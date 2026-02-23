@@ -1,6 +1,6 @@
 # AI Coding Configurations
 
-An opinionated collection of **Cursor** and **Claude Code** configurations for AI-assisted development. Drop the relevant folder into any project to get structured workflows, specialized subagents, safety hooks, and reusable skills — all working together out of the box.
+An opinionated collection of **Cursor** and **Claude Code** configurations for AI-assisted development. Drop the relevant folder into any project to get structured workflows, specialized subagents, safety hooks, and reusable skills - all working together out of the box.
 
 ---
 
@@ -21,7 +21,7 @@ Each configuration gives your AI assistant a set of **commands** to run, **subag
 
 ### Commands
 
-Commands are slash commands you run to kick off a workflow. Both tools share the same set — implemented as Agent Skills following the [agentskills.io](https://agentskills.io) specification:
+Commands are slash commands you run to kick off a workflow. Both tools share the same set, implemented as Agent Skills following the [agentskills.io](https://agentskills.io) specification:
 
 | Command | What it does |
 |---------|-------------|
@@ -33,7 +33,7 @@ Commands are slash commands you run to kick off a workflow. Both tools share the
 | `/ticket` | Create a well-structured GitHub issue through a guided interview. |
 | `/orient` | Map the tech stack, architecture, and patterns of an unfamiliar codebase. |
 | `/ask` | Ask clarifying questions before proceeding with work. |
-| `/skill` | Create a new skill using TDD — baseline test, write content, validate against the agentskills.io spec. |
+| `/skill` | Create a new skill using TDD - baseline test, write content, validate against the agentskills.io spec. |
 | `/primitives` | List every native tool and capability available in the current session. |
 
 ---
@@ -91,7 +91,7 @@ Rules are guidelines loaded automatically by the AI at the start of every sessio
 
 ### Hooks
 
-Hooks are scripts that run automatically at specific points in the workflow — before or after tool use, on session start, on stop. Unlike rules (which the AI *should* follow), hooks *always* run regardless of what the AI decides.
+Hooks are scripts that run automatically at specific points in the workflow - before or after tool use, on session start, on stop. Unlike rules (which the AI *should* follow), hooks *always* run regardless of what the AI decides.
 
 **Claude Code** (`.claude/hooks/`):
 
@@ -121,9 +121,9 @@ Hooks are scripts that run automatically at specific points in the workflow — 
 
 ### Skills
 
-Skills are reference documents the AI draws on automatically based on context. They're not commands you invoke — they activate when relevant.
+Skills are reference documents the AI draws on automatically based on context. They're not commands you invoke - they activate when relevant.
 
-**Claude Code workflow skills** (`.claude/skills/`) — these power the commands above:
+**Claude Code workflow skills** (`.claude/skills/`) - these power the commands above:
 
 | Skill | Purpose |
 |-------|---------|
@@ -132,7 +132,7 @@ Skills are reference documents the AI draws on automatically based on context. T
 | `testing-patterns` | QA patterns for the QA agent |
 | `dev`, `discuss`, `spec`, `to-dos`, `issue`, `ticket`, `skill`, `orient`, `ask`, `primitives` | Full workflow instructions for each command |
 
-**Cursor skills** (`.cursor/skills/`) — all commands and domain skills:
+**Cursor skills** (`.cursor/skills/`) - all commands and domain skills:
 
 | Skill | Type | When it activates |
 |-------|------|------------------|
@@ -168,13 +168,14 @@ Skills are reference documents the AI draws on automatically based on context. T
    {
      "env": {
        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-     }
+     },
+     "teammateMode": "auto"
    }
    ```
-3. Start Claude with `claude --teammate-mode tmux` for team mode.
-4. Run `/orient` to map your codebase, then start with any command.
+   Set `teammateMode` to `tmux` for each agent in its own pane (requires tmux), or `in-process` to keep everything in one terminal. You can also pass it as a flag: `claude --teammate-mode tmux`.
+3. Run `/orient` to map your codebase, then start with any command.
 
-> The env var must live in user-level settings because Claude Code validates project hooks before applying project-level env vars — putting it in the project file can silently prevent slash commands from loading.
+> The env var must live in user-level settings because Claude Code validates project hooks before applying project-level env vars - putting it in the project file can silently prevent slash commands from loading.
 
 ### Cursor
 
@@ -194,7 +195,7 @@ Both configurations write ephemeral data to a `.context/` directory in your proj
 └── session/       # Session state for recovery after context resets
 ```
 
-Add `.context/` to your project's `.gitignore` — it's session-specific and shouldn't be committed.
+Add `.context/` to your project's `.gitignore` - it's session-specific and shouldn't be committed.
 
 ```bash
 echo ".context/" >> .gitignore

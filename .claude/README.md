@@ -1,6 +1,6 @@
 # Claude Code Configuration
 
-Drop `.claude/` into any project to get ten workflow commands, five specialized subagents, safety hooks, and reusable skills — all working together.
+Drop `.claude/` into any project to get ten workflow commands, five specialized subagents, safety hooks, and reusable skills - all working together.
 
 ```
 .claude/
@@ -31,12 +31,12 @@ These power the slash commands. Each maps to a command of the same name.
 | `ticket` | `/ticket` | Create a well-structured GitHub issue through a guided interview. |
 | `orient` | `/orient` | Map the tech stack, architecture, and patterns of a codebase. |
 | `ask` | `/ask` | Ask clarifying questions before proceeding. |
-| `skill` | `/skill` | Create a new skill using TDD — baseline test, then write content. Includes spec reference, starter templates, and a validation script. |
+| `skill` | `/skill` | Create a new skill using TDD - baseline test, then write content. Includes spec reference, starter templates, and a validation script. |
 | `primitives` | `/primitives` | Enumerate every native tool and capability available in the current session. |
 
 ### Semantic Skills
 
-These activate automatically based on context — no command needed.
+These activate automatically based on context - no command needed.
 
 | Skill | Activates when... |
 |-------|------------------|
@@ -54,11 +54,11 @@ Agents live in `.claude/agents/`. The orchestrator (lead) spawns these via Agent
 |-------|------|------|
 | `explorer` | Read-only codebase analysis | async |
 | `implementer` | Writes and modifies code | resumable |
-| `reviewer` | Spec compliance and code quality | — |
-| `qa` | Runs lint, typecheck, and tests | — |
-| `skill-author` | Creates skills using TDD | — |
+| `reviewer` | Spec compliance and code quality | - |
+| `qa` | Runs lint, typecheck, and tests | - |
+| `skill-author` | Creates skills using TDD | - |
 
-Requires Agent Teams: set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in your **user-level** `~/.claude/settings.json` env block — not in the project `settings.json`. See setup note below.
+Requires Agent Teams: set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in your **user-level** `~/.claude/settings.json` env block - not in the project `settings.json`. See setup note below.
 
 ---
 
@@ -75,7 +75,7 @@ Rules live in `.claude/rules/`. Claude Code loads these automatically at every s
 
 ## Hooks
 
-Hooks live in `.claude/hooks/` and are configured in `settings.json`. Unlike rules (which the agent *should* follow), hooks *always* run — they provide hard guarantees via exit code `2` to block with feedback.
+Hooks live in `.claude/hooks/` and are configured in `settings.json`. Unlike rules (which the agent *should* follow), hooks *always* run - they provide hard guarantees via exit code `2` to block with feedback.
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
@@ -128,9 +128,9 @@ All hooks use `$CLAUDE_PROJECT_DIR` (injected by Claude Code) to resolve paths r
 }
 ```
 
-Start Claude with `claude --teammate-mode tmux` for team mode.
+Set `teammateMode` in `settings.json` to control how agents render (`auto`, `tmux`, or `in-process`), or pass it as a flag: `claude --teammate-mode tmux`. Use `tmux` for each agent in its own pane (requires tmux), or `in-process` to keep everything in one terminal.
 
-Do not set it in the project `settings.json`. Claude Code validates project hooks before applying project-level env vars — if the env var is in the same file as the `TeammateIdle` and `TaskCompleted` hooks, those hooks can silently prevent project slash commands from loading.
+Do not set it in the project `settings.json`. Claude Code validates project hooks before applying project-level env vars - if the env var is in the same file as the `TeammateIdle` and `TaskCompleted` hooks, those hooks can silently prevent project slash commands from loading.
 
 ### Context Directory
 

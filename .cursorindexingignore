@@ -1,0 +1,4 @@
+# Skill reference scripts - accessible to AI features but excluded from semantic search
+.cursor/skills/*/scripts/
+.cursor/skills/*/assets/
+.cursor/skills/*/references/

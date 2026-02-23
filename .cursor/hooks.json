@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": ".cursor/hooks/load-session.sh"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": ".cursor/hooks/auto-format.sh"
+      },
+      {
+        "command": ".cursor/hooks/post-edit-lint.sh"
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/block-dangerous.sh",
+        "matcher": "rm -rf|git push.*force|git reset.*hard|DROP |TRUNCATE |delete from"
+      },
+      {
+        "command": ".cursor/hooks/validate-commit.sh",
+        "matcher": "git commit"
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": ".cursor/hooks/redact-secrets.sh"
+      }
+    ],
+    "beforeTabFileRead": [
+      {
+        "command": ".cursor/hooks/redact-secrets.sh"
+      }
+    ],
+    "preCompact": [
+      {
+        "command": ".cursor/hooks/notify-compact.sh"
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/persist-session.sh"
+      }
+    ]
+  }
+}

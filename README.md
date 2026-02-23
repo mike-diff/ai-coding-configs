@@ -64,8 +64,6 @@ Subagents are specialized agents that the orchestrator delegates work to. Each h
 | `browser-tester` | UI verification |
 | `skill-author` | Skill creation via TDD |
 
-> **Note:** Cursor subagents require Cursor Nightly. Switch via Settings → Beta → Update Channel → Nightly.
-
 ---
 
 ### Rules
@@ -182,8 +180,7 @@ Skills are reference documents the AI draws on automatically based on context. T
 
 1. Copy `.cursor/` into your project root.
 2. Make hook scripts executable: `chmod +x .cursor/hooks/*.sh`
-3. Switch to Cursor Nightly if you want subagent support (Settings → Beta → Update Channel → Nightly).
-4. Run `/orient` to map your codebase, then start with any skill.
+3. Run `/orient` to map your codebase, then start with any skill.
 
 ---
 

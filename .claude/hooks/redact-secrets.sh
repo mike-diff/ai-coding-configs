@@ -77,7 +77,7 @@ if [[ -f "$FILE_PATH" ]] && [[ -r "$FILE_PATH" ]]; then
     fi
 
     # Private keys (RSA, EC, OpenSSH)
-    if echo "$CONTENT" | grep -qE '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'; then
+    if echo "$CONTENT" | grep -qE -- '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'; then
       log "BLOCKED: contains private key"
       echo "Blocked: file contains a private key." >&2
       exit 2

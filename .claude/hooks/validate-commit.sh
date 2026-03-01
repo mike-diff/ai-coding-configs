@@ -48,11 +48,11 @@ log "CHECK: $COMMAND"
 MSG=""
 
 # Try double quotes first
-MSG="$(echo "$COMMAND" | grep -oE '(-m|--message)\s+"[^"]*"' | head -1 | sed 's/^.*"//' | sed 's/"$//' 2>/dev/null)" || true
+MSG="$(echo "$COMMAND" | grep -oE '(-m|--message)\s+"[^"]*"' | head -1 | sed 's/^[^"]*"//' | sed 's/"$//' 2>/dev/null)" || true
 
 # Try single quotes
 if [[ -z "$MSG" ]]; then
-  MSG="$(echo "$COMMAND" | grep -oE "(-m|--message)\s+'[^']*'" | head -1 | sed "s/^.*'//" | sed "s/'$//" 2>/dev/null)" || true
+  MSG="$(echo "$COMMAND" | grep -oE "(-m|--message)\s+'[^']*'" | head -1 | sed "s/^[^']*'//" | sed "s/'$//" 2>/dev/null)" || true
 fi
 
 # If using heredoc or we can't parse the message, allow through

@@ -402,7 +402,7 @@ If you need to check something, ask a teammate to check it for you.
 3. **Delegate** - Enable delegate mode, create task list
 4. **Monitor** - Track progress, redirect as needed
 5. **Synthesize** - Compile results from all teammates
-6. **Cleanup** - Shut down teammates, then clean up the team
+6. **Cleanup** - Shut down all teammates (via `shutdown_request`), then call `TeamDelete`
 
 Always shut down all teammates before running cleanup. Teammates should not run cleanup.
 </lifecycle>

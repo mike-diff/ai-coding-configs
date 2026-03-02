@@ -1,3 +1,4 @@
 *mcp.json
 .context/
 .DS_Store
+.claude/.logs/

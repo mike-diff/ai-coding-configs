@@ -79,7 +79,7 @@ Phase 4 (DELIVER):  Spawn blind spot -> Receive message -> Shut down
                     |
 Phase 5 (DEEPEN):   Spawn dependency researcher -> Receive -> Shut down
 (optional)          |
-                    Clean up the team
+                    Call TeamDelete to clean up the team
 ```
 
 You (lead, normal mode)
@@ -780,7 +780,7 @@ Each phase is self-contained. An agent running `/dev "Phase 1" @spec-file.md` sh
 ### 5C: Save and Deliver
 
 After receiving the dependency researcher's `<dependency-result>` message, shut
-down the dependency researcher teammate and incorporate the findings:
+down the dependency researcher teammate (via `shutdown_request`) and incorporate the findings:
 
 1. Save the spec to `docs/specs/spec-[feature-name].md`
 2. Present the summary:
@@ -802,7 +802,7 @@ Usage:
   /dev "Implement Phase 1" @docs/specs/spec-[feature-name].md
 ```
 
-Shut down any remaining teammates, then clean up the team.
+Shut down any remaining teammates (via `shutdown_request`), then call `TeamDelete` to clean up the team.
 </phase>
 
 ---
@@ -824,7 +824,7 @@ Approach: [one sentence summary]
 Next: /dev [suggested command]
 ```
 
-Shut down any remaining teammates, then clean up the team.
+Shut down any remaining teammates (via `shutdown_request`), then call `TeamDelete` to clean up the team.
 </report>
 
 ---

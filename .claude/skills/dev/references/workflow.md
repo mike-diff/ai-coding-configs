@@ -192,7 +192,7 @@ Reply with answers, or "proceed" if no clarification needed.
 **STOP. Wait for user response.**
 - User answers: incorporate, proceed to Phase 5
 - User says "proceed": proceed to Phase 5
-- User says "abort": shut down team, clean up
+- User says "abort": shut down all teammates (via `shutdown_request`), then call `TeamDelete`
 </phase>
 
 ---
@@ -346,8 +346,8 @@ If no UI files modified, skip to Phase 7.
 2. Generate commit message: `type(scope): description`
 3. Stage and commit: `git add -A && git commit`
 4. Report discovered issues (things outside scope that teammates noticed)
-5. Shut down all teammates
-6. Clean up the team
+5. Shut down all teammates (via `shutdown_request`)
+6. Call `TeamDelete` to clean up the team
 
 ```
 ## Feature Complete

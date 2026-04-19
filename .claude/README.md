@@ -157,3 +157,39 @@ Two settings in this config live in your **user-level** `~/.claude/settings.json
     Replace `<your-project>` with a descriptive name. Claude Code will auto-create `MEMORY.md` and topic files there.
 
 **Minimum Claude Code version:** 2.1.108 (released 2026-04-14). Verify with `claude --version`. Older versions will silently ignore `ENABLE_PROMPT_CACHING_1H` and may reject other features used here.
+
+## Built-in commands leveraged
+
+This config assumes the following native Claude Code commands are available. These are shipped by Claude Code itself, not by this repo.
+
+| Command | When to use |
+|---------|-------------|
+| `/context` | Inspect what's loaded in your current context and where tokens are being spent |
+| `/memory` | Inspect and edit auto-memory — see the "User-level setup" section above for where memory is stored |
+| `/effort` | Switch between reasoning effort levels per task |
+| `/team-onboarding` | Generate or refresh a team onboarding guide for this project |
+| `/color` | Change session accent color (useful when running multiple sessions in parallel) |
+| `/tui` | Toggle full-screen, flicker-free rendering |
+| `/loop` | Run a prompt on a recurring or self-paced interval. See `.claude/skills/loop-patterns/SKILL.md` for per-agent recipes |
+
+## Hardening options
+
+Optional settings for security-sensitive or bandwidth-constrained environments.
+
+**Deny outbound network calls to specific domains** (block the sandbox from reaching listed hosts, even for tools that normally have network access). Add to `.claude/settings.json`:
+
+    {
+      "sandbox": {
+        "network": {
+          "deniedDomains": ["evil.example.com", "*.tracker.example"]
+        }
+      }
+    }
+
+**Reduce terminal flicker on slow links.** Set `CLAUDE_CODE_NO_FLICKER=1` in your shell env or `.claude/settings.json` env block:
+
+    {
+      "env": {
+        "CLAUDE_CODE_NO_FLICKER": "1"
+      }
+    }

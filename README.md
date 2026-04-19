@@ -103,6 +103,13 @@ Hooks are scripts that run automatically at specific points in the workflow - be
 | `post-edit-lint.sh` | After every file edit | Auto-lints the edited file (ESLint, ruff) |
 | `teammate-idle.sh` | When a teammate goes idle or stops | Requires a `<*-result>` block before the agent can stop |
 | `task-completed.sh` | On task completion | Requires a `<*-result>` block before the task can be marked done |
+| `notify-compact.sh` | Before context compaction | Shows context usage %; logs which rules and skills survive compaction |
+| `session-start.sh` | On session start | Logs session digest; validates all hook scripts are executable |
+| `permission-denied.sh` | On permission denied | Logs the blocked tool and reason to `.claude/.logs/permission-denied.log` |
+| `file-changed.sh` | When a file changes | Logs file path and change type to `.claude/.logs/hooks.log` |
+| `cwd-changed.sh` | When working directory changes | Logs new cwd to `.claude/.logs/hooks.log` |
+| `task-created.sh` | When a task is created | Logs task id, teammate, and subject to `.claude/.logs/tasks.log` |
+| `stop-failure.sh` | On API-error termination | Logs failure mode and raw payload to `.claude/.logs/stop-failures.log` |
 
 **Cursor** (`.cursor/hooks/`):
 
@@ -130,6 +137,7 @@ Skills are reference documents the AI draws on automatically based on context. T
 | `team-orchestration` | Orchestration patterns for the lead agent |
 | `code-review` | Review patterns for the reviewer agent |
 | `testing-patterns` | QA patterns for the QA agent |
+| `loop-patterns` | Recommended `/loop` cadences for each agent (explorer, implementer, reviewer, qa, skill-author) |
 | `dev`, `discuss`, `spec`, `to-dos`, `issue`, `ticket`, `skill`, `orient`, `ask`, `primitives` | Full workflow instructions for each command |
 
 **Cursor skills** (`.cursor/skills/`) - all commands and domain skills:

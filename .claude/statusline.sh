@@ -9,7 +9,7 @@ CTX_PCT=$(echo "$input" | jq -r '.context_window.used_percentage // 0' 2>/dev/nu
 COST=$(echo "$input" | jq -r '.cost.total_cost_usd // 0' 2>/dev/null)
 FIVE_H=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // "N/A"' 2>/dev/null)
 
-COST_FMT=$(printf '$%.2f' "${COST:-0}" 2>/dev/null || echo '$0.00')
+COST_FMT=$(printf '$%.2f' "${COST:-0}" 2>/dev/null || echo "\$0.00")
 if [[ "$FIVE_H" == "N/A" || -z "$FIVE_H" ]]; then
   FIVE_H_FMT="—"
 else

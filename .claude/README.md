@@ -139,3 +139,21 @@ The `mcp-caching` rule and Cursor's session hooks write to `.context/` in your p
 ```bash
 echo ".context/" >> .gitignore
 ```
+
+## User-level setup
+
+Two settings in this config live in your **user-level** `~/.claude/settings.json`, not the project-level one in this repo:
+
+1. **`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`** — required for Agent Teams (see existing notes).
+2. **`autoMemoryDirectory` / `autoMemoryEnabled`** — Claude Code's policy rejects these keys from project settings to prevent shared projects redirecting memory writes. Copy this into `~/.claude/settings.json`:
+
+    ```json
+    {
+      "autoMemoryEnabled": true,
+      "autoMemoryDirectory": "~/.claude/projects/<your-project>/memory"
+    }
+    ```
+
+    Replace `<your-project>` with a descriptive name. Claude Code will auto-create `MEMORY.md` and topic files there.
+
+**Minimum Claude Code version:** 2.1.108 (released 2026-04-14). Verify with `claude --version`. Older versions will silently ignore `ENABLE_PROMPT_CACHING_1H` and may reject other features used here.

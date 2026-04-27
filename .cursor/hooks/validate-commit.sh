@@ -21,7 +21,7 @@ fi
 
 # Extract the commit message from -m "message" or -m 'message'
 # Handle: git commit -m "msg", git commit -am "msg", git commit -m "msg" -m "body"
-MSG=$(echo "$COMMAND" | grep -oE '(-m|--message)\s+("([^"]*)"' | head -1 | sed 's/^(-m|--message)\s+"//' | sed 's/"$//')
+MSG=$(echo "$COMMAND" | grep -oE '(-m|--message)[[:space:]]+"[^"]*"' | head -1 | sed -E 's/^(-m|--message)[[:space:]]+"//' | sed 's/"$//')
 
 # Fallback: try single quotes
 if [[ -z "$MSG" ]]; then

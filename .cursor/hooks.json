@@ -6,6 +6,21 @@
         "command": ".cursor/hooks/load-session.sh"
       }
     ],
+    "sessionEnd": [
+      {
+        "command": ".cursor/hooks/session-end-log.sh"
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": ".cursor/hooks/subagent-start-log.sh"
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": ".cursor/hooks/subagent-stop-log.sh"
+      }
+    ],
     "afterFileEdit": [
       {
         "command": ".cursor/hooks/auto-format.sh"
@@ -37,6 +52,11 @@
     "preCompact": [
       {
         "command": ".cursor/hooks/notify-compact.sh"
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "command": ".cursor/hooks/post-tool-failure-log.sh"
       }
     ],
     "stop": [

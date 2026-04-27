@@ -1,7 +1,7 @@
 ---
 name: explorer
 description: Codebase analysis specialist. Read-only, fast parallel searches. Use proactively when understanding code structure, finding patterns, or mapping dependencies before implementation.
-model: composer-1.5
+model: inherit
 readonly: true
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: spec-reviewer
 description: Spec compliance verifier. Requires reasoning to analyze code against requirements. Use AFTER implementer completes to verify implementation matches requirements exactly - no more, no less. Catches scope creep and missing requirements.
-model: sonnet-4-6-medium
+model: inherit
 readonly: true
 ---
 

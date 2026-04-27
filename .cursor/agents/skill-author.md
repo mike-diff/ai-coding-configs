@@ -1,7 +1,7 @@
 ---
 name: skill-author
 description: "Skill creation specialist using TDD methodology. Creates Agent Skills with baseline testing, full directory population, and spec compliance. Use when creating new skills for .cursor/skills/."
-model: claude-4.6-opus
+model: inherit
 ---
 
 # Skill Author — TDD Skill Creation Specialist

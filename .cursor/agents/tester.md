@@ -1,7 +1,7 @@
 ---
 name: tester
 description: Test runner specialist. Read-only, runs commands and parses output. Use to execute test suites and report results. Reports failures with test names and error details.
-model: composer-1.5
+model: inherit
 readonly: true
 ---
 

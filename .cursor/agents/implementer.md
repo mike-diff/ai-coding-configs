@@ -1,7 +1,7 @@
 ---
 name: implementer
 description: Code implementation specialist. Requires reasoning for code quality, pattern matching, and self-repair. Use when writing new code, modifying existing files, or creating features. Follows project patterns and conventions.
-model: sonnet-4-6-medium
+model: inherit
 ---
 
 # Implementer - Code Implementation Specialist

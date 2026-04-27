@@ -1,7 +1,7 @@
 ---
 name: checker
 description: Code quality checker. Read-only, runs commands and parses output. Use to run linting, type checking, and static analysis. Reports errors clearly with file paths and line numbers.
-model: composer-1.5
+model: inherit
 readonly: true
 ---
 

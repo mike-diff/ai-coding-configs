@@ -123,6 +123,10 @@ Hooks are scripts that run automatically at specific points in the workflow - be
 | `notify-compact.sh` | Before context compaction | Shows context usage percentage when compaction fires |
 | `persist-session.sh` | On agent stop | Saves session state; injects accumulated lint errors as a followup message if any exist |
 | `load-session.sh` | On session start | Injects previous session state as context |
+| `session-end-log.sh` | On session end | Logs session completion metadata for auditability |
+| `subagent-start-log.sh` | On subagent start | Logs multi-agent lifecycle start events |
+| `subagent-stop-log.sh` | On subagent stop | Logs multi-agent lifecycle completion events |
+| `post-tool-failure-log.sh` | On tool failure | Logs failed tool execution details for debugging |
 
 ---
 
@@ -146,6 +150,7 @@ Skills are reference documents the AI draws on automatically based on context. T
 |-------|------|------------------|
 | `dev`, `discuss`, `spec`, `to-dos`, `issue`, `ticket`, `orient`, `ask`, `skill`, `primitives` | Commands (`disable-model-invocation: true`) | When you type `/name` in Agent chat |
 | `skill-creator` | Domain skill | Creating or editing skills, writing SKILL.md files |
+| `worktree-ops`, `best-of-n-ops`, `debug-ops`, `canvas-ops` | Operational skills | When running Cursor 3.x workflows for isolation, parallel attempts, debugging, and analytical outputs |
 
 ---
 
@@ -190,6 +195,11 @@ Skills are reference documents the AI draws on automatically based on context. T
 1. Copy `.cursor/` into your project root.
 2. Make hook scripts executable: `chmod +x .cursor/hooks/*.sh`
 3. Run `/orient` to map your codebase, then start with any skill.
+
+Useful Cursor 3.x workflows:
+- `/worktree` for isolated implementation branches
+- `/best-of-n` for parallel model attempts in isolated worktrees
+- `/debug` for hypothesis-driven root-cause analysis
 
 ---
 

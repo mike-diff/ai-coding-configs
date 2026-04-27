@@ -15,7 +15,11 @@ This directory contains Cursor-specific configuration for AI-assisted developmen
 │   ├── redact-secrets.sh    # Block reading secret files (Agent + Tab)
 │   ├── notify-compact.sh    # Notify on context compaction
 │   ├── persist-session.sh   # Save session state; inject lint errors as followup
-│   └── load-session.sh      # Inject session state on start
+│   ├── load-session.sh      # Inject session state on start
+│   ├── subagent-start-log.sh # Log subagent lifecycle start events
+│   ├── subagent-stop-log.sh # Log subagent lifecycle stop events
+│   ├── post-tool-failure-log.sh # Log failed tool executions
+│   └── session-end-log.sh   # Log session completion state
 ├── skills/             # Slash commands + auto-activating capabilities (agentskills.io format)
 │   ├── dev/            # /dev - AI-supervised feature development
 │   ├── discuss/        # /discuss - Idea exploration & validated planning
@@ -27,6 +31,10 @@ This directory contains Cursor-specific configuration for AI-assisted developmen
 │   ├── skill/          # /skill - Create new skills via TDD
 │   ├── ask/            # /ask - Clarification questions
 │   ├── primitives/     # /primitives - Enumerate native tools
+│   ├── worktree-ops/   # /worktree operational guidance
+│   ├── best-of-n-ops/  # /best-of-n operational guidance
+│   ├── debug-ops/      # /debug operational guidance
+│   ├── canvas-ops/     # Canvas usage guidance
 │   └── skill-creator/  # Agent Skills spec, templates, and validation script
 ├── agents/             # Subagents for task delegation
 │   ├── explorer.md     # Codebase analysis
@@ -65,6 +73,10 @@ Configuration: `.cursor/hooks.json`
 | Notify compact | `preCompact` | `notify-compact.sh` | Shows context usage percentage in chat when compaction fires |
 | Persist session | `stop` | `persist-session.sh` | Saves git state and session info; injects accumulated lint errors as a followup message if any exist |
 | Load session | `sessionStart` | `load-session.sh` | Injects previous session state as `additional_context` when starting a new conversation |
+| Session end log | `sessionEnd` | `session-end-log.sh` | Logs session completion status and conversation metadata |
+| Subagent start log | `subagentStart` | `subagent-start-log.sh` | Logs subagent start events for multi-agent observability |
+| Subagent stop log | `subagentStop` | `subagent-stop-log.sh` | Logs subagent completion status for multi-agent observability |
+| Tool failure log | `postToolUseFailure` | `post-tool-failure-log.sh` | Logs failed tool calls for debugging and triage |
 
 ### Hooks vs Rules
 
@@ -119,11 +131,7 @@ Subagents are specialized agents that handle specific tasks:
 | browser-tester | UI verification | `/browser-tester [url]` |
 | skill-author | Skill creation via TDD | Spawned by `/skill` |
 
-**Note:** Subagents require Cursor nightly. To switch:
-1. Open Cursor Settings (Cmd+Shift+J)
-2. Select "Beta"
-3. Set update channel to "Nightly"
-4. Restart Cursor
+Subagents are supported in current Cursor 3.x builds. Use Nightly only when you explicitly need preview-only capabilities.
 
 ### Rules
 
@@ -142,6 +150,19 @@ Skills provide specialized knowledge that auto-activates based on description ma
 | Skill | When it activates |
 |-------|------------------|
 | `skill-creator` | Creating or editing skills, writing SKILL.md files, validating skill structure |
+| `worktree-ops` | Deciding when to isolate tasks with `/worktree` |
+| `best-of-n-ops` | Running and evaluating parallel model attempts with `/best-of-n` |
+| `debug-ops` | Root-cause-first troubleshooting with `/debug` |
+| `canvas-ops` | Choosing canvas artifacts for data-heavy or analytical outputs |
+
+## Cursor 3.x Workflows
+
+Use these capabilities to improve execution quality and throughput:
+
+- **`/worktree`** - Isolate risky or parallel tasks in dedicated worktrees.
+- **`/best-of-n`** - Run parallel implementations and select the strongest result.
+- **`/debug`** - Investigate complex failures with hypothesis-driven debugging before patching.
+- **Canvas artifacts** - Prefer canvas outputs for audits, architecture reviews, timelines, and other structured analysis deliverables.
 
 ## MCP Integration
 

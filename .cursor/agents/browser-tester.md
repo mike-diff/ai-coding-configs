@@ -1,7 +1,7 @@
 ---
 name: browser-tester
 description: Browser testing specialist. Read-only, mechanical UI checks. Use to verify UI changes visually, test interactions, and check for console errors. Requires browser MCP.
-model: composer-1.5
+model: inherit
 ---
 
 # Browser Tester - UI Verification Specialist

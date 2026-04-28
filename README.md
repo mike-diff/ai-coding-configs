@@ -4,6 +4,32 @@ An opinionated collection of **Cursor** and **Claude Code** configurations for A
 
 ---
 
+## Install
+
+Two paths, pick one:
+
+### Option A — Plugin (recommended for sharing)
+
+```bash
+/plugin marketplace add mike-diff/ai-coding-configs
+/plugin install agent-team@mike-diff
+```
+
+Commands surface as `/agent-team:discuss`, `/agent-team:dev`, etc.
+See [plugin README](./plugins/agent-team/README.md) for details.
+
+### Option B — Standalone (drop-in, unprefixed commands)
+
+```bash
+git clone https://github.com/mike-diff/ai-coding-configs.git
+cp -r ai-coding-configs/.claude/ /path/to/your/project/
+```
+
+Commands surface as `/discuss`, `/dev`, etc.
+See [.claude/README.md](.claude/README.md) for details.
+
+---
+
 ## What's Included
 
 | Tool | Config Folder |

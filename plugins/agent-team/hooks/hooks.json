@@ -1,0 +1,59 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh" },
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/inject-rules.sh" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/block-dangerous.sh" },
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/validate-commit.sh" }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/redact-secrets.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/post-edit-lint.sh" }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/permission-denied.sh" } ] }
+    ],
+    "TeammateIdle": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/teammate-idle.sh" } ] }
+    ],
+    "TaskCompleted": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/task-completed.sh" } ] }
+    ],
+    "PreCompact": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/notify-compact.sh" } ] }
+    ],
+    "FileChanged": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/file-changed.sh" } ] }
+    ],
+    "CwdChanged": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/cwd-changed.sh" } ] }
+    ],
+    "TaskCreated": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/task-created.sh" } ] }
+    ],
+    "StopFailure": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/stop-failure.sh" } ] }
+    ]
+  }
+}

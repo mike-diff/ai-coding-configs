@@ -4,11 +4,6 @@ description: Skill creation specialist using TDD methodology. Creates Agent Skil
 model: opus
 memory: project
 tools: Read, Write, Edit, Bash, Grep, Glob
-hooks:
-  Stop:
-    - hooks:
-        - type: command
-          command: '"$CLAUDE_PROJECT_DIR"/.claude/hooks/teammate-idle.sh'
 ---
 
 # Skill Author — TDD Skill Creation Specialist
@@ -233,3 +228,11 @@ Before returning results:
 - [ ] File references are one level deep only
 - [ ] validate-skill.sh run and passed
 - [ ] Tested WITH skill active to verify fix
+
+<output_gate>
+STOP. Before sending your final message to the lead or going idle, you MUST include a `<skill-author-result>` block as the last element of your response. The block contains your structured findings per the project's `coding-standards.md` rule.
+
+If you cannot produce findings (task aborted, blocked, etc.), still return an empty `<skill-author-result>` block with an explanatory `<reason>` tag inside.
+
+The project-level `TeammateIdle` hook will reject your idle attempt without this block.
+</output_gate>

@@ -1,0 +1,13 @@
+{
+  "name": "agent-team",
+  "version": "0.1.0",
+  "description": "Coordinated multi-agent workflow with skills, hooks, and structured output gates.",
+  "author": {
+    "name": "Mike Salvati",
+    "email": "cdnmikes@gmail.com"
+  },
+  "homepage": "https://github.com/mike-diff/ai-coding-configs",
+  "repository": "https://github.com/mike-diff/ai-coding-configs",
+  "license": "MIT",
+  "keywords": ["agent-team", "workflow", "claude-code"]
+}

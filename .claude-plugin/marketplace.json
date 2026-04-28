@@ -1,0 +1,21 @@
+{
+  "name": "mike-diff",
+  "owner": {
+    "name": "Mike Salvati",
+    "email": "cdnmikes@gmail.com"
+  },
+  "metadata": {
+    "description": "Mike's AI coding workflow plugins",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "agent-team",
+      "source": "./plugins/agent-team",
+      "description": "Coordinated agent-team workflow: skills, agents, hooks, rules.",
+      "version": "0.1.0",
+      "category": "workflow",
+      "keywords": ["agent-team", "workflow", "skills", "hooks"]
+    }
+  ]
+}

@@ -467,6 +467,22 @@ Present the validated plan and assess depth needed.
 - Feasibility: [confirmed/concerns noted]
 - Best approach: [confirmed/alternative considered]
 - Missing pieces: [N items addressed]
+
+<adlc-handoff>
+problem: [one-sentence problem]
+target_user: [primary user or actor]
+hypothesis: [why this approach should work]
+success_metrics:
+  - [measurable success signal]
+core_workflow_break: [what is broken or missing today]
+assumptions:
+  - [assumption to validate]
+risks:
+  - [risk to mitigate]
+human_decisions_required:
+  - [decision user must make before build, or None]
+recommended_next: /spec "[feature]" or /dev "[small validated change]"
+</adlc-handoff>
 ```
 </output_format>
 
@@ -548,6 +564,8 @@ This is straightforward enough to implement directly.
 
 Ready to build:
   /dev [brief description based on plan]
+
+ADLC handoff captured in the plan above. Pass it directly to /dev if no full spec is needed.
 ```
 
 **Medium/complex features** (effort: Medium/Large, multiple phases, many files, external dependencies):
@@ -692,13 +710,16 @@ Each phase is self-contained. An agent running `/dev "Phase 1" @spec-file.md` sh
 
 After receiving the dependency researcher's `<dependency-result>`, incorporate the findings:
 
-1. Save the spec to `docs/specs/spec-[feature-name].md`
-2. Present the summary:
+1. Ensure `.context/` is gitignored
+2. Save the spec to `.context/specs/spec-[feature-name].md`
+3. Present the summary:
+
+Treat generated specs as local planning artifacts. Do not stage or commit them unless the user explicitly asks to promote the spec to committed project documentation.
 
 ```
 SPEC Complete!
 
-File: docs/specs/spec-[feature-name].md
+File: .context/specs/spec-[feature-name].md
 Phases: [N] self-contained implementation phases
 
 Research Results:
@@ -708,8 +729,8 @@ Research Results:
 - Plan Challenge: [N] concerns addressed
 
 Usage:
-  /dev "Implement Phase 0" @docs/specs/spec-[feature-name].md
-  /dev "Implement Phase 1" @docs/specs/spec-[feature-name].md
+  /dev "Implement Phase 0" @.context/specs/spec-[feature-name].md
+  /dev "Implement Phase 1" @.context/specs/spec-[feature-name].md
 ```
 </phase>
 
@@ -727,6 +748,7 @@ Idea: [title]
 Conversation: [N] exchanges
 Research: scout [status], web researcher [status]
 Validation: challenge [confirmed/flagged N concerns]
+ADLC handoff: included in final plan
 
 Approach: [one sentence summary]
 Next: /dev [suggested command]
@@ -799,7 +821,7 @@ EOF
 | Depth | When | Output | Next Step |
 |-------|------|--------|-----------|
 | **Light** | Small/clear feature | Validated plan (1-2 pages) | `/dev [description]` |
-| **Deep** | Complex/multi-phase feature | Phased spec with pinned deps (10+ pages) | `/dev "Phase N" @spec.md` |
+| **Deep** | Complex/multi-phase feature | Phased spec with pinned deps (10+ pages) | `/dev "Phase N" @.context/specs/spec-[name].md` |
 
 The user never has to decide upfront which depth they need. The conversation naturally reveals how much depth is needed. You assess after validation and offer to go deeper when it would help.
 

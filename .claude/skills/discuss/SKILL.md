@@ -48,6 +48,7 @@ Phase 5 (DEEPEN):   Spawn dependency researcher → shut down (optional)
 - Plan validation (Phase 3) is NON-NEGOTIABLE
 - Blind spot check (Phase 4) is MANDATORY — never skip it
 - ALWAYS compact before Phase 3 and before Phase 5
+- ALWAYS end with an `<adlc-handoff>` block so `/spec` can inherit the validated hypothesis, success metrics, risks, and human decision boundaries
 
 ---
 

@@ -68,7 +68,7 @@ If no input provided, ask: "What feature would you like to specify?"
 - Only include NEW dependencies in each phase's dependency table
 - Map User Stories to phases 1:1 or N:1 (multiple US per phase OK, but US shouldn't span phases)
 - Generate detailed sections for ALL phases in "Planned Phases" table
-- Complete the entire workflow: Clarify → Specify → Plan → Task → Save
+- Complete the entire workflow: Clarify → Requirement Contract → Validate Requirement → Architecture Plan → Validate Architecture → Task → Save
 </constraints>
 
 ---
@@ -76,55 +76,53 @@ If no input provided, ask: "What feature would you like to specify?"
 <operational_modes>
 ## Mode Transitions & Sequential Enforcement
 
-This command operates in two modes across **4 sequential phases**:
+This command keeps one user-facing command while executing the ADLC planning loop internally:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  PLAN MODE                                                       │
-│  ┌─────────────┐      ┌─────────────┐                           │
-│  │ Phase 1     │ ──▶  │ Phase 2     │                           │
-│  │ CLARIFY     │      │ SPECIFY     │                           │
-│  │ (1 of 4)    │      │ (2 of 4)    │                           │
-│  └─────────────┘      └──────┬──────┘                           │
-│                              │                                   │
-│                        ▼ HALT ▼                                  │
-│                   [User Approval Gate]                           │
-├─────────────────────────────────────────────────────────────────┤
-│  ACT MODE                                                        │
-│  ┌─────────────┐      ┌─────────────┐      ┌─────────────┐      │
-│  │ Phase 3     │ ──▶  │ Phase 4     │ ──▶  │ SAVE        │      │
-│  │ PLAN        │      │ TASK        │      │ Complete    │      │
-│  │ (3 of 4)    │      │ (4 of 4)    │      │             │      │
-│  └─────────────┘      └─────────────┘      └─────────────┘      │
-└─────────────────────────────────────────────────────────────────┘
+PLAN MODE
+  Phase 1 CLARIFY
+    → Phase 2 REQUIREMENT CONTRACT
+    → Phase 2.5 VALIDATE REQUIREMENT
+    → User Approval Gate
+
+ACT MODE
+  Phase 3 ARCHITECTURE PLAN
+    → Phase 3.5 VALIDATE ARCHITECTURE
+    → Phase 4 TASK
+    → Save
 ```
 
 ### RULES (NO EXCEPTIONS):
 
-1. **MUST** complete each phase in sequence (1 → 2 → 3 → 4 → Save)
+1. **MUST** complete each phase in sequence (1 → 2 → 2.5 → approval → 3 → 3.5 → 4 → Save)
 2. **MUST** produce all Required Outputs before proceeding to next phase
 3. **MUST** HALT at approval gates and wait for user input
-4. **MUST NOT** skip phases or optimize the sequence
+4. **MUST NOT** skip internal validation because this is "only one command"
 5. **MUST NOT** stop after Phase 3 — Phase 4 is REQUIRED
 6. **MUST NOT** consider spec complete until all phases are done and file is saved
+7. **MUST** save specs under `.context/specs/` as uncommitted agent context. Do not save to `docs/specs/` unless the user explicitly asks to promote the spec to committed project documentation.
 
 ### Phase-Specific Rules:
 
 | Phase | Gate | Rule |
 |-------|------|------|
 | 1 → 2 | Questions answered | HALT until user responds |
-| 2 → 3 | Spec approved | HALT until user says "approved" |
-| 3 → 4 | Technical plan done | Continue immediately to Phase 4 |
+| 2 → 2.5 | Requirement contract drafted | Run internal validation checklist |
+| 2.5 → 3 | Requirement approved | HALT until user says "approved" |
+| 3 → 3.5 | Architecture plan done | Run internal validation checklist |
+| 3.5 → 4 | Architecture validated | Continue immediately to Phase 4 |
 | 4 → Save | All phases generated | Save file and report completion |
 
 ### Progress Markers:
 
 Report phase transitions explicitly:
 - `SPEC📋 [Phase 1 of 4] CLARIFY - Asking questions...`
-- `SPEC📋 [Phase 2 of 4] SPECIFY - Generating global context...`
-- `SPEC📋 [Phase 3 of 4] PLAN - Researching dependencies...`
+- `SPEC📋 [Phase 2 of 4] REQUIREMENT CONTRACT - Defining what and why...`
+- `SPEC📋 [Phase 2.5] VALIDATE REQUIREMENT - Checking contract readiness...`
+- `SPEC📋 [Phase 3 of 4] ARCHITECTURE PLAN - Designing how to build...`
+- `SPEC📋 [Phase 3.5] VALIDATE ARCHITECTURE - Checking task coverage and risk...`
 - `SPEC📋 [Phase 4 of 4] TASK - Generating self-contained phases...`
-- `SPEC📋 Complete! Saved to docs/specs/spec-[name].md`
+- `SPEC📋 Complete! Saved to .context/specs/spec-[name].md`
 </operational_modes>
 
 ---
@@ -209,13 +207,15 @@ Use sequential-thinking when:
 ## Agentic Flow
 
 ```
-Phase 1: CLARIFY  →  Phase 2: SPECIFY  →  Phase 3: PLAN  →  Phase 4: TASK
-     ↓                     ↓                   ↓                 ↓
-  Questions            Spec Draft         Tech Analysis      Task List
-     ↓                     ↓                   ↓                 ↓
-  User Answers         User Approval      [Auto]           Complete Spec
+Phase 1: CLARIFY → Phase 2: REQUIREMENT CONTRACT → Phase 2.5: VALIDATE REQUIREMENT
+     ↓                         ↓                                  ↓
+  Questions             What / why / boundaries              Approval Gate
 
-[---- PLAN MODE ----]  [-- GATE --]  [-------- ACT MODE --------]
+Phase 3: ARCHITECTURE PLAN → Phase 3.5: VALIDATE ARCHITECTURE → Phase 4: TASK
+     ↓                              ↓                              ↓
+  How / task graph             Coverage / risk gate          Complete Spec
+
+[-------------- PLAN MODE --------------] [------------- ACT MODE -------------]
 ```
 
 ---
@@ -309,19 +309,20 @@ Do NOT proceed to Phase 2 until user answers the clarifying questions.
 
 ---
 
-## Phase 2: SPECIFY
+## Phase 2: REQUIREMENT CONTRACT
 
-**Progress: Phase 2 of 4** | Next: PLAN
+**Progress: Phase 2 of 4** | Next: VALIDATE REQUIREMENT
 
 ### RULES (Phase 2):
 
 - MUST wait for user answers from Phase 1 before starting
-- MUST generate global context (Overview, Goals, Tech Stack, Non-Goals)
-- MUST NOT include User Stories or FRs in global section (they go in phases)
+- MUST generate a Requirement Contract that defines the what, why, boundaries, success metrics, assumptions, and responsibility model
+- MUST NOT include implementation task details in the Requirement Contract (they belong in Architecture Plan and TASK)
+- MUST run Requirement Validation before asking for approval
 - MUST organize planned phases and get user approval
 - MUST NOT proceed to Phase 3 without user saying "approved"
 
-After receiving user answers, generate specification with **global context** and **phase organization**.
+After receiving user answers, generate specification with a **Requirement Contract** and phase organization.
 
 > **Note:** User Stories and Functional Requirements are NOT in the global section. They belong in individual phases (generated in Phase 4).
 
@@ -329,26 +330,66 @@ After receiving user answers, generate specification with **global context** and
 
 ```markdown
 ---
+id: SPEC-xxx
 feature: [feature-name]
-created: [DATE]
 status: draft
+created: [DATE]
+updated: [DATE]
+component: ""       # narrow area, e.g. "API/auth", "UI/settings", "cli/workflow"
+domain: ""          # broad area, e.g. "auth", "payments", "developer-workflow"
+stack: []           # tech layers touched, e.g. ["typescript", "react", "python"]
+concerns: []        # cross-cutting dimensions, e.g. ["security", "performance", "a11y"]
+tags: []            # free-form keywords, e.g. ["password-reset", "cache-invalidation"]
 ---
 
 # Specification: [Feature Name]
 
-## Overview
+## Requirement Contract
 
-[2-3 sentences describing what is being built and why it matters. Focus on user value.]
+### Problem
 
-## Goals
+[2-3 sentences describing the user/workflow problem and why it matters. Focus on value, not implementation.]
+
+### Hypothesis
+
+We believe [change] will improve [outcome] for [target user] by [mechanism].
+
+### Goals
 
 1. [Specific, measurable project-level goal]
 2. [Specific, measurable project-level goal]
 3. [Specific, measurable project-level goal]
 
+### Success Metrics
+
+- [ ] SC-001: [Measurable end-to-end outcome]
+- [ ] SC-002: [Testable project criterion]
+- [ ] SC-003: [Verifiable proof artifact]
+
+### Acceptance Criteria
+
+- [ ] AC-001: [Specific, testable behavior]
+- [ ] AC-002: [Specific, testable behavior]
+
+### Assumptions
+
+| Assumption | Status | Validation Needed |
+|------------|--------|-------------------|
+| [assumption] | verified / likely / risk | [how to validate or n/a] |
+
+### Responsibility Model
+
+| Decision / Action | Agent can decide? | Human approval required? | Notes |
+|-------------------|-------------------|--------------------------|-------|
+| Implementation details within approved files | yes | no | Must follow existing patterns |
+| Public API contract changes | no | yes | Requires explicit approval |
+| Data migration or destructive operation | no | yes | Must include rollback |
+| Dependency addition | yes | review required | Version pinned and justified |
+| Deployment or external side effect | no | yes | Unless explicitly authorized |
+
 ## Technical Stack
 
-- **Architecture**: [patterns to follow]
+- **Architecture**: [known patterns to follow]
 - **Backend**: [framework, language, database]
 - **Frontend**: [framework, styling approach]
 - **AI/ML**: [if applicable]
@@ -362,13 +403,19 @@ These are excluded from ALL phases of this project:
 2. [Explicitly excluded feature/scope]
 3. [Explicitly excluded feature/scope]
 
-## Success Criteria (Project)
+## Requirement Validation
 
-End-to-end outcomes that define project completion:
+Status: PASS / NEEDS REVISION / BLOCKED
 
-- [ ] SC-001: [Measurable end-to-end outcome]
-- [ ] SC-002: [Testable project criterion]
-- [ ] SC-003: [Verifiable metric]
+- [ ] Problem is clear and tied to user/workflow value
+- [ ] Acceptance criteria are specific and testable
+- [ ] Success metrics or proof artifacts exist
+- [ ] Non-goals prevent scope creep
+- [ ] Assumptions are stated with status
+- [ ] Responsibility model names human approval boundaries
+- [ ] No unresolved blocker questions remain
+
+If status is NEEDS REVISION or BLOCKED, ask targeted follow-up questions and loop back before presenting for approval.
 
 ## Open Questions
 
@@ -401,13 +448,15 @@ After global context, outline the planned phases with their user stories:
 Present the spec and ask:
 
 ```
-SPEC📋 Here's the draft specification with global context and phase organization.
+SPEC📋 Here's the draft requirement contract with phase organization.
 
-**Global sections:**
-- Overview: [1-sentence summary]
+**Requirement Contract:**
+- Problem: [1-sentence summary]
+- Hypothesis: [1-sentence hypothesis]
 - Goals: [count] project goals
-- Tech Stack: [brief summary]
-- Global Non-Goals: [count] exclusions
+- Acceptance Criteria: [count] testable criteria
+- Responsibility Model: [count] human approval boundaries
+- Requirement Validation: PASS / NEEDS REVISION / BLOCKED
 
 **Planned phases:**
 1. **Phase 0: Foundation** — US1 ([title])
@@ -415,19 +464,21 @@ SPEC📋 Here's the draft specification with global context and phase organizati
 N. **Phase N: Polish** — cleanup and documentation
 
 **Questions:**
-1. Is the phase breakdown logical?
-2. Are user stories assigned to the right phases?
-3. Any missing global non-goals?
-4. Should any phases be split or combined?
+1. Is the requirement contract accurate?
+2. Are the success metrics and acceptance criteria testable?
+3. Are any human approval boundaries missing?
+4. Is the phase breakdown logical?
+5. Should any phases be split or combined?
 
-Reply 'approved' to continue to detailed phase generation, or provide feedback.
+Reply 'approved' to continue to architecture planning and detailed phase generation, or provide feedback.
 ```
 
 ### Required Outputs (Phase 2):
 
-- [ ] Global context generated (Overview, Goals, Tech Stack)
+- [ ] Requirement Contract generated (Problem, Hypothesis, Goals, Success Metrics, Acceptance Criteria)
+- [ ] Assumptions and Responsibility Model defined
 - [ ] Non-Goals (Global) defined
-- [ ] Success Criteria (Project) defined
+- [ ] Requirement Validation completed with PASS / NEEDS REVISION / BLOCKED
 - [ ] Planned Phases table with US assignments
 - [ ] User Story Summary with phase mappings
 - [ ] Approval prompt presented to user
@@ -435,8 +486,9 @@ Reply 'approved' to continue to detailed phase generation, or provide feedback.
 ### Verification Checklist (Phase 2):
 
 Before proceeding, verify:
-- [ ] NO User Stories with full details in global section
-- [ ] NO Functional Requirements in global section
+- [ ] NO implementation task details in Requirement Contract
+- [ ] NO Functional Requirements in the global contract section
+- [ ] Requirement Validation is PASS before asking for approval
 - [ ] Phase organization is logical
 - [ ] User has been asked for approval
 - [ ] You are waiting for "approved" response
@@ -451,9 +503,9 @@ This is the **PLAN → ACT mode gate**.
 
 ---
 
-## Phase 3: PLAN
+## Phase 3: ARCHITECTURE PLAN
 
-**Progress: Phase 3 of 4** | Next: TASK
+**Progress: Phase 3 of 4** | Next: VALIDATE ARCHITECTURE
 
 ### RULES (Phase 3):
 
@@ -461,7 +513,9 @@ This is the **PLAN → ACT mode gate**.
 - MUST research dependencies BY PHASE (organize which phase needs which packages)
 - MUST pin ALL dependency versions using WebSearch
 - MUST look up documentation using context7 for key dependencies
-- MUST continue to Phase 4 after completing — do NOT stop here
+- MUST produce an Architecture Plan before task generation
+- MUST run Architecture Validation before Phase 4
+- MUST continue to Phase 4 after validation passes — do NOT stop here
 
 > **Mode: ACT** — User has approved spec, now generating implementation details.
 
@@ -532,22 +586,66 @@ Analyze the codebase to identify:
 - [ ] Key dependencies have context7 documentation references
 - [ ] Implementation patterns extracted for each phase's packages
 
-### 3.3 Technical Planning
+### 3.3 Architecture Plan
 
-Add a brief technical plan to the global context section:
+Add an Architecture Plan to the spec. This is the internal `/architect` phase folded into `/agent-team:spec` so the public command surface stays light.
 
 ```markdown
-## Technical Plan
+## Architecture Plan
+
+### Existing Patterns to Follow
+- `[path]` — [pattern and why it applies]
 
 ### Project Structure
-[directory tree]
+[directory tree of touched areas]
 
 ### Integration Points
 - [System/API] — [how it connects]
 
+### Files to Modify
+- `[path]` — [what changes and why]
+
+### Files to Create
+- `[path]` — [purpose]
+
+### Data / API / UI Contracts
+- [contract, payload, schema, or UI state boundary]
+
+### Test Strategy
+- Unit: [what proves local behavior]
+- Integration: [what proves contracts]
+- E2E / browser / CLI: [what proves user outcome]
+
+### Risk Plan
+- [risk] — [mitigation or explicit deferral]
+
 ### Key Architectural Decisions
 - [Decision]: [rationale]
+
+### Task Graph
+- T001 [description]
+- T002 [description] depends on T001
 ```
+
+### 3.4 Architecture Validation
+
+Before proceeding to Phase 4, validate the Architecture Plan:
+
+```markdown
+## Architecture Validation
+
+Status: PASS / NEEDS REVISION / BLOCKED
+
+- [ ] Every acceptance criterion maps to at least one task
+- [ ] Tasks form a valid dependency graph
+- [ ] File ownership is clear and no file has two implementer owners
+- [ ] Test strategy covers happy path, failure path, and integration contracts
+- [ ] Dependency versions are pinned and docs references are recorded
+- [ ] Risks have mitigation or explicit deferral
+- [ ] Human approval boundaries from the Responsibility Model are still respected
+```
+
+If status is NEEDS REVISION or BLOCKED, revise the Architecture Plan and re-run this validation before generating task phases.
 
 ### Required Outputs (Phase 3):
 
@@ -555,11 +653,12 @@ Add a brief technical plan to the global context section:
 - [ ] Dependencies organized BY PHASE with pinned versions
 - [ ] context7 references for key dependencies
 - [ ] Implementation patterns extracted
-- [ ] Technical plan added to spec
+- [ ] Architecture Plan added to spec
+- [ ] Architecture Validation completed with PASS / NEEDS REVISION / BLOCKED
 
 ---
 
-**▶ CONTINUE TO PHASE 4** — Do not stop here. The spec is incomplete without Phase 4.
+**▶ CONTINUE TO PHASE 4** — Do not stop here. The spec is incomplete without Phase 4. Only proceed when Architecture Validation is PASS.
 
 ---
 
@@ -583,7 +682,7 @@ Add a brief technical plan to the global context section:
 
 Generate **self-contained phases** for EVERY phase in the "Planned Phases" table.
 
-> **Key Principle:** An agent running `/agent-team:dev "Phase 1" @docs/specs/spec-[name].md` should have 100% of the context needed without reading other phases.
+> **Key Principle:** An agent running `/agent-team:dev "Phase 1" @.context/specs/spec-[name].md` should have 100% of the context needed without reading other phases.
 
 ### Prerequisites Section (REQUIRED for Phase 1+)
 
@@ -767,7 +866,7 @@ Before reporting completion, verify:
 
 **▶ SAVE SPEC FILE AND REPORT COMPLETION**
 
-After generating all phases, save to `docs/specs/spec-[feature-name].md` and report completion.
+After generating all phases, ensure `.context/` is gitignored, save to `.context/specs/spec-[feature-name].md`, and report completion. Do not stage or commit generated specs by default.
 
 **Spec is INCOMPLETE if you have not saved the file.**
 </workflow>
@@ -777,14 +876,16 @@ After generating all phases, save to `docs/specs/spec-[feature-name].md` and rep
 <output_format>
 ## Output
 
-Save complete specification to: `docs/specs/spec-[feature-name].md`
+Save complete specification to: `.context/specs/spec-[feature-name].md`
+
+Default behavior: specs are local planning artifacts. Keep them under `.context/specs/` and out of commits unless the user explicitly asks to promote a spec to committed project documentation.
 
 Report completion:
 
 ```markdown
 SPEC📋 Specification complete!
 
-**File:** `docs/specs/spec-[feature-name].md`
+**File:** `.context/specs/spec-[feature-name].md`
 
 **Structure:**
 - Global context (Overview, Goals, Tech Stack, Non-Goals)
@@ -797,8 +898,8 @@ N. **Phase N: Polish** — cleanup and docs
 
 **Usage:**
 Each phase is self-contained. Pass to /dev:
-  /agent-team:dev "Implement Phase 0" @docs/specs/spec-[feature-name].md
-  /agent-team:dev "Implement Phase 1" @docs/specs/spec-[feature-name].md
+  /agent-team:dev "Implement Phase 0" @.context/specs/spec-[feature-name].md
+  /agent-team:dev "Implement Phase 1" @.context/specs/spec-[feature-name].md
 ```
 </output_format>
 
@@ -859,13 +960,13 @@ For features involving auth, payments, data, or security, add to Phase 2:
 ```
 /agent-team:spec Add user authentication with JWT
     ↓
-docs/specs/spec-auth.md (global context + N phases)
+.context/specs/spec-auth.md (global context + N phases)
     ↓
-/agent-team:dev "Implement Phase 0" @docs/specs/spec-auth.md  →  Foundation complete
+/agent-team:dev "Implement Phase 0" @.context/specs/spec-auth.md  →  Foundation complete
     ↓
-/agent-team:dev "Implement Phase 1" @docs/specs/spec-auth.md  →  Core auth complete
+/agent-team:dev "Implement Phase 1" @.context/specs/spec-auth.md  →  Core auth complete
     ↓
-/agent-team:dev "Implement Phase N" @docs/specs/spec-auth.md  →  Polish complete
+/agent-team:dev "Implement Phase N" @.context/specs/spec-auth.md  →  Polish complete
     ↓
 Feature complete
 ```

@@ -107,7 +107,7 @@ All workflows are implemented as Agent Skills in `.cursor/skills/`. Type `/` in 
 ```
 /discuss What if we added a caching layer?
 /spec Add user authentication with JWT tokens
-/dev Add authentication middleware
+/dev "Implement Phase 1" @.context/specs/spec-authentication.md
 /issue 42
 /ticket Add dark mode toggle
 /to-dos Refactor the auth module
@@ -116,6 +116,10 @@ All workflows are implemented as Agent Skills in `.cursor/skills/`. Type `/` in 
 ```
 
 Each skill is a directory with `SKILL.md` (overview) and `references/workflow.md` (full instructions) following the [agentskills.io](https://agentskills.io) specification. Full workflow detail for each is in the skill's `references/` directory.
+
+Recommended quick-action pins in Cursor 3.3+: `/discuss`, `/spec`, and `/dev`. `/spec` emits task graphs and Safe Parallelization notes that Cursor can use with Build in Parallel.
+
+Specs are local planning artifacts by default. They save under `.context/specs/`, which is gitignored, and should only be promoted into committed documentation when explicitly requested.
 
 ### Subagents
 
@@ -159,6 +163,11 @@ Skills provide specialized knowledge that auto-activates based on description ma
 
 Use these capabilities to improve execution quality and throughput:
 
+- **Pinned quick actions** - Pin `/discuss`, `/spec`, and `/dev` for the lightweight ADLC loop.
+- **Build in Parallel from plans** - Use only for tasks marked `[P]` with non-overlapping file ownership in `/spec`.
+- **`/multitask`** - Use during `/dev` only after clarification and only for independent task groups.
+- **Split changes into PRs** - Use after `/dev` when the task graph produced independent slices and Cursor proposes a split plan for approval.
+- **Cloud agent environments** - Configure repo-specific environments as code for multi-repo or credential-heavy work; do not add generic env files blindly.
 - **`/worktree`** - Isolate risky or parallel tasks in dedicated worktrees.
 - **`/best-of-n`** - Run parallel implementations and select the strongest result.
 - **`/debug`** - Investigate complex failures with hypothesis-driven debugging before patching.

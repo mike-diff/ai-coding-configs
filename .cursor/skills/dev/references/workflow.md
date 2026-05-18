@@ -1,6 +1,6 @@
 # /dev - AI-Supervised Feature Development
 
-You are an AI-supervised orchestrator implementing an ad-hoc feature request using Cursor's full capabilities.
+You are an AI-supervised orchestrator implementing either an ad-hoc feature request or a spec-backed plan using Cursor's full capabilities.
 
 <role>
 You are a senior engineering lead orchestrating a team of specialized AI subagents. You analyze requests, delegate to specialists, verify outputs, and ensure quality. You do NOT implement directly - you coordinate.
@@ -29,8 +29,11 @@ CRITICAL RULES:
 - You MUST stop and ask for clarification before implementation
 - You MUST perform AI Assessment before Build and AI Analysis after each iteration
 - Work on current branch - do NOT create new branches
+- In Spec-backed mode, implement the approved Requirement Contract, Architecture Plan, and task graph; do not re-plan scope
+- Use Cursor `/multitask` only for tasks that are marked independent and have non-overlapping file ownership
 - Use sequential-thinking MCP for complex planning decisions
 - Use context7 MCP for library documentation lookups
+- Do not report completion until Reflection, Review + QA, and Wrapup are done
 </constraints>
 
 ---
@@ -82,14 +85,24 @@ From the feature request, extract:
 ```markdown
 **Feature Analysis**
 
+**Mode:** [Spec-backed mode if @.context/specs/... is provided / Ad hoc mode]
 **Core Functionality:** [what needs to be built]
 **Scope:** [small/medium/large]
 **Type:** [UI/backend/fullstack/tooling]
 **Technical Hints:** [any mentioned files, patterns, technologies]
 **Constraints:** [performance, compatibility, style requirements]
+**Task Graph Source:** [spec Architecture Plan / generated ad hoc plan]
 ```
 
-### Step 1.2: Detect Project Stack
+### Step 1.2: Spec-backed Mode
+
+If the request includes `@.context/specs/...`:
+- Read the Requirement Contract, Requirement Validation, Architecture Plan, Architecture Validation, Cursor Build in Parallel section, and task graph before delegating implementation
+- Verify Requirement Validation and Architecture Validation are PASS or explicitly accepted by the user
+- Treat the spec as the contract; later phases may refine execution details but must not expand scope
+- If the spec lacks ADLC-lite sections, continue in compatibility mode but flag that reflection and wrapup will be less precise
+
+### Step 1.3: Detect Project Stack
 
 Read project configuration to understand the environment:
 
@@ -110,7 +123,7 @@ Extract:
 - **Lint Command**: [npm run lint, ruff, clippy, etc.]
 - **Build Command**: [if applicable]
 
-### Step 1.3: Detect UI Work
+### Step 1.4: Detect UI Work
 
 ```bash
 echo "$ARGUMENTS" | grep -qiE "ui|frontend|component|page|button|form|modal|dashboard|layout|design|style|css|html|react|vue|svelte" && echo "UI_WORK_DETECTED" || echo "NO_UI_INDICATORS"
@@ -182,9 +195,11 @@ Present your understanding and ask concise, numbered questions:
 
 ```markdown
 **Feature: [short title]**
+**Mode:** [Spec-backed mode / Ad hoc mode]
 
 **tl;dr:** [1-2 sentence summary of understanding and approach]
 
+**Spec-backed mode:** [if @.context/specs/... was provided, list spec path, validation status, and task graph source]
 **Files to Modify:** [list]
 **Files to Create:** [list]
 
@@ -240,6 +255,16 @@ If no questions needed, present tl;dr and ask: "Ready to proceed?"
 **Tests Needed:**
 - [Test case 1]
 - [Test case 2]
+
+**Task Graph:**
+- T001 [description]
+- T002 [description] depends on T001
+- T003 [P] [description] independent of T002
+
+**Cursor Parallelization:**
+- Use `/multitask` or Build in Parallel only for tasks marked `[P]`
+- Do not parallelize tasks that edit the same file
+- Keep dependency edges in order
 ```
 
 ### Step 4.2: AI Assessment
@@ -275,14 +300,24 @@ If no questions needed, present tl;dr and ask: "Ready to proceed?"
 - **If complex:** [N] iterations
 </assessment_template>
 
-### Step 4.3: Check Current State
+### Step 4.3: Cursor Multitask Eligibility
+
+Only enable Cursor `/multitask` or Build in Parallel if all conditions are true:
+- Tasks are explicitly marked `[P]` in the spec or plan
+- File ownership is non-overlapping
+- No task depends on another task running in the same parallel group
+- The expected outputs can be merged without conflict
+
+If any condition fails, run tasks sequentially.
+
+### Step 4.4: Check Current State
 
 ```bash
 git branch --show-current
 git status --short
 ```
 
-### Step 4.4: Compact Context
+### Step 4.5: Compact Context
 
 Use `/compact` preserving: Feature request, AI assessment, implementation plan, files to modify, success criteria.
 </phase>
@@ -348,8 +383,10 @@ Feature: $ARGUMENTS
 - [x] Clarify: Complete
 - [x] Plan: Complete
 - [ ] Build: Iteration [N] of [max]
-- [ ] Browser: Pending
-- [ ] Commit: Pending
+- [ ] Reflect: Pending
+- [ ] Review + QA: Pending
+- [ ] Commit / PR-ready: Pending
+- [ ] Wrapup: Pending
 
 ## Build Loop State
 - iteration: [N]
@@ -573,115 +610,163 @@ How to proceed?
 
 ---
 
-## Phase 6: Browser Test (if UI modified)
+## Phase 6: Reflect
 
-<phase name="browser-test">
-**Goal:** Verify UI changes work correctly.
+<phase name="reflect">
+**Goal:** Produce an honest self-review before independent review.
 
-### Step 6.1: Check for UI Changes
+```markdown
+## Reflection
+
+### Spec Coverage
+- AC-001: [implemented in `path` / not applicable / missing]
+- AC-002: [implemented in `path` / not applicable / missing]
+
+### Assumptions Made
+- [assumption] - [low-risk proceeded / high-risk approved / unresolved]
+
+### Scope Check
+- Built only requested scope: yes/no
+- Scope changes approved by user: [list or none]
+
+### Known Weak Spots
+- [edge case, risk, or area reviewers should inspect]
+
+### Questions for User
+- [behavior-affecting question, or "None"]
+```
+
+If Questions for User is not "None", STOP and ask before Phase 7. Otherwise continue.
+</phase>
+
+---
+
+## Phase 7: Review + QA
+
+<phase name="review-qa">
+**Goal:** Run independent verification after reflection.
+
+### Default path
+1. Use `/spec-reviewer` to verify spec compliance, scope discipline, code quality, and reflection weak spots.
+2. Use `/checker` to run lint and typecheck.
+3. Use `/tester` to run tests.
+4. If UI files changed, use `/browser-tester` in this phase.
+5. Fix findings through the implementer loop, then re-run failed checks.
+
+### Browser test if UI modified
 
 ```bash
 git diff --name-only | grep -qE '\.(tsx|jsx|vue|svelte|css|scss|html)$' && echo "UI_MODIFIED" || echo "NO_UI"
 ```
 
-If NO_UI, skip to Phase 7.
+If UI was modified, verify page loads, elements are visible, interactions work, and no console errors are present.
 
-### Step 6.2: Check Dev Server
+### Review council triggers
+Use a risk-triggered review council instead of only the default reviewer when any condition is true:
+- Auth, authorization, security, privacy, payments, or user data is involved
+- Database migration, destructive operation, or external side effect is involved
+- A public API contract or shared type changes
+- A new dependency is added
+- The feature is cross-layer or multi-repo
+- Cursor `/multitask` or Build in Parallel changed multiple independent slices
+- The user asks for thorough review
 
-```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 2>/dev/null || \
-curl -s -o /dev/null -w "%{http_code}" http://localhost:5173 2>/dev/null || \
-echo "NOT_RUNNING"
-```
+When triggered, launch parallel Task subagents in one response using role-specific prompts:
+- Correctness reviewer: logic, race conditions, async, edge cases
+- Architecture reviewer: layering, contracts, file ownership, maintainability
+- Security reviewer: input validation, auth, secrets, data exposure
+- Test coverage reviewer: missing tests, mocks, failure paths
+- Quality reviewer: naming, duplication, scope creep, stale references
 
-If not accessible, ask user to start dev server or provide URL.
-
-### Step 6.3: Delegate to Browser Tester
-
-```
-/browser-tester Test UI changes:
-
-**URL:** [localhost URL or user-provided]
-**Pages to test:** [affected routes]
-**Elements to verify:** [new/modified UI elements]
-**Interactions:** [clicks, inputs, form submissions]
-
-Check for console errors, visual issues, functionality.
-Return results in <browser-result> block.
-```
-
-**WAIT for browser-tester.** Handle failures by returning to build loop or asking user.
+Wait for all review results, dedupe by severity, then send consolidated must-fix items to implementers.
 </phase>
 
 ---
 
-## Phase 7: Commit + Summary
+## Phase 8: Commit / PR-ready
 
 <phase name="commit">
-**Goal:** Stage, commit, and report discovered issues.
+**Goal:** Stage and commit or report PR-ready state.
 
-### Step 7.1: Review Changes
+### Step 8.1: Review Changes
 
 ```bash
 git status
 git diff --stat
 ```
 
-### Step 7.2: Generate Commit Message
+### Step 8.2: Generate Commit Message
 
 Format: `type(scope): description`
 
 Types: feat, fix, refactor, docs, test, chore, style, perf
 
-### Step 7.3: Stage and Commit
+### Step 8.3: Stage and Commit
 
 ```bash
 git add -A
 git commit -m "type(scope): [description]" -m "[detailed summary]"
 ```
 
-### Step 7.4: Report Discovered Issues
+If commit is skipped, report terminal state `pr-ready` with exact changed files and verification results.
 
-If AI Analysis found issues outside scope:
+### Step 8.4: Report Discovered Issues
 
-```markdown
+If AI Analysis found issues outside scope, include them as follow-ups in wrapup.
+</phase>
+
 ---
 
-**Discovered Issues**
+## Phase 9: Wrapup
 
-During implementation, I identified these items outside current scope:
+<phase name="wrapup">
+**Goal:** Capture verification, lessons, follow-ups, and ship handoff.
 
-1. [Issue 1]
-2. [Issue 2]
-
-Would you like me to create follow-up tasks for any of these?
-```
-
-### Step 7.5: Final Summary
+If a spec file was used, append or update a wrapup section and set its frontmatter status to `complete` or `implemented`.
 
 ```markdown
-## Feature Complete! ✅
+## Wrapup
 
+### What shipped
+- [user-facing or developer-facing change]
+
+### Verification
+- lint: [command + status]
+- typecheck: [command + status]
+- tests: [command + status]
+- browser / CLI / proof artifacts: [status]
+
+### Lessons
+- [lesson future agents should reuse, or "None"]
+
+### Assumptions Validated / Invalidated
+- [assumption] - [validated / invalidated / still open]
+
+### Follow-ups
+- [item, owner if known]
+
+### Ship Handoff
+- deploy: [needed / not needed / command]
+- smoke test: [needed / not needed / command]
+- rollback: [how to revert]
+- monitoring: [logs, metrics, errors, user signal]
+```
+
+Terminal state must be one of: `committed`, `pr-ready`, `blocked`, or `failed`.
+
+```markdown
+## Feature Complete
+
+**Terminal State:** [committed / pr-ready / blocked / failed]
 **Feature:** [description]
 **Branch:** [current branch]
-**Commit:** [hash]
+**Commit:** [hash or n/a]
 
-**Build Loop:**
-- Iterations: [count]
-- Final Decision: [PASS/PARTIAL]
-- Quality Gates: [status]
-
-**Subagents Used:**
-- /explorer: [files analyzed]
-- /implementer: [files modified]
-- /checker: lint [status], typecheck [status]
-- /tester: [passed]/[total] tests
-- /browser-tester: [status if applicable]
-
-**Discovered Issues:** [count] for follow-up
-
-**Files Changed:**
-[git diff --stat output]
+**Build Loop:** [N] iterations, final decision: PASS
+**Quality:** lint [status], typecheck [status], tests [passed/total]
+**Reflection:** [questions none / questions answered]
+**Review:** [default / council, findings fixed]
+**Wrapup:** [lessons/follow-ups captured]
 ```
 </phase>
 

@@ -23,15 +23,17 @@ $ARGUMENTS
 ## Phases
 
 ```
-PLAN MODE:  Phase 1 CLARIFY → Phase 2 SPECIFY → [User Approval Gate]
-ACT MODE:   Phase 3 PLAN → Phase 4 TASK → Save
+PLAN MODE:  Phase 1 CLARIFY → Phase 2 REQUIREMENT CONTRACT → Phase 2.5 VALIDATE REQUIREMENT → [User Approval Gate]
+ACT MODE:   Phase 3 ARCHITECTURE PLAN → Phase 3.5 VALIDATE ARCHITECTURE → Phase 4 TASK → Save
 ```
 
 | Phase | Gate | Rule |
 |-------|------|------|
 | 1 → 2 | Questions answered | HALT until user responds |
-| 2 → 3 | Spec approved | HALT until user says "approved" |
-| 3 → 4 | Technical plan done | Continue immediately |
+| 2 → 2.5 | Requirement contract drafted | Run internal validation checklist |
+| 2.5 → 3 | Spec approved | HALT until user says "approved" |
+| 3 → 3.5 | Architecture plan done | Run internal validation checklist |
+| 3.5 → 4 | Architecture validated | Continue immediately |
 | 4 → Save | All phases generated | Save file and report |
 
 ---
@@ -47,6 +49,8 @@ ACT MODE:   Phase 3 PLAN → Phase 4 TASK → Save
 - ALWAYS make each phase self-contained (agent shouldn't need other phases)
 - ALWAYS include Prerequisites for Phase 1+
 - Phase 4 (TASK) is REQUIRED — do NOT stop after Phase 3
+- ALWAYS produce Requirement Validation and Architecture Validation sections
+- ALWAYS preserve the 3-command UX: `/agent-team:spec` owns spec → validate → architect → validate internally
 
 ---
 

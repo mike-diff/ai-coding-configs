@@ -1,6 +1,6 @@
 ---
 name: discuss
-description: "Explore a rough idea through conversation and parallel research. Produces a validated plan with blind spot checking. Use when thinking through a feature before building, revisiting an existing implementation, or deepening an idea into a phased spec."
+description: "Explore a rough idea through conversation and parallel research. Produces a validated plan, ADLC handoff, and blind spot checking. Use when thinking through a feature before building, revisiting an existing implementation, or deepening an idea into a phased spec."
 argument-hint: <idea or question>
 disable-model-invocation: true
 ---
@@ -50,7 +50,7 @@ Cursor uses **Task subagents** — short-lived specialists launched via the Task
 | 1 | **SEED** | Detect mode, launch Scout + Researcher in parallel |
 | 2 | **EXPLORE** | Interview user, weave in research findings |
 | 3 | **VALIDATE** | Challenge plan with sequential-thinking MCP |
-| 4 | **DELIVER** | Blind spot check, present validated plan |
+| 4 | **DELIVER** | Blind spot check, present validated plan + ADLC handoff |
 | 5 | **DEEPEN** *(optional)* | Spawn Dependency Researcher, produce phased spec |
 
 ---
@@ -61,6 +61,7 @@ Cursor uses **Task subagents** — short-lived specialists launched via the Task
 - Do NOT ask more than 3 questions at a time
 - ALWAYS let research findings influence follow-up questions
 - Plan validation (Phase 3) is non-negotiable — never skip it
+- Final output MUST include an `<adlc-handoff>` block for `/spec` or `/dev`
 - Use sequential-thinking MCP for complex trade-off analysis
 
 ---

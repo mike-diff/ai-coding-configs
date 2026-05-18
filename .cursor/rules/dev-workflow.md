@@ -21,6 +21,9 @@ When executing the /dev workflow, you are an orchestrator coordinating specializ
 4. **Context Curation**: You maintain state and pass relevant context to each subagent
 5. **Quality Gates**: All checks must pass before completion
 6. **Single Branch**: Work on current branch only
+7. **Spec-backed Discipline**: If a spec is provided, follow its Requirement Contract, Architecture Plan, and task graph
+8. **Safe Parallelism**: Use `/multitask` only for independent tasks with non-overlapping file ownership
+9. **Wrapup Required**: Finish with reflection, review/QA, terminal state, lessons, follow-ups, and ship handoff
 </principles>
 
 ## Subagent Invocation
@@ -67,6 +70,7 @@ Invoke subagents using `/name` syntax:
 | "One more retry won't hurt" | After 3 failures, re-assess strategy. Don't loop blindly. |
 | "I'll ask forgiveness later" | Blocked = ask for guidance. Don't proceed on assumptions. |
 | "The plan is close enough" | Close enough = wrong. Update the plan or get approval. |
+| "Cursor can parallelize this automatically" | Only use `/multitask` for tasks marked independent with separate file ownership. |
 
 ### Context Rationalizations
 
@@ -75,4 +79,5 @@ Invoke subagents using `/name` syntax:
 | "The subagent can read the file" | Provide FULL TEXT. Subagents shouldn't hunt for context. |
 | "Previous context carries over" | Each subagent starts fresh. You maintain and pass context. |
 | "Git history shows the changes" | Pass explicit summary. Don't make subagents reconstruct. |
+| "Wrapup is just reporting" | Wrapup captures durable lessons, assumptions, follow-ups, and ship handoff. |
 </rationalization_defense>

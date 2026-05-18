@@ -1,6 +1,6 @@
 # Claude Code Configuration
 
-Drop `.claude/` into any project to get ten workflow commands, five specialized subagents, safety hooks, and reusable skills - all working together.
+Drop `.claude/` into any project to get lightweight workflow commands, five specialized subagents, safety hooks, and reusable skills - all working together.
 
 ```
 .claude/
@@ -23,15 +23,16 @@ These power the slash commands. Each maps to a command of the same name.
 
 | Skill | Command | What it does |
 |-------|---------|-------------|
-| `discuss` | `/discuss` | Explore an idea through conversation and parallel research. Produces a validated plan with a blind spot check. |
-| `spec` | `/spec` | Turn a feature description into a phased implementation spec. |
-| `dev` | `/dev` | Build a feature with a coordinated subagent team. |
+| `discuss` | `/discuss` | Explore an idea through conversation and parallel research. Produces a validated plan with a blind spot check and ADLC handoff. |
+| `spec` | `/spec` | Turn a feature description into a requirement contract, validate it, plan architecture, validate the architecture, and save phased tasks. |
+| `dev` | `/dev` | Build a feature with a coordinated subagent team, then reflect, review/QA, commit or report PR-ready, and wrap up learnings. |
 | `to-dos` | `/to-dos` | Break a feature into detailed, dependency-tracked tasks using `TaskCreate`. |
 | `issue` | `/issue` | Fetch a GitHub issue, explore the codebase, produce an implementation plan. |
 | `ticket` | `/ticket` | Create a well-structured GitHub issue through a guided interview. |
 | `orient` | `/orient` | Map the tech stack, architecture, and patterns of a codebase. |
 | `ask` | `/ask` | Ask clarifying questions before proceeding. |
 | `skill` | `/skill` | Create a new skill using TDD - baseline test, then write content. Includes spec reference, starter templates, and a validation script. |
+| `slop-check` | `/slop-check` | Run tool-driven code quality analysis and conservative cleanup judgment. |
 | `primitives` | `/primitives` | Enumerate every native tool and capability available in the current session. |
 
 ### Semantic Skills
@@ -98,19 +99,20 @@ All hooks use `$CLAUDE_PROJECT_DIR` (injected by Claude Code) to resolve paths r
   → Scout + Researcher teammates do parallel research
   → Challenger stress-tests the plan
   → Blind Spot check runs automatically
-  → Validated plan (optionally deepens into a spec)
+  → Validated plan + ADLC handoff (optionally deepens into a spec)
 
 /spec "feature"
-  → CLARIFY → SPECIFY (approval gate) → PLAN → TASK
-  → Saves to docs/specs/spec-[name].md
+  → CLARIFY → REQUIREMENT CONTRACT → VALIDATE REQUIREMENT (approval gate)
+  → ARCHITECTURE PLAN → VALIDATE ARCHITECTURE → TASK
+  → Saves to .context/specs/spec-[name].md
 
-/dev "feature" @docs/specs/spec-[name].md
-  → Lead (delegate mode) spawns team
-  → Explorer maps codebase
-  → Implementer builds → Reviewer checks → QA tests
-  → Build loop repeats up to 5x before escalating
-  → Hooks enforce quality at every step
+/dev "feature" @.context/specs/spec-[name].md
+  → Spec-backed preflight → Explorer maps codebase → Clarify → Team up
+  → Implementer builds → Reflect → Review + QA (risk-triggered review council)
+  → Commit or PR-ready → Wrapup captures lessons, assumptions, follow-ups, and ship handoff
 ```
+
+Specs are local planning artifacts by default. They save under `.context/specs/`, which is gitignored, and should only be promoted into committed documentation when explicitly requested.
 
 ---
 

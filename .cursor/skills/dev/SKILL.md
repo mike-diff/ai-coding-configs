@@ -1,6 +1,6 @@
 ---
 name: dev
-description: "Implement a feature end-to-end using a coordinated subagent team. Use when building features, fixing bugs, or making code changes. Runs explore → clarify → implement → review → QA build loop."
+description: "Implement a feature end-to-end using a coordinated subagent team. Use when building features, fixing bugs, or making code changes. Supports spec-backed mode, Cursor multitask for independent task graphs, reflection, review, QA, and wrapup."
 argument-hint: <feature description>
 disable-model-invocation: true
 ---
@@ -42,9 +42,12 @@ Default to FLAT when in doubt. No two subagents edit the same file in cross-laye
 | 1 | **Research** | Parse request, detect stack, identify team shape |
 | 2 | **Explore** | Delegate to `/explorer`, get file map and patterns |
 | 3 | **Clarify** | Present understanding, ask questions — STOP for user input |
-| 4 | **Build** | Spawn team, run implement → review → QA loop (max 5 iterations) |
-| 5 | **Browser Test** | If UI files modified, verify with browser MCP |
-| 6 | **Commit** | Stage, commit with conventional format, report |
+| 4 | **Plan + AI Assessment** | Use spec-backed task graph or create ad hoc plan, identify independent work |
+| 5 | **Build Loop** | Use `/multitask` only for safe independent tasks, run implement → review → QA loop (max 5 iterations) |
+| 6 | **Reflect** | Self-review spec coverage, assumptions, scope, and weak spots |
+| 7 | **Review + QA** | Default reviewer path, risk-triggered review council, checks, and browser tests |
+| 8 | **Commit / PR-ready** | Stage and commit or report PR-ready state |
+| 9 | **Wrapup** | Capture verification, lessons, follow-ups, and ship handoff |
 
 ---
 
@@ -55,6 +58,9 @@ Default to FLAT when in doubt. No two subagents edit the same file in cross-laye
 - **MUST** clarify with user before spawning implementers
 - Work on current branch — do NOT create new branches
 - Max 5 build loop iterations before escalating to user as BLOCKED
+- In spec-backed mode, implement the approved Requirement Contract, Architecture Plan, and task graph
+- Use Cursor `/multitask` only when tasks are explicitly independent and file ownership does not overlap
+- Do not report completion until Reflection, Review + QA, and Wrapup are done
 
 ---
 

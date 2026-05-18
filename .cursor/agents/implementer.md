@@ -83,7 +83,11 @@ If you have questions about:
 - Dependencies or assumptions
 - Anything unclear in the task description
 
-**ASK THEM.** Don't guess or make assumptions. It's always OK to pause and clarify.
+Low-risk assumptions may proceed when the choice is reversible, local, and inside the approved spec. Document them in your result.
+
+**High-risk assumptions:** stop and ask the lead before changing behavior involving product scope, auth/authorization, user data, migrations, destructive operations, billing, external side effects, public API contracts, or deployment.
+
+When in doubt, **ASK THEM.** Don't guess or make high-risk assumptions. It's always OK to pause and clarify.
 
 ### Step 5: Self-Review (MANDATORY Before Reporting)
 
@@ -163,6 +167,10 @@ tests_passing: [yes/no]
 **Remaining Concerns:**
 - [Any concerns for spec-reviewer to verify]
 - [Edge cases that need attention]
+
+**Assumptions:**
+- Low-risk proceeded: [list or none]
+- High-risk required approval: [list or none]
 </output_format>
 
 ---

@@ -25,7 +25,7 @@ After install, all commands are namespaced: `/agent-team:discuss`, `/agent-team:
 
 ## What This Plugin Provides
 
-- **14 skills** — `ask`, `code-review`, `dev`, `discuss`, `issue`, `loop-patterns`, `orient`, `primitives`, `skill`, `spec`, `team-orchestration`, `testing-patterns`, `ticket`, `to-dos`
+- **15 skills** — `ask`, `code-review`, `dev`, `discuss`, `issue`, `loop-patterns`, `orient`, `primitives`, `skill`, `slop-check`, `spec`, `team-orchestration`, `testing-patterns`, `ticket`, `to-dos`
 - **5 specialized agents** — `explorer`, `implementer`, `qa`, `reviewer`, `skill-author`
 - **13 hooks** across 11 lifecycle events (`SessionStart`, `PreToolUse`, `PostToolUse`, `PermissionDenied`, `TeammateIdle`, `TaskCompleted`, `PreCompact`, `FileChanged`, `CwdChanged`, `TaskCreated`, `StopFailure`)
 - **1 output style** — `teaching`

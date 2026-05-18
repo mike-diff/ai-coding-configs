@@ -1,6 +1,6 @@
 # AI Coding Configurations
 
-An opinionated collection of **Cursor** and **Claude Code** configurations for AI-assisted development. Drop the relevant folder into any project to get structured workflows, specialized subagents, safety hooks, and reusable skills - all working together out of the box.
+An opinionated collection of **Cursor** and **Claude Code** configurations for AI-assisted development, with project-local **pi** maintainer skills for editing the workflows safely. Drop the relevant folder into any project to get structured workflows, specialized subagents, safety hooks, and reusable skills - all working together out of the box.
 
 ---
 
@@ -28,6 +28,18 @@ cp -r ai-coding-configs/.claude/ /path/to/your/project/
 Commands surface as `/discuss`, `/dev`, etc.
 See [.claude/README.md](.claude/README.md) for details.
 
+### Working on this repo with pi
+
+This repository includes project-local pi maintainer skills:
+
+```bash
+/skill:agent-team-discuss
+/skill:agent-team-spec
+/skill:agent-team-dev
+```
+
+These are not another product surface. They are operator workflows for safely editing and validating the Agent Team configs across `.claude/`, `plugins/agent-team/` and `.cursor/`.
+
 ---
 
 ## What's Included
@@ -51,15 +63,16 @@ Commands are slash commands you run to kick off a workflow. Both tools share the
 
 | Command | What it does |
 |---------|-------------|
-| `/discuss` | Think through an idea before building. Spawns background research, interviews you, validates the plan. |
-| `/spec` | Turn a feature description into a phased implementation spec ready to hand to `/dev`. |
-| `/dev` | Build a feature end-to-end with a coordinated subagent team. |
+| `/discuss` | Think through an idea before building. Spawns background research, interviews you, validates the plan, and emits an ADLC handoff. |
+| `/spec` | Turn a feature description into a spec-backed contract: requirement validation, architecture planning, architecture validation, and phased tasks. |
+| `/dev` | Build a feature end-to-end with a coordinated subagent team, then reflect, review/QA, commit or report PR-ready, and wrap up learnings. |
 | `/to-dos` | Break down a feature into detailed, dependency-tracked tasks. |
 | `/issue` | Fetch a GitHub issue, explore the codebase, produce an implementation plan. |
 | `/ticket` | Create a well-structured GitHub issue through a guided interview. |
 | `/orient` | Map the tech stack, architecture, and patterns of an unfamiliar codebase. |
 | `/ask` | Ask clarifying questions before proceeding with work. |
 | `/skill` | Create a new skill using TDD - baseline test, write content, validate against the agentskills.io spec. |
+| `/slop-check` | Run tool-driven code quality analysis and conservative cleanup judgment. |
 | `/primitives` | List every native tool and capability available in the current session. |
 
 ---
@@ -168,7 +181,7 @@ Skills are reference documents the AI draws on automatically based on context. T
 | `code-review` | Review patterns for the reviewer agent |
 | `testing-patterns` | QA patterns for the QA agent |
 | `loop-patterns` | Recommended `/loop` cadences for each agent (explorer, implementer, reviewer, qa, skill-author) |
-| `dev`, `discuss`, `spec`, `to-dos`, `issue`, `ticket`, `skill`, `orient`, `ask`, `primitives` | Full workflow instructions for each command |
+| `dev`, `discuss`, `spec`, `to-dos`, `issue`, `ticket`, `skill`, `slop-check`, `orient`, `ask`, `primitives` | Full workflow instructions for each command |
 
 **Cursor skills** (`.cursor/skills/`) - all commands and domain skills:
 
@@ -184,16 +197,18 @@ Skills are reference documents the AI draws on automatically based on context. T
 
 ```
 /discuss "add a caching layer"
-  → Research + interview → validated plan
+  → Research + interview → validated plan + ADLC handoff
 
 /spec "add Redis caching for API responses"
-  → Clarify → specify → plan → phased task doc
+  → Requirement contract → validate → architecture plan → validate → phased task doc
 
-/dev "Implement Phase 1" @docs/specs/spec-caching.md
-  → Explorer maps codebase → Implementer builds
-  → Reviewer checks spec compliance → QA runs tests
-  → Hooks enforce quality at every step
+/dev "Implement Phase 1" @.context/specs/spec-caching.md
+  → Preflight spec-backed mode → Explorer maps codebase → clarify → team up
+  → Implementer builds → reflect → review council when risk triggers → QA runs tests
+  → commit or PR-ready → wrapup captures lessons, assumptions, follow-ups, and ship handoff
 ```
+
+Specs are local planning artifacts by default. They save under `.context/specs/`, which is gitignored, and should only be promoted into committed documentation when explicitly requested.
 
 ---
 

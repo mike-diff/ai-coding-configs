@@ -40,9 +40,11 @@ Auto-detected from explorer findings. Default to FLAT when in doubt.
 2. **Explore** — spawn explorer, get file map
 3. **Clarify** — present understanding, ask questions, STOP for user input
 4. **Team Up** — spawn teammates based on team shape, enable delegate mode
-5. **Build Loop** — implement → review → QA → decide (PASS/RETRY/BLOCKED, max 5 iterations)
-6. **Browser Test** — if UI files modified
-7. **Commit** — stage, commit, report discovered issues, shut down team
+5. **Build Loop** — implement approved task graph → decide (PASS/RETRY/BLOCKED, max 5 iterations)
+6. **Reflect** — self-review spec coverage, assumptions, scope, and weak spots
+7. **Review + QA** — lightweight reviewer by default, risk-triggered review council when needed
+8. **Commit / PR-ready** — stage and commit or report PR-ready state
+9. **Wrapup** — capture verification, lessons, follow-ups, and ship handoff
 
 ---
 
@@ -53,6 +55,8 @@ Auto-detected from explorer findings. Default to FLAT when in doubt.
 - **MUST** enable delegate mode after spawning the team
 - Work on current branch — do NOT create new branches
 - No two teammates edit the same file in cross-layer mode
+- In spec-backed mode, implement the approved spec/architecture/task graph; do NOT re-plan scope
+- Reflect and wrap up before reporting completion
 
 ---
 

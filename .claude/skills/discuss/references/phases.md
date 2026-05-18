@@ -553,6 +553,25 @@ Present the validated plan and assess depth needed.
 - Feasibility: [confirmed/concerns noted]
 - Best approach: [confirmed/alternative considered]
 - Missing pieces: [N items addressed]
+
+### ADLC Handoff
+```xml
+<adlc-handoff>
+problem: [the workflow break or user pain this solves]
+target_user: [who benefits]
+hypothesis: [We believe X will improve Y by Z]
+success_metrics:
+  - [observable outcome or proof artifact]
+core_workflow_break: [manual/repeated/broken workflow the build should fix]
+assumptions:
+  - [assumption] — [verified / likely / risk]
+risks:
+  - [risk and mitigation]
+human_decisions_required:
+  - [decision that must not be made autonomously later]
+recommended_next: /spec "[spec-ready feature request]"
+</adlc-handoff>
+```
 ```
 </output_format>
 
@@ -628,7 +647,7 @@ After presenting the plan and completing the blind spot check, assess whether th
 
 **Small/clear features** (effort: Small, scope well-defined, few files):
 ```
-This is straightforward enough to implement directly.
+This is straightforward enough to implement directly. I still captured the ADLC handoff so /dev or /spec can preserve the validated assumptions.
 
 Ready to build:
   /dev [brief description based on plan]
@@ -782,14 +801,18 @@ Each phase is self-contained. An agent running `/dev "Phase 1" @spec-file.md` sh
 After receiving the dependency researcher's `<dependency-result>` message, shut
 down the dependency researcher teammate (via `shutdown_request`) and incorporate the findings:
 
-1. Save the spec to `docs/specs/spec-[feature-name].md`
-2. Present the summary:
+1. Ensure `.context/` is gitignored
+2. Save the spec to `.context/specs/spec-[feature-name].md`
+3. Present the summary:
+
+Treat generated specs as local planning artifacts. Do not stage or commit them unless the user explicitly asks to promote the spec to committed project documentation.
 
 ```
 SPEC Complete!
 
-File: docs/specs/spec-[feature-name].md
+File: .context/specs/spec-[feature-name].md
 Phases: [N] self-contained implementation phases
+ADLC handoff: included in the spec context
 
 Research Results:
 - Scout: [N] files mapped, [N] patterns found
@@ -798,8 +821,8 @@ Research Results:
 - Challenger: [N] concerns addressed
 
 Usage:
-  /dev "Implement Phase 0" @docs/specs/spec-[feature-name].md
-  /dev "Implement Phase 1" @docs/specs/spec-[feature-name].md
+  /dev "Implement Phase 0" @.context/specs/spec-[feature-name].md
+  /dev "Implement Phase 1" @.context/specs/spec-[feature-name].md
 ```
 
 Shut down any remaining teammates (via `shutdown_request`), then call `TeamDelete` to clean up the team.
@@ -821,7 +844,26 @@ Research: scout [status], web researcher [status]
 Validation: challenger [confirmed/flagged N concerns]
 
 Approach: [one sentence summary]
-Next: /dev [suggested command]
+
+```xml
+<adlc-handoff>
+problem: [the workflow break or user pain this solves]
+target_user: [who benefits]
+hypothesis: [We believe X will improve Y by Z]
+success_metrics:
+  - [observable outcome or proof artifact]
+core_workflow_break: [manual/repeated/broken workflow the build should fix]
+assumptions:
+  - [assumption] — [verified / likely / risk]
+risks:
+  - [risk and mitigation]
+human_decisions_required:
+  - [decision that must not be made autonomously later]
+recommended_next: /spec "[spec-ready feature request]" OR /dev "[small validated change]"
+</adlc-handoff>
+```
+
+Next: [suggested command]
 ```
 
 Shut down any remaining teammates (via `shutdown_request`), then call `TeamDelete` to clean up the team.
@@ -839,7 +881,7 @@ Shut down any remaining teammates (via `shutdown_request`), then call `TeamDelet
 | Depth | When | Output | Next Step |
 |-------|------|--------|-----------|
 | **Light** | Small/clear feature | Validated plan (1-2 pages) | `/dev [description]` |
-| **Deep** | Complex/multi-phase feature | Phased spec with pinned deps (10+ pages) | `/dev "Phase N" @spec.md` |
+| **Deep** | Complex/multi-phase feature | Phased spec with pinned deps (10+ pages) | `/dev "Phase N" @.context/specs/spec-[name].md` |
 
 The user never has to decide upfront which command to use. The conversation naturally reveals how much depth is needed. The lead assesses after validation and offers to go deeper when it would help.
 

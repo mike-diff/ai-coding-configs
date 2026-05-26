@@ -1,6 +1,6 @@
 {
   "name": "agent-team",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Coordinated multi-agent workflow with skills, hooks, and structured output gates.",
   "author": {
     "name": "Mike Salvati",

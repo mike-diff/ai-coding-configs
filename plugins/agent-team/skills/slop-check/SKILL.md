@@ -1,6 +1,6 @@
 ---
 name: slop-check
-description: Run tool-driven code quality analysis then apply LLM judgment for cleanup. Use when cleaning up a codebase, removing slop, dead code, or improving code quality. Two-phase approach: static analysis tools find problems, agent judges what to fix.
+description: "Run tool-driven code quality analysis then apply LLM judgment for cleanup. Use when cleaning up a codebase, removing slop, dead code, or improving code quality. Two-phase approach: static analysis tools find problems, agent judges what to fix."
 argument-hint: <path-to-codebase>
 ---
 

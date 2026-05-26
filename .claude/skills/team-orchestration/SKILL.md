@@ -93,7 +93,7 @@ Teammates automatically receive project context through native Claude Code featu
 |---------|-----------------|-----|
 | `CLAUDE.md` | Project overview, tech stack, conventions | Auto-loaded at session start |
 | `.claude/rules/` | Coding standards, git conventions, output formats | Auto-loaded for all sessions |
-| Agent Skills | Domain knowledge (code-review, testing-patterns) | Auto-activated by task context |
+| Agent Skills | Domain knowledge (review-patterns, testing-patterns) | Auto-activated by task context |
 | MCP Servers | Tool access (context7, browser, etc.) | Available to all teammates |
 | `memory: project` | Persistent learnings from previous sessions | Loaded per-agent automatically |
 
@@ -365,7 +365,7 @@ The #1 risk with agent teams is inconsistency. Reduce variance:
 
 1. **Every teammate reads CLAUDE.md** - project context loads automatically
 2. **Every teammate has project-scoped memory** - persistent learnings across sessions
-3. **Skills auto-activate based on task context** - code-review and testing-patterns load when relevant
+3. **Skills auto-activate based on task context** - review-patterns and testing-patterns load when relevant
 4. **Rules in `.claude/rules/` auto-load** - coding standards are consistent for all teammates
 5. **Every teammate receives the FULL task spec** - not a summary, not a file reference
 6. **Spawn prompts use the schemas above** - consistent role assignment

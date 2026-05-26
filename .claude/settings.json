@@ -2,6 +2,19 @@
   "env": {
     "ENABLE_PROMPT_CACHING_1H": "1"
   },
+  "skillOverrides": {
+    "ask": "user-invocable-only",
+    "dev": "user-invocable-only",
+    "discuss": "user-invocable-only",
+    "issue": "user-invocable-only",
+    "orient": "user-invocable-only",
+    "primitives": "user-invocable-only",
+    "skill": "user-invocable-only",
+    "slop-check": "user-invocable-only",
+    "spec": "user-invocable-only",
+    "ticket": "user-invocable-only",
+    "to-dos": "user-invocable-only"
+  },
   "statusLine": {
     "type": "command",
     "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/statusline.sh"

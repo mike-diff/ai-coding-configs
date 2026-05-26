@@ -34,6 +34,12 @@ Auto-detected from explorer findings. Default to FLAT when in doubt.
 
 ---
 
+## Spec Sweep Mode
+
+When given a spec path with no specific phase (`/agent-team:dev @.context/specs/spec-X.md`), `/agent-team:dev` runs the phases below **once per spec phase**, in dependency order, committing at each phase boundary — fully autonomous, no pauses. A named single phase (`/agent-team:dev "Implement Phase 1" @<spec>`) runs that one phase only. See workflow.md.
+
+---
+
 ## Phases
 
 1. **Research** — parse request, detect stack
@@ -56,6 +62,7 @@ Auto-detected from explorer findings. Default to FLAT when in doubt.
 - Work on current branch — do NOT create new branches
 - No two teammates edit the same file in cross-layer mode
 - In spec-backed mode, implement the approved spec/architecture/task graph; do NOT re-plan scope
+- In spec sweep mode, commit each phase and HALT on a blocked phase or high-risk escalation — do NOT cascade into dependent phases
 - Reflect and wrap up before reporting completion
 
 ---

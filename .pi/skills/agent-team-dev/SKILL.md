@@ -30,6 +30,8 @@ Use when the request includes `@.context/specs/...`.
 - Do not expand scope without asking.
 - Implement the requested phase or task graph slice.
 
+**Single-phase vs sweep:** a named phase (`/dev "Implement Phase 1" @<spec>`) builds that one phase. A spec path with no single phase (`/dev @<spec>`, `/dev "all phases" @<spec>`) is **sweep mode**: explore + clarify once, then `TaskCreate` one dependency-chained phase task per spec phase and run the per-phase build for each in order, committing at every phase boundary, fully autonomously. Halt the sweep on a blocked phase or high-risk escalation; do not cascade into dependent phases. See the source-of-truth `workflow.md` for the loop.
+
 ### Ad hoc mode
 
 Use for small validated changes without a spec.

@@ -1,5 +1,5 @@
 ---
-name: code-review
+name: review-patterns
 description: Code review patterns for spec compliance, quality verification, and reference integrity. Use when reviewing code changes, verifying implementation against requirements, or assessing code quality. Covers three-pass review method, severity levels, scope creep detection, security checks, and stale reference detection.
 ---
 

@@ -16,9 +16,19 @@ USAGE=$(echo "$INPUT" | jq -r '.context_usage_percent // "unknown"' 2>/dev/null)
 TRIGGER=$(echo "$INPUT" | jq -r '.trigger // "auto"' 2>/dev/null)
 
 if [[ "$TRIGGER" == "manual" ]]; then
-  echo '{"user_message": "Compacting context manually. Session state will be saved on next stop."}'
+  MSG="Compacting context manually. Session state will be saved on next stop."
 else
-  echo "{\"user_message\": \"Context at ${USAGE}% — compacting automatically. Session state will be saved on next stop.\"}"
+  MSG="Context at ${USAGE}% — compacting automatically. Session state will be saved on next stop."
+fi
+
+# Desktop/terminal notification (OSC 777; requires Claude Code v2.1.141+).
+# Hooks run without a controlling terminal, so the escape sequence is returned in
+# `terminalSequence` and Claude Code emits it for us.
+SEQ=$(printf '\033]777;notify;%s;%s\007' "Claude Code" "$MSG")
+if command -v jq >/dev/null 2>&1; then
+  jq -nc --arg msg "$MSG" --arg seq "$SEQ" '{user_message: $msg, terminalSequence: $seq}'
+else
+  printf '{"user_message": "%s"}\n' "$MSG"
 fi
 
 # Added: survivor summary

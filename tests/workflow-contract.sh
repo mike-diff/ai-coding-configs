@@ -65,6 +65,20 @@ for prefix in .claude .cursor; do
 done
 assert_file_contains ".cursor/skills/dev/references/workflow.md" "/multitask"
 
+# /dev sweep mode orchestrates all spec phases autonomously, committing per phase and halting on failure.
+for prefix in .claude .cursor; do
+  assert_file_contains "$prefix/skills/dev/references/workflow.md" "## Spec Sweep Mode"
+  assert_file_contains "$prefix/skills/dev/references/workflow.md" "Commit at the phase boundary"
+  assert_file_contains "$prefix/skills/dev/references/workflow.md" "Halt the sweep"
+  assert_file_contains "$prefix/skills/dev/references/workflow.md" "Operational guardrails"
+  assert_file_contains "$prefix/skills/dev/SKILL.md" "Spec Sweep Mode"
+done
+
+# /spec recommends the autonomous sweep one-liner as the next step.
+for prefix in .claude .cursor; do
+  assert_file_contains "$prefix/skills/spec/references/workflow.md" "Implement all phases autonomously"
+done
+
 # Implementers must escalate high-risk assumptions instead of always proceeding.
 for agent in .claude/agents/implementer.md .cursor/agents/implementer.md; do
   assert_file_contains "$agent" "High-risk assumptions"
@@ -96,5 +110,20 @@ assert_file_contains "scripts/sync-plugin.sh" "slop-check"
 assert_file_contains "tests/smoke.sh" "timeout"
 assert_file_contains "tests/smoke.sh" "slop-check"
 [ -f "plugins/agent-team/skills/slop-check/SKILL.md" ] || fail "plugin missing slop-check skill"
+
+# review-patterns skill is renamed from code-review (avoids collision with the built-in /code-review).
+[ -f ".claude/skills/review-patterns/SKILL.md" ] || fail "missing review-patterns skill"
+[ ! -d ".claude/skills/code-review" ] || fail "code-review skill should be renamed to review-patterns"
+[ ! -d "plugins/agent-team/skills/code-review" ] || fail "plugin still has stale code-review skill — re-run sync-plugin.sh"
+assert_file_contains ".claude/skills/review-patterns/SKILL.md" "name: review-patterns"
+assert_file_contains ".claude/agents/reviewer.md" "skills: review-patterns"
+
+# Command skills are guarded from model auto-invocation via skillOverrides (standalone settings).
+assert_file_contains ".claude/settings.json" "skillOverrides"
+assert_file_contains ".claude/settings.json" "\"dev\": \"user-invocable-only\""
+
+# Compact hook emits a desktop notification; post-edit-lint surfaces lint via additionalContext.
+assert_file_contains ".claude/hooks/notify-compact.sh" "terminalSequence"
+assert_file_contains ".claude/hooks/post-edit-lint.sh" "additionalContext"
 
 echo "workflow-contract: ok"

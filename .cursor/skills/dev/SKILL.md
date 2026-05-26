@@ -35,6 +35,12 @@ Default to FLAT when in doubt. No two subagents edit the same file in cross-laye
 
 ---
 
+## Spec Sweep Mode
+
+When given a spec path with no specific phase (`/dev @.context/specs/spec-X.md`), `/dev` runs the phases below **once per spec phase**, in dependency order, committing at each phase boundary — fully autonomous, no pauses. A named single phase (`/dev "Implement Phase 1" @<spec>`) runs that one phase only. See workflow.md.
+
+---
+
 ## Phases
 
 | # | Phase | What happens |
@@ -59,6 +65,7 @@ Default to FLAT when in doubt. No two subagents edit the same file in cross-laye
 - Work on current branch — do NOT create new branches
 - Max 5 build loop iterations before escalating to user as BLOCKED
 - In spec-backed mode, implement the approved Requirement Contract, Architecture Plan, and task graph
+- In spec sweep mode, commit each phase and HALT on a blocked phase or high-risk escalation — do NOT cascade into dependent phases
 - Use Cursor `/multitask` only when tasks are explicitly independent and file ownership does not overlap
 - Do not report completion until Reflection, Review + QA, and Wrapup are done
 

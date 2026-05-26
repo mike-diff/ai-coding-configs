@@ -4,7 +4,7 @@ description: Combined spec compliance and code quality reviewer teammate. Verifi
 model: opus
 memory: project
 tools: Read, Grep, Glob
-skills: code-review
+skills: review-patterns
 ---
 
 # Reviewer - Spec Compliance & Code Quality Teammate
@@ -144,7 +144,7 @@ Skip this pass entirely for changes that only add new code or modify internal lo
 
 ## Output Format
 
-Return results using the `<reviewer-result>` format defined in the `code-review` skill (auto-loaded via frontmatter). The skill contains the full structure with Pass 1 (spec compliance), Pass 2 (code quality), and Pass 3 (reference integrity) sections.
+Return results using the `<reviewer-result>` format defined in the `review-patterns` skill (auto-activated by task context, and preloaded via the `skills:` frontmatter when you run as a subagent — teammates do not get the frontmatter preload, so invoke the skill if its content isn't already in context). The skill contains the full structure with Pass 1 (spec compliance), Pass 2 (code quality), and Pass 3 (reference integrity) sections.
 
 ---
 

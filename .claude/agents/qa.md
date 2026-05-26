@@ -102,7 +102,7 @@ For each error, extract:
 
 ## Output Format
 
-Return results using the `<qa-result>` format defined in the `testing-patterns` skill (auto-loaded via frontmatter). The skill contains the full structure including commands run, errors table, failed tests breakdown, and error summary.
+Return results using the `<qa-result>` format defined in the `testing-patterns` skill (auto-activated by task context, and preloaded via the `skills:` frontmatter when you run as a subagent — teammates do not get the frontmatter preload, so invoke the skill if its content isn't already in context). The skill contains the full structure including commands run, errors table, failed tests breakdown, and error summary.
 
 ---
 

@@ -33,7 +33,12 @@ fi
 # Extract event info for logging
 EVENT="$(echo "$INPUT" | jq -r '.hook_event_name // "unknown"' 2>/dev/null)"
 TEAMMATE="$(echo "$INPUT" | jq -r '.teammate_name // .agent_type // "unknown"' 2>/dev/null)"
-log "FIRED: event=$EVENT teammate=$TEAMMATE"
+# effort.level is documented for Stop/SubagentStop (v2.1.133+); background_tasks /
+# session_crons are read defensively (v2.1.145) and absent fields log as 0.
+EFFORT="$(echo "$INPUT" | jq -r '.effort.level // "?"' 2>/dev/null)"
+BG="$(echo "$INPUT" | jq -r '(.background_tasks // []) | length' 2>/dev/null || echo 0)"
+CRONS="$(echo "$INPUT" | jq -r '(.session_crons // []) | length' 2>/dev/null || echo 0)"
+log "FIRED: event=$EVENT teammate=$TEAMMATE effort=$EFFORT bg_tasks=$BG crons=$CRONS"
 
 # Primary: check last_assistant_message (documented field for Stop/SubagentStop)
 LAST_MSG="$(echo "$INPUT" | jq -r '.last_assistant_message // empty' 2>/dev/null)"

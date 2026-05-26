@@ -5,5 +5,6 @@ mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/stop-failures.log"
 INPUT="$(cat /dev/stdin 2>/dev/null || echo '{}')"
 PM=$(echo "$INPUT" | jq -r '.permission_mode // "?"' 2>/dev/null || echo '?')
-echo "[$(date '+%Y-%m-%dT%H:%M:%S%z')] stop-failure permission_mode=$PM raw=$INPUT" >> "$LOG"
+EFFORT=$(echo "$INPUT" | jq -r '.effort.level // "?"' 2>/dev/null || echo '?')
+echo "[$(date '+%Y-%m-%dT%H:%M:%S%z')] stop-failure permission_mode=$PM effort=$EFFORT raw=$INPUT" >> "$LOG"
 exit 0

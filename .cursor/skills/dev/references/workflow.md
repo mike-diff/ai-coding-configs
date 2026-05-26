@@ -30,6 +30,7 @@ CRITICAL RULES:
 - You MUST perform AI Assessment before Build and AI Analysis after each iteration
 - Work on current branch - do NOT create new branches
 - In Spec-backed mode, implement the approved Requirement Contract, Architecture Plan, and task graph; do not re-plan scope
+- In spec sweep mode, commit at each phase boundary and halt the sweep on a BLOCKED phase or high-risk escalation - do NOT continue into dependent phases
 - Use Cursor `/multitask` only for tasks that are marked independent and have non-overlapping file ownership
 - Use sequential-thinking MCP for complex planning decisions
 - Use context7 MCP for library documentation lookups
@@ -86,6 +87,7 @@ From the feature request, extract:
 **Feature Analysis**
 
 **Mode:** [Spec-backed mode if @.context/specs/... is provided / Ad hoc mode]
+**Spec sub-mode:** [single-phase if a specific `Phase N` is named / sweep if a spec path is given with no single phase — see Spec Sweep Mode]
 **Core Functionality:** [what needs to be built]
 **Scope:** [small/medium/large]
 **Type:** [UI/backend/fullstack/tooling]
@@ -129,6 +131,59 @@ Extract:
 echo "$ARGUMENTS" | grep -qiE "ui|frontend|component|page|button|form|modal|dashboard|layout|design|style|css|html|react|vue|svelte" && echo "UI_WORK_DETECTED" || echo "NO_UI_INDICATORS"
 ```
 
+</phase>
+
+---
+
+## Spec Sweep Mode
+
+<phase name="sweep">
+Trigger: the request provides a spec path with **no single specific phase** named — e.g. `/dev @.context/specs/spec-X.md`, `/dev "all phases" @<spec>`, `/dev "remaining phases" @<spec>`. A named single phase (`/dev "Implement Phase 1" @<spec>`) runs that one phase only — skip this section.
+
+In sweep mode you orchestrate **every phase of the spec end-to-end, fully autonomously**: run the per-phase build (Phases 4–8) once for each phase in dependency order, committing at every phase boundary, then run Wrapup (Phase 9) once at the end. You do NOT pause between phases.
+
+### Setup (once, before the first phase)
+1. Read the spec file fully. Enumerate its phases (Phase 0..N) with names and acceptance criteria.
+2. Run **Phase 2 (Explore) and Phase 3 (Clarify) once for the whole spec**, not per phase. Clarify STOPs for user input exactly once; after the user proceeds, do not stop again between phases.
+3. Create one **phase task** per spec phase with `TaskCreate`, dependency-chained so they execute in order:
+   ```
+   TaskCreate:
+     subject: "Implement Phase N: [phase name]"
+     description: |
+       ## Command
+       /dev "Implement Phase N" @.context/specs/spec-X.md
+       ## Acceptance Criteria
+       - [ ] [criteria copied from the spec phase]
+       ## Note
+       Self-contained per spec. Executed by the sweep orchestrator.
+   -> TaskUpdate: taskId=[phase N task], addBlockedBy=[phase N-1 task]
+   ```
+   Verify the chain with `TaskList`. If phase tasks already exist from a prior interrupted sweep, **reconcile**: keep `completed` ones, create only the missing phases, and resume at the first incomplete phase.
+
+### Per-phase loop (each phase, in dependency order)
+1. Skip phases already marked `completed`.
+2. `TaskUpdate` the phase task to `in_progress`.
+3. Run the per-phase build — Phase 4 (Plan + AI Assessment) → Phase 5 (Build Loop) → Phase 6 (Reflect) → Phase 7 (Review + QA) — scoped to this phase's acceptance criteria. Reuse the explorer file map from Setup. Use `/multitask` only within a phase, for tasks marked independent with non-overlapping file ownership.
+4. **Commit at the phase boundary** (Phase 8): `type(scope): description` referencing the phase. Commit between phases by default so each phase is an independent, revertible step — do not defer commits to the end. **Exception:** if the user explicitly requested PR-ready / no-commit, skip per-phase commits, carry the working tree across phases, and report `pr-ready` once at the end — note that resume-on-interruption is unavailable without phase commits.
+5. `TaskUpdate` the phase task to `completed`.
+6. Proceed to the next phase **without pausing** (fully autonomous).
+
+### Sweep safety floor (when to halt)
+Autonomy does not mean barreling through failure. **Halt the sweep** — do not start dependent phases — when any of these occur:
+- A phase's build loop ends `BLOCKED` (Phase 5) or checks/tests cannot pass after retries.
+- An implementer escalates a high-risk assumption (auth, user data, migrations, destructive ops, billing, external side effects, public API contracts, deployment).
+- A phase's Reflection raises a behavior-affecting "Question for User".
+
+On halt: `TaskUpdate` the current phase task to blocked, report which phases completed and committed and which remain, and wait for the user. Already-committed phases stay committed.
+
+### Operational guardrails (unattended runs)
+A sweep runs unattended across many phases and subagent spawns, so harden the run:
+- **Cap spend / set limits** before launching an autonomous sweep; a stuck subagent can burn budget unnoticed.
+- **Don't fully walk away.** Monitor long unattended runs; if a subagent hangs or stops on an error, redirect it or spawn a replacement rather than leaving the run entirely.
+- A halted phase leaves earlier phases committed — resume with `/dev "Implement Phase N" @<spec>` once the blocker is fixed.
+
+### Finish
+After the last phase completes, run **Phase 9 (Wrapup) once** for the whole feature, summarizing every phase, its commit, and verification status.
 </phase>
 
 ---
@@ -709,6 +764,8 @@ git commit -m "type(scope): [description]" -m "[detailed summary]"
 ```
 
 If commit is skipped, report terminal state `pr-ready` with exact changed files and verification results.
+
+In spec sweep mode, this runs once per phase: always commit the completed phase here (do not defer to the end), then return to the per-phase loop for the next phase.
 
 ### Step 8.4: Report Discovered Issues
 

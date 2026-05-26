@@ -821,8 +821,8 @@ Research Results:
 - Challenger: [N] concerns addressed
 
 Usage:
-  /agent-team:dev "Implement Phase 0" @.context/specs/spec-[feature-name].md
-  /agent-team:dev "Implement Phase 1" @.context/specs/spec-[feature-name].md
+  /agent-team:dev @.context/specs/spec-[feature-name].md   (all phases, autonomous)
+  /agent-team:dev "Implement Phase 0" @.context/specs/spec-[feature-name].md   (one phase)
 ```
 
 Shut down any remaining teammates (via `shutdown_request`), then call `TeamDelete` to clean up the team.

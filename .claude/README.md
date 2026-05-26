@@ -42,7 +42,7 @@ These activate automatically based on context - no command needed.
 | Skill | Activates when... |
 |-------|------------------|
 | `team-orchestration` | Spawning or coordinating agent teams |
-| `code-review` | Reviewing code, verifying implementation against spec |
+| `review-patterns` | Reviewing code, verifying implementation against spec |
 | `testing-patterns` | Running lint, typecheck, or tests; writing new tests |
 
 ---

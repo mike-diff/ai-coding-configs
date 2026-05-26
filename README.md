@@ -178,7 +178,7 @@ Skills are reference documents the AI draws on automatically based on context. T
 | Skill | Purpose |
 |-------|---------|
 | `team-orchestration` | Orchestration patterns for the lead agent |
-| `code-review` | Review patterns for the reviewer agent |
+| `review-patterns` | Review patterns for the reviewer agent |
 | `testing-patterns` | QA patterns for the QA agent |
 | `loop-patterns` | Recommended `/loop` cadences for each agent (explorer, implementer, reviewer, qa, skill-author) |
 | `dev`, `discuss`, `spec`, `to-dos`, `issue`, `ticket`, `skill`, `slop-check`, `orient`, `ask`, `primitives` | Full workflow instructions for each command |
@@ -202,7 +202,9 @@ Skills are reference documents the AI draws on automatically based on context. T
 /spec "add Redis caching for API responses"
   → Requirement contract → validate → architecture plan → validate → phased task doc
 
-/dev "Implement Phase 1" @.context/specs/spec-caching.md
+/dev @.context/specs/spec-caching.md
+  → Spec sweep: runs every phase end-to-end, committing at each phase boundary (autonomous)
+  → Or one phase at a time: /dev "Implement Phase 1" @.context/specs/spec-caching.md
   → Preflight spec-backed mode → Explorer maps codebase → clarify → team up
   → Implementer builds → reflect → review council when risk triggers → QA runs tests
   → commit or PR-ready → wrapup captures lessons, assumptions, follow-ups, and ship handoff
@@ -230,6 +232,11 @@ Specs are local planning artifacts by default. They save under `.context/specs/`
 3. Run `/orient` to map your codebase, then start with any command.
 
 > The env var must live in user-level settings because Claude Code validates project hooks before applying project-level env vars - putting it in the project file can silently prevent slash commands from loading.
+
+**Recent Claude Code features that pair well with this config** (v2.1.x):
+- The command skills (`/dev`, `/discuss`, `/spec`, etc.) are marked `user-invocable-only` via `skillOverrides` in `.claude/settings.json`, so the model won't auto-launch them mid-conversation — you still invoke them with `/`. (Plugin installs can't carry this setting; add it to your own settings if you want the same guard.)
+- If autonomous runs (like `/dev` spec sweep) hit the auto-mode classifier, tune `autoMode` rules — including `autoMode.hard_deny` — in your user settings.
+- `/goal` sets a completion condition Claude works toward across turns — a lightweight native complement to the multi-phase `/dev` sweep.
 
 ### Cursor
 

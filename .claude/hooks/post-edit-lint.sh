@@ -74,10 +74,17 @@ fi
 # Run lint and capture output (don't fail the hook on lint errors)
 LINT_OUTPUT="$(eval "$LINT_CMD" 2>&1)" || true
 
-# If lint found issues, show them to Claude via stderr
+# If lint found issues, surface them to Claude. Prefer hookSpecificOutput.additionalContext
+# (reliably injected into context) over stderr; fall back to stderr if jq is unavailable.
 if [[ -n "$LINT_OUTPUT" ]]; then
-  echo "Lint issues after editing $FILE_PATH:" >&2
-  echo "$LINT_OUTPUT" >&2
+  log "LINT: issues found for $FILE_PATH"
+  CTX="Lint issues after editing ${FILE_PATH}:"$'\n'"${LINT_OUTPUT}"
+  if command -v jq >/dev/null 2>&1; then
+    jq -nc --arg ctx "$CTX" \
+      '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
+  else
+    echo "$CTX" >&2
+  fi
 fi
 
 exit 0

@@ -1174,7 +1174,9 @@ SPEC📋 Specification complete!
 N. **Phase N: Polish** - cleanup and docs
 
 **Usage:**
-Each phase is self-contained. Pass a phase to `/dev`:
+Implement all phases autonomously (recommended):
+`/dev @.context/specs/spec-[feature-name].md`
+Or run one self-contained phase at a time:
 `/dev "Implement Phase 1" @.context/specs/spec-[feature-name].md`
 ```
 </output_format>

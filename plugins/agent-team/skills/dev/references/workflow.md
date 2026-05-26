@@ -30,6 +30,7 @@ $ARGUMENTS
 - Work on current branch - do NOT create new branches
 - No two teammates edit the same file in cross-layer mode
 - In Spec-backed mode, implement the approved Requirement Contract, Architecture Plan, and task graph; do not re-plan scope
+- In spec sweep mode, commit at each phase boundary and halt the sweep on a BLOCKED phase or high-risk escalation - do NOT continue into dependent phases
 - Do not report completion until Reflection, Review + QA, and Wrapup are done
 </constraints>
 
@@ -41,6 +42,7 @@ $ARGUMENTS
 Parse the feature request (do this directly - lightweight):
 
 1. **Mode**: Spec-backed mode if the request includes `@.context/specs/...`; otherwise Ad hoc mode
+   - Within spec-backed mode: **single-phase** if a specific `Phase N` is named (`/agent-team:dev "Implement Phase 1" @<spec>`); **sweep** if no single phase is named (`/agent-team:dev @<spec>`, `/agent-team:dev "all phases" @<spec>`, `/agent-team:dev "remaining phases" @<spec>`). Sweep runs every phase end-to-end — see [Spec Sweep Mode](#spec-sweep-mode-multi-phase-orchestration).
 2. **Core Functionality**: What needs to be built
 3. **Scope**: Small/medium/large
 4. **Type**: UI/backend/fullstack/tooling
@@ -67,6 +69,60 @@ Before spawning the team, form an initial hypothesis about the team shape:
 
 Don't commit yet - the explorer will confirm. But bias toward FLAT unless the feature clearly spans layers. In spec-backed mode, the approved Architecture Plan and task graph override the initial hypothesis unless the explorer finds a blocking mismatch.
 </thinking>
+</phase>
+
+---
+
+## Spec Sweep Mode (multi-phase orchestration)
+
+<phase name="sweep">
+Trigger: the request provides a spec path with **no single specific phase** named — e.g. `/agent-team:dev @.context/specs/spec-X.md`, `/agent-team:dev "all phases" @<spec>`, `/agent-team:dev "remaining phases" @<spec>`. A named single phase (`/agent-team:dev "Implement Phase 1" @<spec>`) runs that one phase only — skip this section.
+
+In sweep mode you orchestrate **every phase of the spec end-to-end, fully autonomously**: run the per-phase build (Phases 4–8) once for each phase in dependency order, committing at every phase boundary, then run Wrapup (Phase 9) once at the end. You do NOT pause between phases.
+
+### Setup (once, before the first phase)
+1. Read the spec file fully. Enumerate its phases (Phase 0..N) with names and acceptance criteria.
+2. Run **Phase 2 (Explore) and Phase 3 (Clarify) once for the whole spec**, not per phase. Clarify STOPs for user input exactly once; after the user proceeds, do not stop again between phases.
+3. Create one **phase task** per spec phase with `TaskCreate`, dependency-chained so they execute in order:
+   ```
+   TaskCreate:
+     subject: "Implement Phase N: [phase name]"
+     description: |
+       ## Command
+       /agent-team:dev "Implement Phase N" @.context/specs/spec-X.md
+       ## Acceptance Criteria
+       - [ ] [criteria copied from the spec phase]
+       ## Note
+       Self-contained per spec. Executed by the sweep orchestrator.
+   -> TaskUpdate: taskId=[phase N task], addBlockedBy=[phase N-1 task]
+   ```
+   Verify the chain with `TaskList`. If phase tasks already exist from a prior interrupted sweep, **reconcile**: keep `completed` ones, create only the missing phases, and resume at the first incomplete phase.
+
+### Per-phase loop (each phase, in dependency order)
+1. Skip phases already marked `completed`.
+2. `TaskUpdate` the phase task to `in_progress`.
+3. Run the per-phase build — Phase 4 (Team Up) → Phase 5 (Build Loop) → Phase 6 (Reflect) → Phase 7 (Review + QA) — scoped to this phase's acceptance criteria. Reuse the explorer file map from Setup; teammates may be reused across phases.
+4. **Commit at the phase boundary** (Phase 8): `type(scope): description` referencing the phase. Commit between phases by default so each phase is an independent, revertible step — do not defer commits to the end. **Exception:** if the user explicitly requested PR-ready / no-commit, skip per-phase commits, carry the working tree across phases, and report `pr-ready` once at the end — note that resume-on-interruption is unavailable without phase commits.
+5. `TaskUpdate` the phase task to `completed`.
+6. Proceed to the next phase **without pausing** (fully autonomous).
+
+### Sweep safety floor (when to halt)
+Autonomy does not mean barreling through failure. **Halt the sweep** — do not start dependent phases — when any of these occur:
+- A phase's build loop ends `BLOCKED` (Phase 5, Step 4) or QA cannot pass after retries.
+- An implementer escalates a high-risk assumption (auth, user data, migrations, destructive ops, billing, external side effects, public API contracts, deployment).
+- A phase's Reflection raises a behavior-affecting "Question for User".
+
+On halt: `TaskUpdate` the current phase task to blocked, report which phases completed and committed and which remain, and wait for the user. Already-committed phases stay committed.
+
+### Operational guardrails (unattended runs)
+A sweep runs unattended across many teammate spawns, so harden the run:
+- **Cap spend.** Launch headless/autonomous sweeps with `--max-budget-usd` (e.g. `claude -p "/agent-team:dev @<spec> ..." --max-budget-usd N`). A stuck teammate can otherwise burn budget unnoticed.
+- **Know the failure mode.** Agent Teams is experimental: a teammate can enter a non-terminating turn and ignore `shutdown_request`, with no force-kill. Teammates honor only the subagent definition's `tools` and `model` — `maxTurns`, `permissionMode`, and `hooks` do NOT apply on the teammate path, so a per-agent turn cap is not available.
+- **Recovery for a hung teammate.** Ask the lead to shut it down; if it refuses and `TeamDelete` reports an "active member", remove that member from `~/.claude/teams/<team>/config.json`, then re-run `TeamDelete`.
+- **Don't fully walk away.** Per Agent Teams best practice, monitor long unattended runs rather than leaving them entirely; a halted sweep waits for you, but a hung teammate needs manual intervention.
+
+### Finish
+After the last phase completes, run **Phase 9 (Wrapup) once** for the whole feature, summarizing every phase, its commit, and verification status.
 </phase>
 
 ---
@@ -411,6 +467,8 @@ Dispatch council reviewers in one gate, wait for all findings, dedupe by severit
 3. Stage and commit unless the user requested PR-ready only: `git add -A && git commit`
 4. If commit is skipped, report terminal state `pr-ready` with exact changed files and verification results
 5. Report discovered issues (things outside scope that teammates noticed)
+
+In spec sweep mode, this runs once per phase: always commit the completed phase here (do not defer to the end), then return to the per-phase loop for the next phase.
 
 Do not shut down the team yet if wrapup needs final facts from a teammate.
 </phase>

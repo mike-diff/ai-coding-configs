@@ -45,11 +45,11 @@ This directory contains Cursor-specific configuration for AI-assisted developmen
 │   ├── browser-tester.md # UI verification
 │   └── skill-author.md # Skill creation via TDD
 ├── rules/              # Project rules (auto-applied based on context)
-│   ├── dev-workflow.md      # /dev workflow conventions
-│   ├── coding-standards.md  # Code style and quality
-│   ├── commit-conventions.md # Git commit format
-│   ├── subagent-outputs.md  # Required subagent result formats
-│   └── mcp-caching.md      # Cache large MCP responses
+│   ├── dev-workflow.mdc      # /dev workflow conventions
+│   ├── coding-standards.mdc  # Code style and quality
+│   ├── commit-conventions.mdc # Git commit format
+│   ├── subagent-outputs.mdc  # Required subagent result formats
+│   └── mcp-caching.mdc      # Cache large MCP responses
 ├── skills/             # Reusable capabilities
 │   └── skill-creator/  # Agent Skills spec, templates, and validation script
 └── README.md           # This file
@@ -141,11 +141,11 @@ Subagents are supported in current Cursor 3.x builds. Use Nightly only when you 
 
 Rules auto-apply based on file patterns:
 
-- `dev-workflow.md` - Active during /dev command
-- `coding-standards.md` - Active for code files (*.ts, *.py, etc.)
-- `commit-conventions.md` - Active for git operations
-- `subagent-outputs.md` - Active for subagent files
-- `mcp-caching.md` - Always active, caches large MCP responses
+- `dev-workflow.mdc` - Active during /dev command
+- `coding-standards.mdc` - Active for code files (*.ts, *.py, etc.)
+- `commit-conventions.mdc` - Active for git operations
+- `subagent-outputs.mdc` - Active for subagent files
+- `mcp-caching.mdc` - Always active, caches large MCP responses
 
 ### Skills
 

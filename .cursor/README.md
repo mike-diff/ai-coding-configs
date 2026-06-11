@@ -225,7 +225,7 @@ Or add manually:
 
 ### Adding Project-Specific Rules
 
-Create `.cursor/rules/your-rule.md`:
+Create `.cursor/rules/your-rule.mdc` (the `.mdc` extension is required — plain `.md` files in `.cursor/rules/` are silently ignored by Cursor):
 
 ```markdown
 ---

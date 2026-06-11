@@ -158,7 +158,7 @@ Two settings in this config live in your **user-level** `~/.claude/settings.json
 
     Replace `<your-project>` with a descriptive name. Claude Code will auto-create `MEMORY.md` and topic files there.
 
-**Minimum Claude Code version:** 2.1.108 (released 2026-04-14). Verify with `claude --version`. Older versions will silently ignore `ENABLE_PROMPT_CACHING_1H` and may reject other features used here.
+**Minimum Claude Code version:** 2.1.108 (released 2026-04-14). Verify with `claude --version`. Older versions will silently ignore `ENABLE_PROMPT_CACHING_1H` and may reject other features used here. Last verified against 2.1.172 (June 2026).
 
 ## Built-in commands leveraged
 

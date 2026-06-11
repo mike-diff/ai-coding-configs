@@ -73,7 +73,7 @@ resource usage low and avoids context pollution from stale teammates.
 | Code review | COUNCIL | Multiple review lenses simultaneously |
 | Simple bug fix | No team (subagent) | Team overhead exceeds benefit |
 
-**Rule of thumb:** If the task takes < 10 minutes for one agent, use a subagent instead of a team.
+**Rule of thumb:** If the task takes < 10 minutes for one agent, use a subagent instead of a team. Subagents can spawn their own subagents (up to 5 levels deep, Claude Code 2.1.172+), so a single subagent can still delegate narrow lookups without team overhead.
 
 **Two commands cover everything:**
 - `/discuss` - ideation, planning, and optional deep specs (COUNCIL)

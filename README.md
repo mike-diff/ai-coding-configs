@@ -40,6 +40,8 @@ This repository includes project-local pi maintainer skills:
 
 These are not another product surface. They are operator workflows for safely editing and validating the Agent Team configs across `.claude/`, `plugins/agent-team/` and `.cursor/`.
 
+> **Note:** pi v0.79.0+ prompts for project trust before loading `.pi/skills/`. Approve the prompt (or run with `--approve`, or manage saved decisions via `/trust`) for these skills to appear.
+
 ---
 
 ## What's Included

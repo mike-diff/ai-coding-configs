@@ -1,0 +1,25 @@
+# === GitHub Linguist language-bar overrides ===
+#
+# This repo is a set of AI agent / skill / rule *definitions* authored in
+# Markdown, with shell used only as glue (hooks, the sync script, tests).
+#
+# Linguist excludes `prose` (Markdown) and `data` (JSON) from the language bar
+# by default, so the ~600 KB of Markdown that *is* the product was dropped and
+# the ~65 KB of glue shell became the only "detectable" language -> a misleading
+# "Shell 100%". These overrides make the bar reflect the repo's real content:
+# Markdown-defined AI orchestration.
+
+# Count the Markdown that defines the orchestration (prose is excluded by default).
+*.md    linguist-detectable=true
+
+# Cursor rule files are Markdown with frontmatter: classify and count them.
+*.mdc   linguist-language=Markdown linguist-detectable=true
+
+# Shell is glue, not the product -> drop it from the language bar.
+# (detectable=false, not vendored: hooks are first-party and still show in diffs.)
+*.sh    linguist-detectable=false
+
+# The plugin tree is generated from .claude/ by scripts/sync-plugin.sh.
+# Mark it generated so the mirror neither inflates stats nor clutters diffs.
+# (Listed last so it wins over the broad rules above for files under it.)
+plugins/agent-team/**   linguist-generated=true

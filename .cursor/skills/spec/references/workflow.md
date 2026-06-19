@@ -69,6 +69,7 @@ If no input provided, ask: "What feature would you like to specify?"
 - Pin dependency versions with verification date
 - Include specific implementation patterns from docs in task specs
 - Make each phase self-contained (agent shouldn't need to read other phases)
+- Emit a transcript-verifiable `## Goal Condition` per phase (commands + outputs, scope constraint, turn cap)
 - Include Prerequisites section summarizing what earlier phases created (Phase 1+)
 - Include phase-specific Non-Goals to prevent scope creep
 - Only include NEW dependencies in each phase's dependency table
@@ -740,6 +741,10 @@ Before proceeding, verify:
 - MUST include Prerequisites section for Phase 1 and later
 - MUST include User Stories, FRs, Dependencies, Tasks in each phase
 - MUST include Non-Goals (This Phase) to prevent scope creep
+- MUST emit a `## Goal Condition` block in EVERY phase (incl. Polish), per the Goal Condition Generation Rule
+- MUST write every Goal Condition clause as transcript-verifiable (command + concrete output), never subjective
+- MUST include a scope-constraint line and a turn-cap clause ("or after N turns") in each Goal Condition
+- MUST keep each Goal Condition under 4,000 characters
 - MUST end with Phase N: Polish
 - MUST save the complete spec file after generating all phases
 - MUST NOT stop until the spec file is saved and completion is reported
@@ -885,6 +890,26 @@ These are explicitly excluded from THIS phase (may be in later phases):
 - [ ] Tests: `[test command]` passes
 - [ ] Proof: [artifact type] captured and matches expected
 - [ ] No regressions: `[full test command]` still passes
+
+## Goal Condition
+
+*(Auto-generated from this phase's Acceptance Criteria + Verify Before Proceeding. Transcript-verifiable: every clause is something Claude proves by surfacing a command's output in the conversation, because the `/goal` evaluator cannot run tools itself. Copy into `/goal "..."` to drive this phase autonomously, solo, in one session.)*
+
+```text
+Phase N ([phase name]) is done when ALL hold AND I have shown the proof in this conversation:
+1. `[primary test/build command]` exits 0 — paste the final summary line (e.g. "N passed").
+2. AC-001: `[proof command]` outputs [concrete expected string/exit code] — paste it.
+3. [one numbered line per remaining AC-###: a command + the exact output that proves it].
+4. `[full regression command]` still exits 0 — paste the summary.
+Constraints that must not change: only files under [globs from Files to Create/Modify] are modified; no new dependencies beyond [pinned list]; public API/UI contracts unchanged.
+Stop and report if any command fails twice in a row, or after [N] turns, whichever first.
+```
+
+### Goal Condition Generation Rule
+
+Translate every Acceptance Criterion (Given/when/then) and every `## Verify Before Proceeding` checkbox into one numbered clause naming a concrete command and the exact output/exit code Claude will paste to prove it — never a subjective judgment ("works", "is correct", "looks right"), since the Haiku evaluator only reads the transcript and cannot run tools. Append a scope-constraint line (from the phase's Files-to-Create/Modify globs + NEW deps) and a turn-cap line (default **25**; scale ~2–3 turns/task, min 10, max 40). Keep the block under **4,000 characters**.
+
+**UI / manual ACs:** if an AC cannot be proven by a command (purely visual), require a surfaced proxy (Playwright assertion exit 0, DOM/axe snapshot, screenshot-capture exit status); if none exists, mark that AC `[manual]` in Verify and **exclude it** from the Goal Condition rather than writing a fake "looks right" clause.
 
 ---
 ```
@@ -1064,6 +1089,20 @@ Finalize the feature by updating documentation, cleaning up temporary code, runn
 - [ ] Proof: Clean test and lint output
 - [ ] No regressions: All existing functionality works
 
+## Goal Condition
+
+*(Auto-generated from the Polish Success Criteria. Transcript-verifiable.)*
+
+```text
+Polish is done when ALL hold AND I have shown the proof in this conversation:
+1. `[full test command]` exits 0 — paste the final summary line.
+2. `[lint command]` exits 0 with no new warnings — paste the summary.
+3. `rg -n "TODO|FIXME|console.log|debugger" [feature path]` shows no feature matches — paste it.
+4. Docs updated: `git diff --stat [docs path]` shows the change — paste it.
+Constraints that must not change: only files under [phase globs] modified; no behavior changes to shipped features.
+Stop and report if any command fails twice in a row, or after [N] turns, whichever first.
+```
+
 ---
 ```
 
@@ -1073,6 +1112,7 @@ Finalize the feature by updating documentation, cleaning up temporary code, runn
 - [ ] Phase 1 through Phase N-1 sections generated (each with Prerequisites)
 - [ ] Phase N: Polish section generated
 - [ ] All phases have: Scope, User Stories, FRs, Tasks, Success Criteria, Verify
+- [ ] Every phase (incl. Polish) has a `## Goal Condition` block (command + output per clause, scope constraint, turn cap, under 4,000 chars)
 - [ ] Phase 1+ have: Prerequisites and Non-Goals (This Phase)
 - [ ] Dependencies are per-phase (only NEW packages)
 - [ ] Spec file saved to `.context/specs/spec-[feature-name].md`
@@ -1085,6 +1125,10 @@ Before reporting completion, verify:
 - [ ] Phase 0 has: Scope, User Stories, FRs, Dependencies, Tasks, Verify
 - [ ] Phase 1+ has: Prerequisites, Scope, User Stories, FRs, Non-Goals, Dependencies, Tasks, Verify
 - [ ] Phase N: Polish is included as the final phase
+- [ ] Every phase (incl. Polish) has a `## Goal Condition` block
+- [ ] Each Goal Condition clause names a command + concrete expected output (no subjective criteria)
+- [ ] Each Goal Condition has a scope-constraint line and a turn-cap clause
+- [ ] Each Goal Condition is under 4,000 chars
 - [ ] Dependencies are organized BY PHASE (only NEW packages per phase)
 - [ ] Each phase has pinned versions and context7 references
 - [ ] File has been saved (not just generated in response)
@@ -1178,6 +1222,12 @@ Implement all phases autonomously (recommended):
 `/dev @.context/specs/spec-[feature-name].md`
 Or run one self-contained phase at a time:
 `/dev "Implement Phase 1" @.context/specs/spec-[feature-name].md`
+
+Drive a single phase solo with native /goal (no team, one session; requires a trusted workspace):
+`/goal "<paste that phase's Goal Condition>"`
+Claude keeps taking turns until the proofs are in the transcript, then stops. Pair with auto mode to skip per-tool prompts. Advance by setting the next phase's Goal Condition.
+Do NOT set a /goal on a phase /dev is already driving — /dev has its own review+QA gate.
+For a goal-gated walk across phases in one session, see the loop-patterns skill.
 ```
 </output_format>
 

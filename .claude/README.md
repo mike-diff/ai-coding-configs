@@ -105,6 +105,7 @@ All hooks use `$CLAUDE_PROJECT_DIR` (injected by Claude Code) to resolve paths r
   → CLARIFY → REQUIREMENT CONTRACT → VALIDATE REQUIREMENT (approval gate)
   → ARCHITECTURE PLAN → VALIDATE ARCHITECTURE → TASK
   → Saves to .context/specs/spec-[name].md
+  → Each phase carries a Goal Condition; drive one phase solo with /goal "<condition>"
 
 /dev "feature" @.context/specs/spec-[name].md
   → Spec-backed preflight → Explorer maps codebase → Clarify → Team up

@@ -48,6 +48,7 @@ Each phase section in the output is fully self-contained with: Prerequisites, Us
 - **ALWAYS** include Requirement Validation and Architecture Validation sections
 - **ALWAYS** include Cursor Build in Parallel guidance when tasks are independent
 - **ALWAYS** wait at gates — do not auto-proceed past Requirement Contract without "approved"
+- **ALWAYS** emit a transcript-verifiable `## Goal Condition` per phase so a user can drive each phase with `/goal`
 - Make each phase self-contained — no cross-phase story or task references
 
 ---
@@ -57,6 +58,8 @@ Each phase section in the output is fully self-contained with: Prerequisites, Us
 ```
 /dev "Implement Phase 1" @.context/specs/spec-[name].md
 ```
+
+Or drive a phase natively with the phase's Goal Condition: `/goal "<phase Goal Condition>"`. Don't set `/goal` on a phase `/dev` is already driving.
 
 **`/spec` vs `/discuss`:** Use `/spec` when you know what to build. Use `/discuss` when you're still exploring — it interviews you, researches the codebase, validates the plan, and optionally deepens into a spec.
 

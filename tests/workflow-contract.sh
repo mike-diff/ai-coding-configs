@@ -79,6 +79,13 @@ for prefix in .claude .cursor; do
   assert_file_contains "$prefix/skills/spec/references/workflow.md" "Implement all phases autonomously"
 done
 
+# /spec emits a transcript-verifiable Goal Condition per phase (native /goal driver).
+for prefix in .claude .cursor; do
+  assert_file_contains "$prefix/skills/spec/references/workflow.md" "## Goal Condition"
+  assert_file_contains "$prefix/skills/spec/references/workflow.md" "or after"
+done
+assert_file_contains ".claude/skills/loop-patterns/SKILL.md" "goal-gated cross-phase walk"
+
 # Implementers must escalate high-risk assumptions instead of always proceeding.
 for agent in .claude/agents/implementer.md .cursor/agents/implementer.md; do
   assert_file_contains "$agent" "High-risk assumptions"

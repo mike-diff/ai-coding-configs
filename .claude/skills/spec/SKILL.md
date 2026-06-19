@@ -47,6 +47,7 @@ ACT MODE:   Phase 3 ARCHITECTURE PLAN → Phase 3.5 VALIDATE ARCHITECTURE → Ph
 - ALWAYS use WebSearch for dependency versions
 - ALWAYS use context7 for key dependency docs
 - ALWAYS make each phase self-contained (agent shouldn't need other phases)
+- ALWAYS emit a transcript-verifiable `## Goal Condition` per phase so a user can drive each phase with `/goal`
 - ALWAYS include Prerequisites for Phase 1+
 - Phase 4 (TASK) is REQUIRED — do NOT stop after Phase 3
 - ALWAYS produce Requirement Validation and Architecture Validation sections

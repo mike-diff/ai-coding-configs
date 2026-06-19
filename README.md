@@ -203,6 +203,7 @@ Skills are reference documents the AI draws on automatically based on context. T
 
 /spec "add Redis caching for API responses"
   → Requirement contract → validate → architecture plan → validate → phased task doc
+  → Each phase ships a transcript-verifiable Goal Condition you can paste into /goal
 
 /dev @.context/specs/spec-caching.md
   → Spec sweep: runs every phase end-to-end, committing at each phase boundary (autonomous)
@@ -238,7 +239,7 @@ Specs are local planning artifacts by default. They save under `.context/specs/`
 **Recent Claude Code features that pair well with this config** (v2.1.x):
 - The command skills (`/dev`, `/discuss`, `/spec`, etc.) are marked `user-invocable-only` via `skillOverrides` in `.claude/settings.json`, so the model won't auto-launch them mid-conversation — you still invoke them with `/`. (Plugin installs can't carry this setting; add it to your own settings if you want the same guard.)
 - If autonomous runs (like `/dev` spec sweep) hit the auto-mode classifier, tune `autoMode` rules — including `autoMode.hard_deny` — in your user settings.
-- `/goal` sets a completion condition Claude works toward across turns — a lightweight native complement to the multi-phase `/dev` sweep.
+- `/goal` sets a completion condition Claude works toward across turns — a lightweight native complement to the multi-phase `/dev` sweep. `/spec` now emits a ready-to-paste `## Goal Condition` per phase (transcript-verifiable commands + outputs, scope constraint, turn cap), so you can drive a single phase solo with `/goal "<condition>"` instead of the `/dev` team sweep. Don't stack both on the same phase.
 
 ### Cursor
 

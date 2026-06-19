@@ -100,6 +100,13 @@ Status: PASS / NEEDS REVISION / BLOCKED
 
 Only proceed to task phases when Architecture Validation is PASS.
 
+## Each phase section must include
+
+- Prerequisites (Phase 1+), Scope, User Stories + Acceptance Criteria, Functional Requirements
+- Non-Goals (This Phase), pinned Dependencies, Implementation Guidance, Tasks, Files to Create/Modify
+- Verify Before Proceeding checklist
+- **Goal Condition**: a transcript-verifiable `/goal` block (commands + expected outputs, scope constraint, turn cap) derived from the phase's Acceptance Criteria, so a user can drive the phase with `/goal`
+
 ## Completion response
 
 After saving, report:

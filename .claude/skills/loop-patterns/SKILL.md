@@ -43,6 +43,16 @@ Uncommon; used during long skill authoring when the baseline test suite is slow.
 
 Cadence: self-paced. Good for: multi-file skill authoring.
 
+## spec phases — goal-gated cross-phase walk
+
+Solo (no agent team), one session, auto-advance each phase only after its Goal Condition is met:
+
+    /loop Set /goal to the next not-yet-done phase's Goal Condition from @.context/specs/spec-[name].md; when /goal reports "Goal achieved", commit, then advance. Stop when the last phase's goal is achieved.
+
+`/loop` re-runs the prompt in the same session; `/goal` is the per-phase completion judge that `/loop` lacks. They're independent — `/goal` can't invoke `/loop`, so the loop prompt re-sets the goal each iteration. Prefer `/dev @<spec>` (sweep) for hands-off team runs; use this for solo single-session control.
+
+Cadence: self-paced. Good for: solo spec implementation without an agent team.
+
 ## Not recommended
 
 - Running `/loop` on one-shot tasks — starts a recurring process that outlives the task

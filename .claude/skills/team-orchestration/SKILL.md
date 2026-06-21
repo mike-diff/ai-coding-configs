@@ -111,146 +111,15 @@ Everything else (agent definition, skills, memory, rules, CLAUDE.md) loads autom
 
 ## Spawn Schemas
 
-> **Canonical source:** These are the minimal reusable templates. The `/dev` and `/discuss` skills contain extended, context-specific versions of these prompts with additional phase instructions, output budget rules, and mode-specific guidance. When working from those skills, follow their inline prompts. These templates are for ad-hoc team spawning outside of those workflows.
+`/dev` and `/discuss` carry the **authoritative** spawn prompts inline (in
+`dev/references/workflow.md` and `discuss/references/phases.md`) — when working
+from those skills, follow theirs. For **ad-hoc** team spawning outside those
+workflows, use the minimal reusable templates in
+[references/spawn-schemas.md](references/spawn-schemas.md) (Explorer, Implementer,
+Reviewer, QA, and the COUNCIL roles).
 
-<spawn_schemas>
-Use these templates when spawning teammates. Replace `[placeholders]` with actual values.
-
-### Explorer Spawn
-
-```
-Spawn a read-only explorer teammate with the prompt:
-
-"You are the explorer for this team.
-
-Your task: Analyze the codebase for implementing this feature:
-[FULL TASK SPEC - paste complete description]
-
-Find: (1) Similar features and patterns, (2) Files to modify/create,
-(3) Architecture patterns, (4) Dependencies, (5) Concerns.
-
-Return findings in an <explorer-result> block. Message the lead when done."
-
-Require plan approval before they make changes.
-```
-
-### Implementer Spawn
-
-```
-Spawn an implementer teammate with the prompt:
-
-"You are the implementer for this team.
-
-Your task: Implement changes for this feature:
-[FULL TASK SPEC - paste complete description]
-
-Implementation plan:
-[PASTE PLAN FROM EXPLORER FINDINGS]
-
-Work through the shared task list. Message the reviewer when each task is done.
-Message the lead if blocked. Complete self-review before marking tasks done.
-
-Return results in an <implementer-result> block."
-
-Require plan approval before they make changes.
-```
-
-### Reviewer Spawn
-
-```
-Spawn a read-only reviewer teammate with the prompt:
-
-"You are the reviewer for this team.
-
-Your task: Verify implementation matches this spec:
-[FULL TASK SPEC - paste complete description]
-
-Two-pass review: (1) Spec compliance - does code match requirements exactly?
-(2) Code quality - security, performance, patterns.
-
-MESSAGE THE IMPLEMENTER DIRECTLY with findings. Do not relay through the lead.
-Return results in a <reviewer-result> block. Message the lead with final status."
-```
-
-### QA Spawn
-
-```
-Spawn a QA teammate with the prompt:
-
-"You are the QA teammate.
-
-Your task: Run lint, typecheck, and tests for this project.
-Wait for the reviewer to confirm COMPLIANT before running.
-
-Auto-detect commands from package.json, pyproject.toml, or similar.
-MESSAGE THE IMPLEMENTER DIRECTLY with any errors found.
-Return results in a <qa-result> block. Message the lead with final status."
-```
-
-### COUNCIL Spawn Schemas (for /discuss)
-
-These teammates are spawned progressively per phase. All are read-only.
-
-#### Scout Spawn (Phase 1)
-```
-Spawn a read-only scout teammate with the prompt:
-
-"You are the codebase scout for a /discuss session.
-[PASTE IDEA + REFERENCES]
-
-Explore the codebase for patterns, integration points, and constraints.
-OUTPUT BUDGET: Keep response under 2000 tokens.
-Return findings in a <scout-result> block. Message the lead when done."
-```
-
-#### Researcher Spawn (Phase 1)
-```
-Spawn a read-only researcher teammate with the prompt:
-
-"You are the web researcher for a /discuss session.
-[PASTE IDEA + REFERENCES]
-
-Research prior art, libraries, best practices, architectural patterns.
-OUTPUT BUDGET: Keep response under 2000 tokens.
-Return findings in a <research-result> block. Message the lead when done."
-```
-
-#### Challenger Spawn (Phase 3)
-```
-Spawn a read-only challenger teammate with the prompt:
-
-"You are the plan challenger for a /discuss session.
-[PASTE DRAFT PLAN + FINDINGS SUMMARIES]
-
-Stress-test: feasibility, accuracy, alternatives, risks, missing pieces.
-OUTPUT BUDGET: Keep response under 1500 tokens.
-Return findings in a <challenge-result> block. Message the lead when done."
-```
-
-#### Blind Spot Spawn (Phase 4)
-```
-Spawn a read-only blind spot teammate with the prompt:
-
-"You are the blind spot investigator for a /discuss session.
-[PASTE VALIDATED PLAN SUMMARY + TECHNOLOGIES]
-
-Check: native features, recent changes, simpler alternatives, unverified assumptions.
-OUTPUT BUDGET: Keep response under 1000 tokens.
-Return findings in a <blindspot-result> block. Message the lead when done."
-```
-
-#### Dependency Researcher Spawn (Phase 5 - optional)
-```
-Spawn a read-only dependency researcher teammate with the prompt:
-
-"You are the dependency researcher for a /discuss DEEPEN session.
-[PASTE VALIDATED PLAN + SCOUT SUMMARY]
-
-Research all external dependencies. Pin exact versions. Use context7 for docs.
-OUTPUT BUDGET: Keep response under 2000 tokens.
-Return findings in a <dependency-result> block. Message the lead when done."
-```
-</spawn_schemas>
+Spawn prompts contain only role + full task spec + communication protocol;
+everything else loads automatically (see Native Context Protocol above).
 
 ---
 
@@ -411,44 +280,8 @@ Always shut down all teammates before running cleanup. Teammates should not run 
 
 ## Red Flags
 
-<red_flags>
-### Delegation Rationalizations
-
-| Thought | Reality |
-|---------|---------|
-| "I'll just do this one thing myself" | Enable delegate mode. You coordinate, never code. |
-| "This is simple, I'll just do it" | Simple tasks still need subagent discipline. Delegate. |
-| "This teammate is slow, I'll help" | Message them with guidance. Don't take over. |
-| "I can check quickly without a teammate" | Quick checks miss things. Use the teammate. |
-| "The user wants speed" | Fast + wrong = slow. Process ensures quality. |
-| "I already know the codebase" | Fresh teammate context prevents assumptions. |
-
-### Review Rationalizations
-
-| Thought | Reality |
-|---------|---------|
-| "I'll skip the reviewer, tests pass" | Tests verify behavior, not requirements. Review is required. |
-| "Self-review is enough" | Self-review catches obvious issues. Spec-review catches drift. Both required. |
-| "Spec review is overkill" | Spec drift is the #1 cause of wasted iterations. Always verify. |
-| "The implementer is confident" | Confidence ≠ correctness. Verify independently. |
-| "Tests pass, so it's correct" | Tests verify behavior, not requirements. Spec review catches "wrong thing built well." |
-
-### Process Rationalizations
-
-| Thought | Reality |
-|---------|---------|
-| "I'll skip clarification, it's obvious" | Assumptions cause rework. 5 minutes asking saves hours fixing. |
-| "One big task is easier" | Small tasks enable parallelism and reduce waste. |
-| "One more retry won't hurt" | After 3 failures, re-assess strategy. Don't loop blindly. |
-| "I'll ask forgiveness later" | Blocked = ask for guidance. Don't proceed on assumptions. |
-| "The plan is close enough" | Close enough = wrong. Update the plan or get approval. |
-
-### Context Rationalizations
-
-| Thought | Reality |
-|---------|---------|
-| "I'll broadcast this update" | Broadcast costs tokens per teammate. Use targeted messages. |
-| "The teammate can read the file" | Provide FULL TEXT. Teammates start with clean context and shouldn't hunt for it. |
-| "Previous context carries over" | Each teammate starts fresh. You maintain and pass context. |
-| "Git history shows the changes" | Pass explicit summary. Don't make teammates reconstruct context. |
-</red_flags>
+When you catch yourself rationalizing your way out of delegation, review, process
+discipline, or context-passing, check it against
+[references/red-flags.md](references/red-flags.md) — the common orchestration
+rationalizations and why each one is wrong. The cardinal rule: you coordinate,
+you never code.

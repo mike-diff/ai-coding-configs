@@ -35,16 +35,13 @@
       { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/permission-denied.sh" } ] }
     ],
     "TeammateIdle": [
-      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/teammate-idle.sh" } ] }
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/require-result-block.sh idle" } ] }
     ],
     "TaskCompleted": [
-      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/task-completed.sh" } ] }
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/require-result-block.sh completion" } ] }
     ],
     "PreCompact": [
       { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/notify-compact.sh" } ] }
-    ],
-    "FileChanged": [
-      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/file-changed.sh" } ] }
     ],
     "CwdChanged": [
       { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/cwd-changed.sh" } ] }

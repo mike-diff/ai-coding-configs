@@ -5,10 +5,12 @@ Drop `.claude/` into any project to get lightweight workflow commands, five spec
 ```
 .claude/
 ├── settings.json
+├── statusline.sh                     # Custom status line (model, cost, context)
 ├── skills/                           # Auto-activating capabilities
 ├── agents/                           # Subagents for delegation
 ├── rules/                            # Standards auto-loaded every session
-└── hooks/                            # Deterministic safety and quality gates
+├── hooks/                            # Deterministic safety and quality gates
+└── output-styles/                    # Optional system-prompt styles (e.g. teaching), opt-in via /config
 ```
 
 ---

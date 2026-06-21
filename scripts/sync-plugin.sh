@@ -9,7 +9,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$REPO_ROOT/.claude"
 DST="$REPO_ROOT/plugins/agent-team"
 
-SKILL_NAMES='ask|dev|discuss|issue|loop-patterns|orient|primitives|review-patterns|skill|slop-check|spec|team-orchestration|testing-patterns|ticket|to-dos'
+SKILL_NAMES='ask|dev|discuss|goal-or-loop|issue|loop-patterns|orient|primitives|review-patterns|skill|slop-check|spec|team-orchestration|testing-patterns|ticket|to-dos'
 
 echo "Syncing $SRC -> $DST"
 
@@ -69,7 +69,7 @@ perl -i -pe \
   "$DST/agents/skill-author.md"
 
 # 6. Verification: no unprefixed slash-command refs in plugin skills
-UNPREFIXED=$(perl -ne 'print "$ARGV:$.: $_" if /(?<![:\/\w-])\/(ask|dev|discuss|issue|loop-patterns|orient|primitives|review-patterns|skill|slop-check|spec|team-orchestration|testing-patterns|ticket|to-dos)\b(?!:)/' $(find "$DST/skills" -name "*.md") 2>/dev/null | grep -v "/agent-team:" || true)
+UNPREFIXED=$(perl -ne 'print "$ARGV:$.: $_" if /(?<![:\/\w-])\/(ask|dev|discuss|goal-or-loop|issue|loop-patterns|orient|primitives|review-patterns|skill|slop-check|spec|team-orchestration|testing-patterns|ticket|to-dos)\b(?!:)/' $(find "$DST/skills" -name "*.md") 2>/dev/null | grep -v "/agent-team:" || true)
 if [ -n "$UNPREFIXED" ]; then
   echo "WARNING: unprefixed slash-command references remain:" >&2
   echo "$UNPREFIXED" >&2

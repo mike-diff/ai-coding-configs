@@ -76,6 +76,7 @@ Commands are slash commands you run to kick off a workflow. Both tools share the
 | `/skill` | Create a new skill using TDD - baseline test, write content, validate against the agentskills.io spec. |
 | `/slop-check` | Run tool-driven code quality analysis and conservative cleanup judgment. |
 | `/primitives` | List every native tool and capability available in the current session. |
+| `/goal-or-loop` | Decide whether a task should run as `/goal`, `/loop`, both in sequence, or neither, and emit a copy-paste-ready command block. |
 
 ---
 
@@ -183,6 +184,7 @@ Skills are reference documents the AI draws on automatically based on context. T
 | `review-patterns` | Review patterns for the reviewer agent |
 | `testing-patterns` | QA patterns for the QA agent |
 | `loop-patterns` | Recommended `/loop` cadences for each agent (explorer, implementer, reviewer, qa, skill-author) |
+| `goal-or-loop` | Decide between `/goal`, `/loop`, both, or neither for a task, and emit a high-craft command block |
 | `dev`, `discuss`, `spec`, `to-dos`, `issue`, `ticket`, `skill`, `slop-check`, `orient`, `ask`, `primitives` | Full workflow instructions for each command |
 
 **Cursor skills** (`.cursor/skills/`) - all commands and domain skills:

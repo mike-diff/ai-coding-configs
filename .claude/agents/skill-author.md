@@ -90,6 +90,12 @@ mkdir -p .claude/skills/[skill-name]/assets      # if planned
 
 Write SKILL.md addressing the specific failures from baseline.
 
+**The SKILL.md is a prompt.** Apply `.claude/skills/skill/references/prompting-guide.md`:
+right altitude (defaults + rationale, not if-else prose), calibrated language
+(reserve ALWAYS/NEVER for true invariants — give other rules their rationale),
+canonical examples over exhaustive rule lists, a lean SKILL.md with depth pushed
+into `references/`, and completion defined by a checkable signal.
+
 **SKILL.md required sections:**
 1. Frontmatter (`name`, `description`, `compatibility: "Designed for Claude Code"`)
 2. When to Use This Skill

@@ -127,7 +127,7 @@ Run the validation script: scripts/validate.sh
 ## Phase 2: Check for Existing Skills
 
 ```bash
-ls -la "/.claude/skills/
+ls -la "${CLAUDE_PROJECT_DIR}/.claude/skills/
 find .claude/skills -name "SKILL.md" -exec head -3 {} \; -print
 ```
 
@@ -174,8 +174,8 @@ Wait for the `<skill-author-result>` block before proceeding.
 ## Phase 4: Validate
 
 ```bash
-bash "/skills/skill/scripts/validate-skill.sh" "/.claude/skills/[skill-name]/
-ls -la "/.claude/skills/[skill-name]/
+bash "${CLAUDE_PLUGIN_ROOT}/skills/skill/scripts/validate-skill.sh" "${CLAUDE_PROJECT_DIR}/.claude/skills/[skill-name]/
+ls -la "${CLAUDE_PROJECT_DIR}/.claude/skills/[skill-name]/
 wc -l .claude/skills/[skill-name]/SKILL.md
 ```
 

@@ -116,7 +116,7 @@ Rules are guidelines loaded automatically by the AI at the start of every sessio
 
 | Rule | What it covers |
 |------|---------------|
-| `coding-standards` | Code quality, naming, structure |
+| `coding-standards` | Code quality, naming, structure, and prompt design (calibrated language, altitude, lean skills) |
 | `mcp-caching` | Cache large MCP responses to `.context/` to avoid bloating context windows |
 
 **Cursor** (`.cursor/rules/`):

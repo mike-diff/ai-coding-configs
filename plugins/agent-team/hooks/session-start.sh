@@ -25,7 +25,7 @@ log "START sid=$SID source=$SRC model=$MDL cwd=$CWD"
 
 if [ "$SKIP_EXEC_CHECK" = "0" ]; then
   # Validate required hook scripts are executable
-  REQUIRED=(block-dangerous.sh validate-commit.sh redact-secrets.sh post-edit-lint.sh teammate-idle.sh task-completed.sh notify-compact.sh)
+  REQUIRED=(block-dangerous.sh validate-commit.sh redact-secrets.sh post-edit-lint.sh require-result-block.sh notify-compact.sh)
   MISSING=0
   for h in "${REQUIRED[@]}"; do
     if [[ ! -x "$HOOKS_DIR/$h" ]]; then

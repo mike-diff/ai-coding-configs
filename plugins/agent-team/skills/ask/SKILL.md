@@ -1,6 +1,7 @@
 ---
 name: ask
 description: Ask numbered clarifying questions before proceeding with a task
+disable-model-invocation: true
 ---
 
 Ask concise, numeric questions for clarification before proceeding.

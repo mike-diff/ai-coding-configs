@@ -2,6 +2,7 @@
 name: ticket
 description: Create a GitHub issue through a guided interview. Explores the codebase first, asks batched questions, previews, then runs gh issue create.
 argument-hint: <brief description of the issue>
+disable-model-invocation: true
 ---
 
 # /ticket - Create GitHub Issue via Interview

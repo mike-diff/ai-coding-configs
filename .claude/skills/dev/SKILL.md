@@ -2,6 +2,7 @@
 name: dev
 description: Implement a feature using a coordinated agent team. Auto-detects FLAT or HIERARCHICAL team shape. Runs a build loop with review and QA quality gates.
 argument-hint: <feature description>
+disable-model-invocation: true
 ---
 
 # Team-Based Feature Development

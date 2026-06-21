@@ -2,6 +2,7 @@
 name: spec
 description: Generate a complete feature specification with user stories, requirements, and self-contained implementation phases. Use when you know what to build.
 argument-hint: <feature description>
+disable-model-invocation: true
 ---
 
 # Feature Specification Generator

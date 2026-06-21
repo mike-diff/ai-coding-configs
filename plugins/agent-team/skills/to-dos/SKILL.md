@@ -2,6 +2,7 @@
 name: to-dos
 description: Generate detailed, actionable developer tasks using TaskCreate with rich descriptions, dependency tracking, and owner assignment.
 argument-hint: <feature or change to break down>
+disable-model-invocation: true
 ---
 
 # Technical Implementation Task Generator

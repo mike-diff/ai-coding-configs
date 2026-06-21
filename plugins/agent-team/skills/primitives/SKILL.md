@@ -1,6 +1,7 @@
 ---
 name: primitives
 description: Enumerate all native Claude Code tools, modes, and configuration primitives available in the current session
+disable-model-invocation: true
 ---
 
 # Core Tool Audit

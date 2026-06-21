@@ -1,6 +1,7 @@
 ---
 name: orient
 description: Build a comprehensive understanding of the codebase. Maps tech stack, architecture, and patterns. Findings persist through project memory.
+disable-model-invocation: true
 ---
 
 # Codebase Proficiency

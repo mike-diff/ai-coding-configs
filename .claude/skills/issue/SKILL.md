@@ -2,6 +2,7 @@
 name: issue
 description: Fetch a GitHub issue, explore the codebase, ask clarifying questions, and produce an implementation plan. Stops before building.
 argument-hint: <issue number or URL>
+disable-model-invocation: true
 ---
 
 # /issue - GitHub Issue Analysis & Planning

@@ -3,6 +3,7 @@ name: skill
 description: "Create a new Agent Skill in .claude/skills/ following the agentskills.io specification. Use when creating skills, writing SKILL.md files, setting up skill directory structures, or validating skill frontmatter. Delegates to skill-author teammate using TDD methodology."
 argument-hint: <skill description>
 compatibility: "Designed for Claude Code"
+disable-model-invocation: true
 ---
 
 # /skill — Create Agent Skills

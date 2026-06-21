@@ -125,9 +125,9 @@ assert_file_contains "tests/smoke.sh" "slop-check"
 assert_file_contains ".claude/skills/review-patterns/SKILL.md" "name: review-patterns"
 assert_file_contains ".claude/agents/reviewer.md" "skills: review-patterns"
 
-# Command skills are guarded from model auto-invocation via skillOverrides (standalone settings).
-assert_file_contains ".claude/settings.json" "skillOverrides"
-assert_file_contains ".claude/settings.json" "\"dev\": \"user-invocable-only\""
+# Command skills are guarded from model auto-invocation via per-skill frontmatter.
+assert_file_contains ".claude/skills/dev/SKILL.md" "disable-model-invocation: true"
+assert_file_contains ".claude/skills/spec/SKILL.md" "disable-model-invocation: true"
 
 # Compact hook emits a desktop notification; post-edit-lint surfaces lint via additionalContext.
 assert_file_contains ".claude/hooks/notify-compact.sh" "terminalSequence"

@@ -2,6 +2,7 @@
 name: discuss
 description: Explore a rough idea through conversation and parallel research. Produces a validated plan with blind spot checking. Optionally deepens into a phased spec.
 argument-hint: <idea or question>
+disable-model-invocation: true
 ---
 
 # Idea Exploration & Validated Planning

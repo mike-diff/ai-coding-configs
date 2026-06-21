@@ -95,6 +95,7 @@ Run the validation script: scripts/validate.sh
 3. **Spec compliance** — Follow agentskills.io format strictly.
 4. **Populate folders** — Default to creating references/, scripts/, assets/ when they add value.
 5. **Validate before closing** — Run `scripts/validate-skill.sh` on the result.
+6. **Prompt quality** — The SKILL.md is a prompt; it must follow [prompting-guide.md](references/prompting-guide.md) (right altitude, calibrated language, canonical examples over rule lists, lean SKILL.md, external completion).
 </principles>
 
 <red_flags>
@@ -153,6 +154,11 @@ Task: Create this skill using TDD methodology.
 Starter templates are in .claude/skills/skill/assets/:
   technique-template.md, reference-template.md, guardrail-template.md
 
+The SKILL.md is a prompt — follow .claude/skills/skill/references/prompting-guide.md:
+  right altitude (defaults + rationale, not if-else prose), calibrated language
+  (reserve ALWAYS/NEVER for true invariants), canonical examples over rule lists,
+  lean SKILL.md with depth in references/, completion defined by a checkable signal.
+
 TDD process:
 1. Baseline test WITHOUT the skill — record failures verbatim
 2. Write SKILL.md + populate folders addressing those failures
@@ -204,6 +210,7 @@ If validation fails, delegate back to skill-author with specific errors.
 
 ## Resources
 
+- [Prompting Guide](references/prompting-guide.md) — The standard every SKILL.md is written against: altitude, calibrated language, canonical examples, lean SKILL.md, external completion
 - [Agent Skills Specification](references/agent-skills-spec.md) — Full spec reference
 - [Skill Templates](references/skill-templates.md) — Annotated templates for all three types
 - Starter templates: `assets/technique-template.md`, `assets/reference-template.md`, `assets/guardrail-template.md`

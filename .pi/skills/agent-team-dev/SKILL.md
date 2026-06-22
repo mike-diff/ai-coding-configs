@@ -1,6 +1,7 @@
 ---
 name: agent-team-dev
 description: Run the Agent Team dev workflow in pi for this repo. Use when implementing a validated feature or spec-backed phase with preflight, exploration, clarification, implementation, reflection, review, QA and wrapup.
+disable-model-invocation: true
 ---
 
 # Agent Team Dev
@@ -30,7 +31,7 @@ Use when the request includes `@.context/specs/...`.
 - Do not expand scope without asking.
 - Implement the requested phase or task graph slice.
 
-**Single-phase vs sweep:** a named phase (`/dev "Implement Phase 1" @<spec>`) builds that one phase. A spec path with no single phase (`/dev @<spec>`, `/dev "all phases" @<spec>`) is **sweep mode**: explore + clarify once, then `TaskCreate` one dependency-chained phase task per spec phase and run the per-phase build for each in order, committing at every phase boundary, fully autonomously. Halt the sweep on a blocked phase or high-risk escalation; do not cascade into dependent phases. See the source-of-truth `workflow.md` for the loop.
+**Single-phase vs sweep:** a named phase (`/dev "Implement Phase 1" @<spec>`) builds that one phase. A spec path with no single phase (`/dev @<spec>`, `/dev "all phases" @<spec>`) is **sweep mode**: explore + clarify once, then work the spec's phases in dependency order, one at a time, committing at every phase boundary, fully autonomously. pi has no `TaskCreate`/shared-task-list tool and no sub-agents, so track progress with an explicit ordered phase checklist kept in your working notes (or in the spec file): read the spec, implement the current phase, verify, commit, then move to the next; native compaction handles context across the sweep. Halt the sweep on a blocked phase or high-risk escalation; do not cascade into dependent phases. (The source-of-truth `workflow.md` describes the same loop using Claude Code's `TaskCreate` task graph, which is Claude-only — translate it to the sequential checklist above on pi.)
 
 ### Ad hoc mode
 
@@ -58,8 +59,8 @@ Use for small validated changes without a spec.
 5. Reflect
    - Check spec coverage, assumptions, scope and weak spots.
 6. Review and QA
-   - Use focused review for low-risk work.
-   - Use a risk-triggered review council for security, data, migrations, dependencies, public contracts, cross-layer work, or user-requested thorough review.
+   - Use a single focused review pass for low-risk work.
+   - For security, data, migrations, dependencies, public contracts, cross-layer work, or user-requested thorough review, do a deeper multi-pass review — pi is single-agent, so this is sequential review lenses in one session, not spawned reviewer teammates (the `.claude`/`.cursor` source describes a spawned review council).
    - Run relevant validation commands.
 7. Commit or PR-ready
    - Commit only if requested or appropriate for the task.

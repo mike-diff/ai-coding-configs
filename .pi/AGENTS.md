@@ -2,6 +2,11 @@
 
 This repo maintains the Agent Team workflows across three product surfaces plus pi maintainer skills.
 
+> Note: pi does NOT auto-load this nested file as context — it reads the repo-root
+> `AGENTS.md` (cwd→root walk), not `.pi/AGENTS.md`. The canonical, pi-loaded copy of
+> these instructions lives at the repo root `AGENTS.md`. This file is kept for human
+> reference and is asserted by `tests/workflow-contract.sh`; keep it in sync with root.
+
 ## Surfaces
 
 - Claude standalone: `.claude/`
@@ -13,7 +18,7 @@ This repo maintains the Agent Team workflows across three product surfaces plus 
 
 - Claude standalone is the source of truth for the Claude Code plugin. After changing `.claude/`, run `scripts/sync-plugin.sh` and review `plugins/agent-team/` diffs.
 - Cursor is a separate runtime. When workflow semantics change, update `.cursor/` explicitly rather than assuming plugin sync covers it.
-- Pi skills are maintainer/operator wrappers. They must point back to Claude/Cursor workflow files as source of truth and must not become a fourth independent workflow implementation.
+- Pi skills are maintainer/operator wrappers. They must point back to Claude/Cursor workflow files as source of truth and must not become a fourth independent workflow implementation. `.pi/` syncs nowhere automatically, so when `.claude` workflow semantics or skill frontmatter change, manually re-check the three `.pi/skills/agent-team-*` wrappers (and this file vs root `AGENTS.md`), then re-run `./tests/workflow-contract.sh`.
 
 ## Workflow constraints
 

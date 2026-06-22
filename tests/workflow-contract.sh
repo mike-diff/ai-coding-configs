@@ -93,12 +93,16 @@ for agent in .claude/agents/implementer.md .cursor/agents/implementer.md; do
 done
 
 # Pi project-local skills provide maintainer entry points without adding a fourth source of truth.
+# Root AGENTS.md is the file pi actually auto-loads (cwd->root walk); .pi/AGENTS.md is human/fixture only.
+assert_file_contains "AGENTS.md" "Agent Team"
 assert_file_contains ".pi/AGENTS.md" "Agent Team"
 assert_file_contains ".pi/AGENTS.md" "scripts/sync-plugin.sh"
 for skill in agent-team-discuss agent-team-spec agent-team-dev; do
   [ -f ".pi/skills/$skill/SKILL.md" ] || fail "missing pi skill: $skill"
   assert_file_contains ".pi/skills/$skill/SKILL.md" "name: $skill"
   assert_file_contains ".pi/skills/$skill/SKILL.md" "source of truth"
+  # Maintainer wrappers must be /skill:-only, never model-auto-invoked (matches .claude guard).
+  assert_file_contains ".pi/skills/$skill/SKILL.md" "disable-model-invocation: true"
 done
 assert_file_contains ".pi/skills/agent-team-spec/SKILL.md" ".context/specs/spec-[feature-name].md"
 assert_file_contains ".pi/skills/agent-team-dev/SKILL.md" "Spec-backed mode"

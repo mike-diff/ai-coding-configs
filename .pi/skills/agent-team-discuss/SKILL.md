@@ -1,6 +1,7 @@
 ---
 name: agent-team-discuss
 description: Run the Agent Team discuss workflow in pi for this repo. Use when exploring a feature idea before writing a spec or implementation plan, validating assumptions, or preparing an ADLC handoff for /skill:agent-team-spec or /skill:agent-team-dev.
+disable-model-invocation: true
 ---
 
 # Agent Team Discuss
@@ -30,13 +31,15 @@ Answer: Should we build this, what are we assuming, and what should flow into `/
    - Reference-driven discussion using files, docs, URLs, or prior context
 2. Ask at most 3 clarifying questions at a time.
 3. Use repo search and file reads to ground the conversation in existing patterns.
-4. Use subagents only when useful:
-   - Codebase scout for implementation patterns
-   - Web or docs researcher for external libraries or current platform behavior
-   - Challenger or reviewer for blind spots on high-risk plans
-5. Validate the plan before recommending build.
-6. Do not implement.
-7. End with a compact validated plan and an `<adlc-handoff>` block.
+4. Do the research inline, sequentially (pi is single-agent — there is no team/subagent spawn):
+   - Scout the codebase for implementation patterns
+   - Research external libraries or current platform behavior (web/docs)
+   - Stress-test high-risk plans for blind spots
+   For heavy parallel research, the multi-agent COUNCIL flow lives in the source-of-truth `.claude/skills/discuss/references/phases.md` / `.cursor` — run it there.
+5. Blind-spot check is MANDATORY before recommending build — never skip it, and do not gate it on "high-risk only" (per the source-of-truth phases.md).
+6. Validate the plan before recommending build.
+7. Do not implement.
+8. End with a compact validated plan and an `<adlc-handoff>` block.
 
 ## Required final handoff
 

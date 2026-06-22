@@ -57,15 +57,19 @@ cp -R "$SRC/skills/." "$DST/skills/"
 find "$DST/skills" -name "*.md" -print0 | xargs -0 perl -i -pe \
   "s{(?<![:/\\w-])/($SKILL_NAMES)\\b(?!:)}{/agent-team:\$1}g"
 
-# Hardcoded path rewrites in skill/SKILL.md
+# Hardcoded path rewrites in skill/SKILL.md.
+# NOTE: the replacement side of perl s{}{} is double-quote context, so a literal
+# ${CLAUDE_PLUGIN_ROOT} would be interpolated as an (undefined) perl variable and
+# vanish. Escape the dollar as \$ so the literal ${...} placeholder reaches the
+# plugin file, where Claude Code expands it at load time.
 perl -i -pe \
-  's{ls -la \.claude/skills/}{ls -la "${CLAUDE_PROJECT_DIR}/.claude/skills/}g; \
-   s{bash \.claude/skills/skill/scripts/validate-skill\.sh \.claude/skills/}{bash "${CLAUDE_PLUGIN_ROOT}/skills/skill/scripts/validate-skill.sh" "${CLAUDE_PROJECT_DIR}/.claude/skills/}g' \
+  's{ls -la \.claude/skills/}{ls -la "\${CLAUDE_PROJECT_DIR}/.claude/skills/}g; \
+   s{bash \.claude/skills/skill/scripts/validate-skill\.sh \.claude/skills/}{bash "\${CLAUDE_PLUGIN_ROOT}/skills/skill/scripts/validate-skill.sh" "\${CLAUDE_PROJECT_DIR}/.claude/skills/}g' \
   "$DST/skills/skill/SKILL.md"
 
-# Same rewrites in skill-author.md (already copied to $DST/agents/ in step 1)
+# Same rewrite in skill-author.md (already copied to $DST/agents/ in step 1).
 perl -i -pe \
-  's{bash \.claude/skills/skill/scripts/validate-skill\.sh \.claude/skills/}{bash "${CLAUDE_PLUGIN_ROOT}/skills/skill/scripts/validate-skill.sh" "${CLAUDE_PROJECT_DIR}/.claude/skills/}g' \
+  's{bash \.claude/skills/skill/scripts/validate-skill\.sh \.claude/skills/}{bash "\${CLAUDE_PLUGIN_ROOT}/skills/skill/scripts/validate-skill.sh" "\${CLAUDE_PROJECT_DIR}/.claude/skills/}g' \
   "$DST/agents/skill-author.md"
 
 # 6. Verification: no unprefixed slash-command refs in plugin skills

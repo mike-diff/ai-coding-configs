@@ -1,6 +1,7 @@
 ---
 name: agent-team-spec
 description: Run the Agent Team spec workflow in pi for this repo. Use when turning a validated idea or ADLC handoff into a local, uncommitted spec with requirement validation, architecture validation, task graph and implementation phases.
+disable-model-invocation: true
 ---
 
 # Agent Team Spec

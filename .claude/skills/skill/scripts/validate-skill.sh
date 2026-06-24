@@ -85,6 +85,20 @@ else
     pass "name has no consecutive hyphens"
   fi
 
+  # No XML tags (name is machine-parsed; angle brackets are never valid here)
+  if echo "$NAME" | grep -q '[<>]'; then
+    fail "name must not contain XML tags (< or >)"
+  else
+    pass "name has no XML tags"
+  fi
+
+  # No reserved words (anthropic / claude)
+  if echo "$NAME" | grep -qiE 'anthropic|claude'; then
+    fail "name must not contain reserved words (anthropic, claude)"
+  else
+    pass "name has no reserved words"
+  fi
+
   # Matches directory name
   if [[ "$NAME" != "$DIR_NAME" ]]; then
     fail "name '$NAME' does not match directory name '$DIR_NAME'"
@@ -116,6 +130,21 @@ else
     pass "description includes when-to-use trigger"
   else
     warn "description may be missing a when-to-use trigger (e.g. 'Use when...')"
+  fi
+
+  # No XML tags (description is injected into the system prompt verbatim)
+  if echo "$DESC" | grep -q '[<>]'; then
+    fail "description must not contain XML tags (< or >)"
+  else
+    pass "description has no XML tags"
+  fi
+
+  # Third person: the description is injected into the system prompt, so
+  # first/second person ("I can…", "you can…") reads oddly and weakens discovery.
+  if echo "$DESC" | grep -iqE "I can|I will|you can|you'll|we can"; then
+    warn "description may not be in third person (found 'I can'/'you can'/etc.)"
+  else
+    pass "description appears to be in third person"
   fi
 fi
 
@@ -156,6 +185,43 @@ if [[ -n "$DEEP_REFS" ]]; then
   echo "$DEEP_REFS" | sed 's/^/    /'
 else
   pass "No deep file references detected"
+fi
+
+# Backslash in a markdown link target signals a Windows path — skills must use
+# forward slashes to stay portable. Warn rather than fail (illustrative examples exist).
+BACKSLASH_REFS=$(grep -oE '\]\([^)]*\\[^)]*\)' "$SKILL_FILE" 2>/dev/null | \
+  grep -vE '\]\(https?://' || true)
+if [[ -n "$BACKSLASH_REFS" ]]; then
+  warn "File reference uses a backslash (use forward slashes for portability):"
+  echo "$BACKSLASH_REFS" | sed 's/^/    /'
+else
+  pass "No backslash file references detected"
+fi
+
+# ── Reference tables of contents ──────────────────────────────────────────────
+# A reference file over 100 lines should open with a table of contents so the
+# agent can jump to the right section. Warn (don't fail) — existing skills predate this.
+echo ""
+echo "Reference Tables of Contents"
+
+if [[ -d "$SKILL_DIR/references" ]]; then
+  TOC_CHECKED=0
+  while IFS= read -r ref; do
+    REF_LINES=$(wc -l < "$ref")
+    if [[ $REF_LINES -gt 100 ]]; then
+      TOC_CHECKED=1
+      if head -30 "$ref" | grep -qiE '^##+ +(Contents|Table of Contents)'; then
+        pass "$(basename "$ref") has a table of contents"
+      else
+        warn "$(basename "$ref") is $REF_LINES lines but lacks a '## Contents' heading near the top"
+      fi
+    fi
+  done < <(find "$SKILL_DIR/references" -maxdepth 1 -name '*.md' -type f | sort)
+  if [[ $TOC_CHECKED -eq 0 ]]; then
+    pass "No reference files over 100 lines"
+  fi
+else
+  pass "No references/ directory (TOC check skipped)"
 fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────

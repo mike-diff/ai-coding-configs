@@ -4,6 +4,16 @@ Ready-to-use templates for the three skill types. Copy the relevant template as 
 
 ---
 
+## Contents
+
+- [Choosing a Type](#choosing-a-type)
+- [Matching Structure to Degrees of Freedom](#matching-structure-to-degrees-of-freedom)
+- [Technique Template](#technique-template)
+- [Reference Template](#reference-template)
+- [Guardrail Template](#guardrail-template)
+
+---
+
 ## Choosing a Type
 
 | Type | Use when... | Key sections |
@@ -11,6 +21,41 @@ Ready-to-use templates for the three skill types. Copy the relevant template as 
 | **Technique** | Teaching a concrete procedure with steps | Pattern, Implementation, Common Mistakes |
 | **Reference** | Providing quick-lookup docs or API patterns | Quick Reference tables, code snippets |
 | **Guardrail** | Enforcing a critical practice, preventing mistakes | STOP block, Rationalization Defense, The Process |
+
+---
+
+## Matching Structure to Degrees of Freedom
+
+Before picking a template, decide how much latitude the task allows, and shape the skill to match (see `prompting-guide.md` §2):
+
+- **High freedom** — the path varies; describe the goal in prose and let the model choose how to get there.
+- **Medium freedom** — the shape is fixed but inputs vary; hand over a parameterized procedure or checklist.
+- **Low freedom** — one correct path; provide an exact script or step list and forbid improvisation.
+
+Three building blocks earn their place when the task calls for them — drop them into whichever template you start from:
+
+**Copy-able checklist** for any multi-step procedure (medium/low freedom). The agent ticks items as it goes, so nothing is skipped:
+
+```markdown
+- [ ] Step 1 — [what + why]
+- [ ] Step 2 — [what + why]
+- [ ] Step 3 — [what + why]
+```
+
+**Validate → fix → repeat feedback loop** so completion is checkable, not self-graded:
+
+```markdown
+1. Run `[validation command]`.
+2. If it reports problems, fix the first one.
+3. Re-run from step 1. Done only when it passes clean.
+```
+
+**Input/output example pairs** for any skill whose output shape matters. One concrete pair pins the format better than a prose description of it:
+
+```markdown
+**Input:**  [representative input]
+**Output:** [exact expected output]
+```
 
 ---
 

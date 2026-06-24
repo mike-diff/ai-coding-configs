@@ -10,6 +10,23 @@ to consult when writing or reviewing a prompt.
 
 ---
 
+## Contents
+
+1. [The two ideas everything else serves](#1-the-two-ideas-everything-else-serves)
+2. [Altitude — the central authoring skill](#2-altitude--the-central-authoring-skill)
+3. [Calibrated language](#3-calibrated-language)
+4. [Canonical examples over rule lists](#4-canonical-examples-over-rule-lists)
+5. [Structure](#5-structure)
+6. [Skills and progressive disclosure](#6-skills-and-progressive-disclosure)
+7. [Behavior control](#7-behavior-control)
+8. [Completion is external](#8-completion-is-external)
+9. [Output and scope discipline](#9-output-and-scope-discipline)
+10. [Safety and untrusted content](#10-safety-and-untrusted-content)
+11. [Iterate against evals](#11-iterate-against-evals)
+- [Quick checklist for a new skill/agent prompt](#quick-checklist-for-a-new-skillagent-prompt)
+
+---
+
 ## 1. The two ideas everything else serves
 
 **Attention budget.** A model has a finite effective attention budget. As context
@@ -51,6 +68,17 @@ Right altitude:
   defective items are our responsibility regardless of timing. Escalate
   anything outside these bounds rather than improvising policy.
 ```
+
+**Degrees of freedom.** Match how tightly you constrain to how much the task can
+vary. *High freedom* — describe the goal in prose and let the model find the path
+(use when the space is open-ended, e.g. "review this PR for anything that would
+surprise a maintainer"). *Medium freedom* — hand it a parameterized script or a
+fixed sequence with room to fill in specifics (use when the shape is known but the
+inputs vary). *Low freedom* — give one exact script to run with no improvisation
+(use when there's a single correct path and any deviation is a bug, e.g. a
+migration bridge that must touch the schema in exactly one order). Picking the
+wrong altitude shows up as either brittle scripts cracking on novel input or vague
+prose drifting where precision was required.
 
 ---
 
@@ -212,6 +240,18 @@ Newer Claude models are terser by default — legacy "be concise" instructions c
 over-trim. Prefer native structured-output / JSON-schema modes over a
 schema-in-prompt when the platform enforces them.
 
+Two more habits that keep a prompt durable:
+
+- **Offer one default plus a single escape hatch, not a menu.** A list of equally
+  weighted options makes the model deliberate instead of act. State the path you
+  want and the one condition under which to deviate; that reads as a decision, not
+  a quiz.
+- **Avoid time-sensitive phrasing and mixed terminology.** "The new format",
+  "currently", and "as of the latest release" go stale; pick durable language and
+  one term per concept. When a legacy approach has to stay for migration, isolate
+  it in an "Old patterns" aside (a collapsed `<details>` block) so it doesn't
+  compete with the current guidance.
+
 ---
 
 ## 10. Safety and untrusted content
@@ -236,10 +276,14 @@ actions originating from untrusted content require explicit confirmation.
 
 Establish a baseline, change one thing, measure on the same suite, keep or revert.
 Build the eval set from real failures (20 representative tasks beat zero perfect
-ones). Three grader types: programmatic checks (cheapest, most trustworthy),
-LLM-as-judge with a written rubric (calibrate against human labels first), and
-human transcript reading (lowest volume, highest insight — transcripts reveal
-*why* a prompt failed). Write an eval the second time the same failure appears.
+ones; **at minimum, write 3 evals from concrete gaps** before investing in
+extensive content). Three grader types: programmatic checks (cheapest, most
+trustworthy), LLM-as-judge with a written rubric (calibrate against human labels
+first), and human transcript reading (lowest volume, highest insight — transcripts
+reveal *why* a prompt failed). Write an eval the second time the same failure
+appears. **Run the suite across every model the prompt will ship on**
+(Haiku/Sonnet/Opus) — behavior and instruction-following differ by model, so a
+prompt that passes on one can fail on another.
 
 ---
 
@@ -253,3 +297,6 @@ human transcript reading (lowest volume, highest insight — transcripts reveal
 - [ ] Each rule stated once, in the right section; constraints early
 - [ ] Completion defined by a checkable signal, not "done"
 - [ ] Scope constraints at the end
+- [ ] One default + single escape hatch, not a menu of equal options
+- [ ] No time-sensitive phrasing or mixed terminology; legacy isolated in an "Old patterns" aside
+- [ ] ≥3 evals from real gaps; tested across target models (Haiku/Sonnet/Opus)

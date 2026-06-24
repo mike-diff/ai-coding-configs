@@ -59,8 +59,8 @@ skill-name/
 
 | Field | Required | Rules |
 |-------|----------|-------|
-| `name` | Yes | 1–64 chars. Lowercase + hyphens only (`a-z`, `0-9`, `-`). No leading/trailing/consecutive hyphens. Must match directory name exactly. |
-| `description` | Yes | 1–1024 chars. Must include **what** it does AND **when** to use it. Include trigger keywords. |
+| `name` | Yes | 1–64 chars. Lowercase + hyphens only (`a-z`, `0-9`, `-`). No leading/trailing/consecutive hyphens. No XML tags. No reserved words (`anthropic`, `claude`). Must match directory name exactly. |
+| `description` | Yes | 1–1024 chars. Must include **what** it does AND **when** to use it. Include trigger keywords. Write in third person. No XML tags. |
 | `compatibility` | Recommended | Use `"Designed for Claude Code"` for Claude Code skills. |
 | `license` | No | License name or reference to LICENSE file. |
 | `metadata` | No | Key-value map for custom properties. |
@@ -74,6 +74,8 @@ description: "Extracts text and tables from PDF files, fills PDF forms, merges P
 ```yaml
 description: "Helps with PDFs."
 ```
+
+**Naming:** prefer the gerund form (`processing-pdfs`, `testing-code`); noun phrases (`pdf-processing`) and action names (`process-pdfs`) are also fine. Avoid vague labels (`helper`, `utils`, `tools`) and over-generic names (`documents`, `data`). See [naming conventions](references/agent-skills-spec.md#naming-conventions).
 
 ---
 
@@ -97,6 +99,7 @@ Run the validation script: scripts/validate.sh
 4. **Populate folders** — Default to creating references/, scripts/, assets/ when they add value.
 5. **Validate before closing** — Run `scripts/validate-skill.sh` on the result.
 6. **Prompt quality** — The SKILL.md is a prompt; it must follow [prompting-guide.md](references/prompting-guide.md) (right altitude, calibrated language, canonical examples over rule lists, lean SKILL.md, external completion).
+7. **Evaluate, don't assume** — Build ≥3 evaluations from real gaps before writing extensive content, and test the skill across the models it will run under (Haiku/Sonnet/Opus). Behavior differs by model; an eval that only passes on one isn't done.
 </principles>
 
 <red_flags>
@@ -159,6 +162,14 @@ The SKILL.md is a prompt — follow .claude/skills/skill/references/prompting-gu
   right altitude (defaults + rationale, not if-else prose), calibrated language
   (reserve ALWAYS/NEVER for true invariants), canonical examples over rule lists,
   lean SKILL.md with depth in references/, completion defined by a checkable signal.
+
+Spec rules to inherit (see .claude/skills/skill/references/agent-skills-spec.md):
+  - name: lowercase + hyphens only, no XML tags, no reserved words (anthropic, claude);
+    prefer gerund naming, avoid vague/generic labels.
+  - description: third person, no XML tags, includes what + when.
+  - Add a `## Contents` table of contents to any references/ file over 100 lines.
+  - File references: forward slashes only, one level deep, never backslashes.
+  - Build ≥3 evaluations from real gaps and test across target models (Haiku/Sonnet/Opus).
 
 TDD process:
 1. Baseline test WITHOUT the skill — record failures verbatim

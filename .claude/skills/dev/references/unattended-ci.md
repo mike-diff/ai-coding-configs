@@ -65,6 +65,22 @@ Verified by spike (private `claude-dispatch-spike` repo, real CI runs):
 - `branch_prefix: "claude/"` — the action appends `issue-<n>` itself. Do NOT use
   `branch_prefix: "claude/issue-"` or you get a doubled `claude/issue-issue-<n>` branch name.
 
+## Known limitation: writes to `.claude/` are blocked
+
+The action sandbox **denies writes under `.claude/`** (Edit/Write and Bash file-primitives,
+including for delegated sub-agents) — `claude-code-action` injects its own runtime config
+there and protects it. Writes to the repo root and `.context/` succeed; only `.claude/**` is
+blocked. Observed on the issue-#13 dogfood run: the agent correctly produced the full change
+set and exited `blocked` rather than routing around the denial.
+
+Consequence: an issue whose target lives **entirely under `.claude/`** (e.g. editing a skill or
+agent) cannot complete via this workflow — it will return a `blocked` result with the proposed
+changes in a comment, which a human then applies. For self-edits to `.claude/`, apply the
+agent's proposed changes manually (or in an interactive `/dev` session). The override path, if
+you want to pursue it, is the action's `settings` input to relax the protected-path policy —
+untested here; confirm with a spike before relying on it. Most dispatch targets (app/`src` code)
+are unaffected.
+
 ## Caps (defense in depth)
 
 - `--max-turns` — caps the LEAD's turns only (a sub-agent cannot be turn-capped from here).

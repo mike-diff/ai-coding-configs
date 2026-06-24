@@ -75,10 +75,9 @@ Verified by spike (private `claude-dispatch-spike` repo, real CI runs):
   pr edit` so a re-label updates the existing PR instead of failing).
 - **PR title** = the issue title verbatim (no `(#n)` suffix — the issue is linked in the body).
 - **PR body** = the agent writes `PR_BODY.md` at the repo root during the run (summary, key
-  changes, verification, `Closes #n`); the step reads it from the pushed branch and uses it as
-  the description, with a minimal fallback if absent. `PR_BODY.md` is a small throwaway artifact
-  that the action commits onto the dispatch branch; it disappears when the branch is deleted on
-  merge.
+  changes, verification, `Closes #n`); the step reads it from the pushed branch, uses it as the
+  description, then **deletes it from the branch** (a single contents-API commit) so it never
+  appears in the PR diff. Falls back to a minimal body if the agent didn't write one.
 - Enabling auto-PR requires the repo setting **Settings → Actions → General → "Allow GitHub
   Actions to create and approve pull requests"** to be ON. PRs opened by the default
   `GITHUB_TOKEN` do not themselves trigger other workflows.

@@ -85,6 +85,20 @@ else
     pass "name has no consecutive hyphens"
   fi
 
+  # No XML tags
+  if echo "$NAME" | grep -qE '[<>]'; then
+    fail "name must not contain XML tags (< or >)"
+  else
+    pass "name has no XML tags"
+  fi
+
+  # No reserved words
+  if echo "$NAME" | grep -qiE 'anthropic|claude'; then
+    fail "name must not contain reserved words (anthropic, claude)"
+  else
+    pass "name has no reserved words"
+  fi
+
   # Matches directory name
   if [[ "$NAME" != "$DIR_NAME" ]]; then
     fail "name '$NAME' does not match directory name '$DIR_NAME'"
@@ -116,6 +130,20 @@ else
     pass "description includes when-to-use trigger"
   else
     warn "description may be missing a when-to-use trigger (e.g. 'Use when...')"
+  fi
+
+  # No XML tags (description is injected into the system prompt)
+  if echo "$DESC" | grep -qE '[<>]'; then
+    fail "description must not contain XML tags (< or >)"
+  else
+    pass "description has no XML tags"
+  fi
+
+  # Heuristic: should be written in third person
+  if echo "$DESC" | grep -iqE '\bI can\b|\bI will\b|\byou can\b|\byou will\b|\byou'"'"'ll\b|\bwe can\b'; then
+    warn "description may not be third person (avoid 'I can…'/'You can…')"
+  else
+    pass "description appears to be third person"
   fi
 fi
 
@@ -156,6 +184,40 @@ if [[ -n "$DEEP_REFS" ]]; then
   echo "$DEEP_REFS" | sed 's/^/    /'
 else
   pass "No deep file references detected"
+fi
+
+# Windows-style paths: backslash inside a markdown link target
+BACKSLASH_REFS=$(grep -oE '\]\([^)]*\\[^)]*\)' "$SKILL_FILE" 2>/dev/null || true)
+if [[ -n "$BACKSLASH_REFS" ]]; then
+  warn "Windows-style path(s) found — use forward slashes:"
+  echo "$BACKSLASH_REFS" | sed 's/^/    /'
+else
+  pass "No Windows-style paths detected"
+fi
+
+# ── Reference tables of contents ──────────────────────────────────────────────
+# Reference files over 100 lines should include a ## Contents / ## Table of Contents
+# near the top, so partial reads still reveal the file's full scope.
+echo ""
+echo "Reference Tables of Contents"
+
+if [[ -d "$SKILL_DIR/references" ]]; then
+  TOC_CHECKED=0
+  while IFS= read -r ref; do
+    [[ -z "$ref" ]] && continue
+    TOC_CHECKED=1
+    REF_LINES=$(wc -l < "$ref")
+    if [[ $REF_LINES -gt 100 ]]; then
+      if head -30 "$ref" | grep -qiE '^##+ (contents|table of contents)'; then
+        pass "$(basename "$ref") ($REF_LINES lines) has a table of contents"
+      else
+        warn "$(basename "$ref") ($REF_LINES lines) has no '## Contents' near the top"
+      fi
+    fi
+  done < <(find "$SKILL_DIR/references" -maxdepth 1 -name '*.md' -type f)
+  [[ $TOC_CHECKED -eq 0 ]] && pass "No reference files to check"
+else
+  pass "No references/ directory"
 fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────

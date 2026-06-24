@@ -8,6 +8,21 @@ Targeted at Claude (Claude Code). The always-on essentials live in
 `.claude/rules/coding-standards.md` ("Prompt Structures"); this is the depth layer
 to consult when writing or reviewing a prompt.
 
+## Contents
+
+1. The two ideas everything else serves
+2. Altitude — the central authoring skill (incl. degrees of freedom)
+3. Calibrated language
+4. Canonical examples over rule lists
+5. Structure
+6. Skills and progressive disclosure
+7. Behavior control
+8. Completion is external
+9. Output and scope discipline
+10. Safety and untrusted content
+11. Iterate against evals
+- Quick checklist for a new skill/agent prompt
+
 ---
 
 ## 1. The two ideas everything else serves
@@ -51,6 +66,21 @@ Right altitude:
   defective items are our responsibility regardless of timing. Escalate
   anything outside these bounds rather than improvising policy.
 ```
+
+**Degrees of freedom.** Altitude has a second axis: how much latitude to leave for
+*how* the work is done. Match it to the task's fragility, not your comfort:
+
+- **High** (prose heuristics) — multiple valid approaches, decisions depend on
+  context. *e.g.* a code review: "check structure, look for edge cases, verify
+  conventions." An open field; trust Claude to route.
+- **Medium** (parameterized script or pseudocode) — a preferred pattern exists but
+  some variation is fine. *e.g.* a report generator with `format=` / `include_charts=`.
+- **Low** (one exact script, few/no params) — fragile, consistency-critical, must run
+  in sequence. *e.g.* a database migration: "Run exactly `scripts/migrate.py
+  --verify --backup`. Do not add flags." A narrow bridge with cliffs.
+
+Over-specifying an open field makes brittle prompts; under-specifying a narrow bridge
+invites errors.
 
 ---
 
@@ -212,6 +242,16 @@ Newer Claude models are terser by default — legacy "be concise" instructions c
 over-trim. Prefer native structured-output / JSON-schema modes over a
 schema-in-prompt when the platform enforces them.
 
+Two more discipline rules that keep instructions followable:
+
+- **One default, one escape hatch — not a menu.** "Use pdfplumber for text
+  extraction; for scanned PDFs use pdf2image with OCR instead" beats listing five
+  libraries. Too many options is itself a failure mode.
+- **No time-sensitive phrasing or mixed terminology.** Avoid "before August 2025,
+  use the old API" — isolate deprecated guidance in an "Old patterns" `<details>`
+  aside. Pick one term per concept and reuse it; synonym drift ("field"/"box"/
+  "element") makes instructions harder to follow.
+
 ---
 
 ## 10. Safety and untrusted content
@@ -241,6 +281,11 @@ LLM-as-judge with a written rubric (calibrate against human labels first), and
 human transcript reading (lowest volume, highest insight — transcripts reveal
 *why* a prompt failed). Write an eval the second time the same failure appears.
 
+For a skill specifically: build evals **before** extensive content (run the task
+without the skill, record the gaps, write ≥3 scenarios that target them), then test
+across every model it will run under (Haiku/Sonnet/Opus) — what Opus infers, Haiku
+may need spelled out.
+
 ---
 
 ## Quick checklist for a new skill/agent prompt
@@ -248,6 +293,10 @@ human transcript reading (lowest volume, highest insight — transcripts reveal
 - [ ] Description is a router with real trigger phrases (and non-triggers)
 - [ ] `SKILL.md` lean; depth in `references/` (one level deep), determinism in `scripts/`
 - [ ] Right altitude: defaults + rationale + deviation conditions, not if-else prose
+- [ ] Degrees of freedom matched to task fragility (high prose ↔ low exact script)
+- [ ] One default + one escape hatch, not a menu of options
+- [ ] No time-sensitive phrasing; one term per concept
+- [ ] ≥3 evals from real gaps; tested across target models (Haiku/Sonnet/Opus)
 - [ ] Calibrated language; absolutes reserved for true invariants
 - [ ] 3–5 canonical examples (contrastive where behavior is ambiguous), not rule sprawl
 - [ ] Each rule stated once, in the right section; constraints early

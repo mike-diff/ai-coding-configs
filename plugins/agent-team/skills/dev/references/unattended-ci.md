@@ -71,8 +71,17 @@ Verified by spike (private `claude-dispatch-spike` repo, real CI runs):
   link** in the issue comment — the action itself does NOT auto-open the PR (that is a
   `pull_request`-event behavior). The dispatch workflow adds an **"Open pull request" step**
   after the action that opens the PR automatically from `steps.claude.outputs.branch_name`
-  (guarded: skips if the branch has no commits ahead of the base or a PR already exists).
-  Note: PRs opened by the default `GITHUB_TOKEN` do not themselves trigger other workflows.
+  (guarded: skips if the branch has no commits ahead of the base; uses `gh pr create || gh
+  pr edit` so a re-label updates the existing PR instead of failing).
+- **PR title** = the issue title verbatim (no `(#n)` suffix — the issue is linked in the body).
+- **PR body** = the agent writes `PR_BODY.md` at the repo root during the run (summary, key
+  changes, verification, `Closes #n`); the step reads it from the pushed branch and uses it as
+  the description, with a minimal fallback if absent. `PR_BODY.md` is a small throwaway artifact
+  that the action commits onto the dispatch branch; it disappears when the branch is deleted on
+  merge.
+- Enabling auto-PR requires the repo setting **Settings → Actions → General → "Allow GitHub
+  Actions to create and approve pull requests"** to be ON. PRs opened by the default
+  `GITHUB_TOKEN` do not themselves trigger other workflows.
 - `branch_prefix: "claude/"` — the action appends `issue-<n>` itself. Do NOT use
   `branch_prefix: "claude/issue-"` or you get a doubled `claude/issue-issue-<n>` branch name.
 

@@ -37,6 +37,12 @@ jobs:
             reviewer/qa sub-agents via the Task tool, run the build loop with the review
             and QA gates, and commit the result.
 
+            Before finishing, write a file `PR_BODY.md` at the repo root with the pull
+            request description: a short summary of what changed and why, the key changes
+            (bulleted), how it was verified (tests/validators run + results), any
+            assumptions made, and a final line `Closes #${{ github.event.issue.number }}`.
+            Write it as the PR description a reviewer should read — not a transcript.
+
             Issue title: ${{ github.event.issue.title }}
 
             Issue body:
@@ -80,22 +86,25 @@ jobs:
             exit 0
           fi
 
-          # Idempotent: don't open a second PR if one already exists for this branch.
-          if [ -n "$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number --jq '.[0].number // empty')" ]; then
-            echo "An open PR already exists for ${BRANCH}; not creating another."
-            exit 0
+          # PR body: prefer PR_BODY.md authored by the agent (committed on the branch);
+          # fall back to a minimal body if the agent didn't produce one.
+          BODY_FILE="$(mktemp)"
+          if gh api "repos/${REPO}/contents/PR_BODY.md?ref=${BRANCH}" \
+               -H "Accept: application/vnd.github.raw" > "$BODY_FILE" 2>/dev/null; then
+            echo "Using agent-authored PR_BODY.md."
+          else
+            printf '%s\n' \
+              "Automated by the dispatch workflow. Built by \`/dev --unattended\`." \
+              "See the issue and the run for the build's progress and verification." \
+              "" \
+              "Run: ${RUN_URL}" \
+              "" \
+              "Closes #${ISSUE_NUM}" > "$BODY_FILE"
           fi
 
-          printf '%s\n' \
-            "Automated by the dispatch workflow for #${ISSUE_NUM}." \
-            "" \
-            "Built by \`/dev --unattended\`. See the issue for the run's progress, gap analysis, and verification." \
-            "" \
-            "Run: ${RUN_URL}" \
-            "" \
-            "Closes #${ISSUE_NUM}" > /tmp/pr-body.md
-
+          # Create the PR, or update its body if one already exists (idempotent on re-label).
           gh pr create --repo "$REPO" \
             --base "$BASE" --head "$BRANCH" \
-            --title "${ISSUE_TITLE} (#${ISSUE_NUM})" \
-            --body-file /tmp/pr-body.md
+            --title "$ISSUE_TITLE" \
+            --body-file "$BODY_FILE" \
+          || gh pr edit "$BRANCH" --repo "$REPO" --body-file "$BODY_FILE"

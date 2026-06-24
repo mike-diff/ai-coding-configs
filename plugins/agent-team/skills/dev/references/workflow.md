@@ -130,9 +130,11 @@ In sweep mode you orchestrate **every phase of the spec end-to-end, fully autono
 Autonomy does not mean barreling through failure. **Halt the sweep** — do not start dependent phases — when any of these occur:
 - A phase's build loop ends `BLOCKED` (Phase 5, Step 4) or QA cannot pass after retries.
 - An implementer escalates a high-risk assumption (auth, user data, migrations, destructive ops, billing, external side effects, public API contracts, deployment).
-- A phase's Reflection raises a behavior-affecting "Question for User". (Unattended mode: a behavior-affecting question does NOT halt — record it as a note and continue; only the high-risk and BLOCKED conditions above halt. See [Unattended Mode](#unattended-mode).)
+- A phase's Reflection raises a behavior-affecting "Question for User" — **interactive only.** In unattended mode a behavior-affecting question does NOT halt the sweep; record it as a note and continue (only the high-risk and BLOCKED conditions above halt). See [Unattended Mode](#unattended-mode).
 
-On halt: `TaskUpdate` the current phase task to blocked, report which phases completed and committed and which remain, and wait for the user. Already-committed phases stay committed. (Unattended mode: do not wait — post the blocker, leave the tree clean, and end with terminal state `blocked`.)
+On halt: `TaskUpdate` the current phase task to blocked, report which phases completed and committed and which remain. Already-committed phases stay committed. Then:
+- **If interactive:** wait for the user.
+- **If unattended:** do not wait — post the blocker, leave the tree clean, and end with terminal state `blocked`.
 
 ### Operational guardrails (unattended runs)
 A sweep runs unattended across many teammate spawns, so harden the run:
@@ -172,7 +174,9 @@ This file map determines the team shape. Be thorough.
 Return findings in an <explorer-result> block. Message the lead when done."
 ```
 
-Require plan approval. Wait for `<explorer-result>`. (Unattended mode: do not require approval — proceed on the file map; see [Unattended Mode](#unattended-mode).)
+Wait for `<explorer-result>`, then gate on the plan:
+- **If interactive:** require plan approval before proceeding.
+- **If unattended:** do not require approval — proceed on the explorer's file map; the reviewer gate is the safety net. See [Unattended Mode](#unattended-mode).
 
 ### Team Shape Detection
 
@@ -221,12 +225,12 @@ Present your understanding to the user based on explorer findings before spawnin
 Reply with answers, or "proceed" if no clarification needed.
 ```
 
-**STOP. Wait for user response.**
+**If interactive — STOP. Wait for user response.**
 - User answers: incorporate, proceed to Phase 4
 - User says "proceed": proceed to Phase 4
 - User says "abort": shut down all teammates (via `shutdown_request`), then call `TeamDelete`
 
-**Unattended mode:** do NOT stop. Skip the questions, record any ambiguity resolution under Assumptions (carried into Phase 6 Reflect), and proceed to Phase 4. See [Unattended Mode](#unattended-mode).
+**If unattended — do NOT stop.** There is no user to respond. Resolve any ambiguity by the simplest reasonable interpretation, record it under Assumptions (carried into Phase 6 Reflect), and proceed to Phase 4. See [Unattended Mode](#unattended-mode).
 </phase>
 
 ---
@@ -443,7 +447,9 @@ Before independent review, produce an honest self-review from the lead's perspec
 - [behavior-affecting question, or "None"]
 ```
 
-If Questions for User is not "None", STOP and ask before Phase 7. Otherwise continue. (Unattended mode: do not stop — carry any questions into the wrapup / PR body as notes and continue to Phase 7; see [Unattended Mode](#unattended-mode).)
+If Questions for User is "None", continue to Phase 7. Otherwise, gate on it:
+- **If interactive:** STOP and ask before Phase 7.
+- **If unattended:** do not stop — carry the questions into the wrapup / PR body as notes and continue to Phase 7. See [Unattended Mode](#unattended-mode).
 </phase>
 
 ---

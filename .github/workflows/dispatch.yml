@@ -88,10 +88,19 @@ jobs:
 
           # PR body: prefer PR_BODY.md authored by the agent (committed on the branch);
           # fall back to a minimal body if the agent didn't produce one.
+          # PR_BODY.md is a description artifact, not a source change — capture its content,
+          # then delete it from the branch so it never appears in the PR diff.
           BODY_FILE="$(mktemp)"
-          if gh api "repos/${REPO}/contents/PR_BODY.md?ref=${BRANCH}" \
-               -H "Accept: application/vnd.github.raw" > "$BODY_FILE" 2>/dev/null; then
+          PR_BODY_SHA="$(gh api "repos/${REPO}/contents/PR_BODY.md?ref=${BRANCH}" --jq '.sha' 2>/dev/null || true)"
+          if [ -n "$PR_BODY_SHA" ]; then
             echo "Using agent-authored PR_BODY.md."
+            gh api "repos/${REPO}/contents/PR_BODY.md?ref=${BRANCH}" \
+              -H "Accept: application/vnd.github.raw" > "$BODY_FILE"
+            # Remove the artifact from the branch (a single commit deleting just this file).
+            gh api -X DELETE "repos/${REPO}/contents/PR_BODY.md" \
+              -f message="chore: drop PR_BODY.md (PR description artifact)" \
+              -f sha="$PR_BODY_SHA" -f branch="$BRANCH" >/dev/null
+            echo "Removed PR_BODY.md from ${BRANCH}."
           else
             printf '%s\n' \
               "Automated by the dispatch workflow. Built by \`/dev --unattended\`." \

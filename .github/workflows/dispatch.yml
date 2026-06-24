@@ -1,0 +1,51 @@
+name: Claude Dispatch
+# Run /dev in unattended mode when an issue is labeled 'dispatch'.
+# Rationale, one-time setup (Claude GitHub App + CLAUDE_CODE_OAUTH_TOKEN), and the
+# constraints behind each input below are documented in the single source of truth:
+#   .claude/skills/dev/references/unattended-ci.md
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: dispatch-${{ github.event.issue.number }}
+  cancel-in-progress: false     # let an in-flight run finish; don't kill mid-build
+
+jobs:
+  dispatch:
+    if: github.event.label.name == 'dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45          # wall-clock backstop — the only hard stop for a hung sub-agent
+    permissions:
+      contents: write            # create the claude/issue-<n> branch + commit
+      issues: write              # read the issue body, post status back
+      pull-requests: write       # surface the PR
+      id-token: write            # required even for OAuth — see ci-overrides.md
+      actions: read
+    steps:
+      - uses: actions/checkout@v4   # loads .claude/skills/dev + .claude/agents headless
+      - uses: anthropics/claude-code-action@v1
+        env:
+          DEV_UNATTENDED: "1"        # signals /dev to suspend its human-input gates
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Imperative invocation (a bare "/dev" gets described, not run).
+          prompt: |
+            Invoke /dev in unattended mode now and implement this GitHub issue end-to-end.
+            Do not just describe it — execute it: delegate to the explorer/implementer/
+            reviewer/qa sub-agents via the Task tool, run the build loop with the review
+            and QA gates, and commit the result.
+
+            Issue title: ${{ github.event.issue.title }}
+
+            Issue body:
+            ${{ github.event.issue.body }}
+          # --model sets only the lead; sub-agents keep their model: frontmatter.
+          # --allowedTools is required to spawn sub-agents in tag mode. See unattended-ci.md.
+          claude_args: >-
+            --model opus
+            --max-turns 60
+            --max-budget-usd 15
+            --allowedTools Task,Bash,Read,Write,Edit,Grep,Glob
+          branch_prefix: "claude/"   # action appends issue-<n>; avoids doubled name
+          track_progress: true

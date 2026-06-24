@@ -1,7 +1,7 @@
 ---
 name: dev
-description: Implement a feature using a coordinated agent team. Auto-detects FLAT or HIERARCHICAL team shape. Runs a build loop with review and QA quality gates.
-argument-hint: <feature description>
+description: Implement a feature using a coordinated agent team. Auto-detects FLAT or HIERARCHICAL team shape. Runs a build loop with review and QA quality gates. Supports an unattended mode (--unattended) for headless/CI runs with no human in the loop.
+argument-hint: <feature description> [--unattended]
 disable-model-invocation: true
 ---
 
@@ -39,13 +39,17 @@ Auto-detected from explorer findings. Default to FLAT when in doubt.
 
 When given a spec path with no specific phase (`/agent-team:dev @.context/specs/spec-X.md`), `/agent-team:dev` runs the phases below **once per spec phase**, in dependency order, committing at each phase boundary — fully autonomous, no pauses. A named single phase (`/agent-team:dev "Implement Phase 1" @<spec>`) runs that one phase only. See workflow.md.
 
+## Unattended Mode
+
+When the request includes `--unattended` (or env `DEV_UNATTENDED=1`, which CI sets), `/agent-team:dev` runs with **no human in the loop**: the Clarify, plan-approval, and Questions-for-User STOPs are suspended — ambiguity is resolved by the simplest reasonable interpretation and logged under Assumptions, and a true blocker exits with terminal state `blocked` instead of waiting. This is what lets `/agent-team:dev` run headlessly from a GitHub Action (issue labeled `dispatch`). Orthogonal to Spec/Ad-hoc and team shape. See [Unattended Mode](references/workflow.md#unattended-mode) and [references/unattended-ci.md](references/unattended-ci.md) for CI wiring.
+
 ---
 
 ## Phases
 
 1. **Research** — parse request, detect stack
 2. **Explore** — spawn explorer, get file map
-3. **Clarify** — present understanding, ask questions, STOP for user input
+3. **Clarify** — present understanding, ask questions, STOP for user input (suspended in unattended mode)
 4. **Team Up** — spawn teammates based on team shape, enable delegate mode
 5. **Build Loop** — implement approved task graph → decide (PASS/RETRY/BLOCKED, max 5 iterations)
 6. **Reflect** — self-review spec coverage, assumptions, scope, and weak spots
@@ -64,6 +68,7 @@ When given a spec path with no specific phase (`/agent-team:dev @.context/specs/
 - No two teammates edit the same file in cross-layer mode
 - In spec-backed mode, implement the approved spec/architecture/task graph; do NOT re-plan scope
 - In spec sweep mode, commit each phase and HALT on a blocked phase or high-risk escalation — do NOT cascade into dependent phases
+- In unattended mode, suspend all human-input STOPs (Clarify, plan approval, Questions-for-User); resolve ambiguity by simplest interpretation logged as Assumptions, and exit `blocked` rather than waiting — HALT only for destructive/irreversible scope
 - Reflect and wrap up before reporting completion
 
 ---

@@ -1,8 +1,8 @@
 name: Claude Dispatch
-# Trigger the /dispatch multi-agent build when an issue is labeled 'dispatch'.
+# Run /dev in unattended mode when an issue is labeled 'dispatch'.
 # Rationale, one-time setup (Claude GitHub App + CLAUDE_CODE_OAUTH_TOKEN), and the
 # constraints behind each input below are documented in the single source of truth:
-#   .claude/skills/dispatch/references/ci-overrides.md
+#   .claude/skills/dev/references/unattended-ci.md
 on:
   issues:
     types: [labeled]
@@ -23,23 +23,25 @@ jobs:
       id-token: write            # required even for OAuth — see ci-overrides.md
       actions: read
     steps:
-      - uses: actions/checkout@v4   # loads .claude/skills/dispatch + .claude/agents headless
+      - uses: actions/checkout@v4   # loads .claude/skills/dev + .claude/agents headless
       - uses: anthropics/claude-code-action@v1
+        env:
+          DEV_UNATTENDED: "1"        # signals /dev to suspend its human-input gates
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # Imperative invocation (a bare "/dispatch" gets described, not run).
+          # Imperative invocation (a bare "/dev" gets described, not run).
           prompt: |
-            Invoke the /dispatch skill now and carry out its full workflow to implement
-            this GitHub issue end-to-end. Do not just describe the skill — execute it:
-            delegate to the explorer/implementer/reviewer/qa sub-agents via the Task tool,
-            run the build loop with the review and QA gates, and commit the result.
+            Invoke /dev in unattended mode now and implement this GitHub issue end-to-end.
+            Do not just describe it — execute it: delegate to the explorer/implementer/
+            reviewer/qa sub-agents via the Task tool, run the build loop with the review
+            and QA gates, and commit the result.
 
             Issue title: ${{ github.event.issue.title }}
 
             Issue body:
             ${{ github.event.issue.body }}
           # --model sets only the lead; sub-agents keep their model: frontmatter.
-          # --allowedTools is required to spawn sub-agents in tag mode. See ci-overrides.md.
+          # --allowedTools is required to spawn sub-agents in tag mode. See unattended-ci.md.
           claude_args: >-
             --model opus
             --max-turns 60

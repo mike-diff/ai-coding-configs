@@ -43,6 +43,7 @@ Parse the feature request (do this directly - lightweight):
 
 1. **Mode**: Spec-backed mode if the request includes `@.context/specs/...`; otherwise Ad hoc mode
    - Within spec-backed mode: **single-phase** if a specific `Phase N` is named (`/agent-team:dev "Implement Phase 1" @<spec>`); **sweep** if no single phase is named (`/agent-team:dev @<spec>`, `/agent-team:dev "all phases" @<spec>`, `/agent-team:dev "remaining phases" @<spec>`). Sweep runs every phase end-to-end — see [Spec Sweep Mode](#spec-sweep-mode-multi-phase-orchestration).
+   - **Unattended modifier** (orthogonal to the above): on if the request includes `--unattended` / "unattended", or the env var `DEV_UNATTENDED=1` is set (CI sets this). Unattended suspends every human-input gate — see [Unattended Mode](#unattended-mode). Interactive is the default.
 2. **Core Functionality**: What needs to be built
 3. **Scope**: Small/medium/large
 4. **Type**: UI/backend/fullstack/tooling
@@ -69,6 +70,25 @@ Before spawning the team, form an initial hypothesis about the team shape:
 
 Don't commit yet - the explorer will confirm. But bias toward FLAT unless the feature clearly spans layers. In spec-backed mode, the approved Architecture Plan and task graph override the initial hypothesis unless the explorer finds a blocking mismatch.
 </thinking>
+</phase>
+
+---
+
+## Unattended Mode
+
+<phase name="unattended">
+Trigger: `--unattended` / "unattended" in the request, or env `DEV_UNATTENDED=1` (CI sets this). Orthogonal to Spec-backed/Ad hoc and to FLAT/CROSS-LAYER — it composes with any of them. Default is interactive; this section only changes behavior when unattended is on.
+
+In unattended mode there is **no human to answer questions** (e.g. `/agent-team:dev` runs inside a GitHub Action triggered by an issue label). Every human-input gate is **SUSPENDED** and replaced with an autonomous behavior:
+
+- **Clarify STOP (Phase 3)** — do NOT stop. Take the simplest reasonable interpretation of any ambiguity, record it under **Assumptions**, and proceed. (This follows the calibrated-language rule in `coding-standards.md`: default + rationale + exception — not a blanket "never ask.")
+- **Plan approval (Phase 2)** — do NOT wait for approval. Proceed on the explorer's file map; the reviewer gate is the safety net.
+- **Questions for User (Phase 6)** — becomes a note in the wrapup / PR body, never a gate.
+- **Halt-and-wait (everywhere)** — never wait. To halt: post the blocker (issue comment / wrapup), leave the working tree clean (no partial commit), and end with terminal state `blocked`.
+
+**HALT (do not continue)** only for genuinely destructive/irreversible scope — auth changes, DB migrations, billing, data deletion, public API contract breaks — or a build loop that cannot pass its gates after retries. For risk-triggered work, prefer the Phase 7 review council over a single reviewer rather than stopping.
+
+**Caps & failure mode (CI):** a teammate cannot be force-killed and (on the teammate path) cannot be turn-capped — the job's wall-clock timeout is the only hard stop, so keep teammate tasks tightly scoped. See [unattended-ci.md](unattended-ci.md) for the GitHub Actions wiring, auth, and tag-mode constraints.
 </phase>
 
 ---
@@ -110,9 +130,9 @@ In sweep mode you orchestrate **every phase of the spec end-to-end, fully autono
 Autonomy does not mean barreling through failure. **Halt the sweep** — do not start dependent phases — when any of these occur:
 - A phase's build loop ends `BLOCKED` (Phase 5, Step 4) or QA cannot pass after retries.
 - An implementer escalates a high-risk assumption (auth, user data, migrations, destructive ops, billing, external side effects, public API contracts, deployment).
-- A phase's Reflection raises a behavior-affecting "Question for User".
+- A phase's Reflection raises a behavior-affecting "Question for User". (Unattended mode: a behavior-affecting question does NOT halt — record it as a note and continue; only the high-risk and BLOCKED conditions above halt. See [Unattended Mode](#unattended-mode).)
 
-On halt: `TaskUpdate` the current phase task to blocked, report which phases completed and committed and which remain, and wait for the user. Already-committed phases stay committed.
+On halt: `TaskUpdate` the current phase task to blocked, report which phases completed and committed and which remain, and wait for the user. Already-committed phases stay committed. (Unattended mode: do not wait — post the blocker, leave the tree clean, and end with terminal state `blocked`.)
 
 ### Operational guardrails (unattended runs)
 A sweep runs unattended across many teammate spawns, so harden the run:
@@ -152,7 +172,7 @@ This file map determines the team shape. Be thorough.
 Return findings in an <explorer-result> block. Message the lead when done."
 ```
 
-Require plan approval. Wait for `<explorer-result>`.
+Require plan approval. Wait for `<explorer-result>`. (Unattended mode: do not require approval — proceed on the file map; see [Unattended Mode](#unattended-mode).)
 
 ### Team Shape Detection
 
@@ -205,6 +225,8 @@ Reply with answers, or "proceed" if no clarification needed.
 - User answers: incorporate, proceed to Phase 4
 - User says "proceed": proceed to Phase 4
 - User says "abort": shut down all teammates (via `shutdown_request`), then call `TeamDelete`
+
+**Unattended mode:** do NOT stop. Skip the questions, record any ambiguity resolution under Assumptions (carried into Phase 6 Reflect), and proceed to Phase 4. See [Unattended Mode](#unattended-mode).
 </phase>
 
 ---
@@ -421,7 +443,7 @@ Before independent review, produce an honest self-review from the lead's perspec
 - [behavior-affecting question, or "None"]
 ```
 
-If Questions for User is not "None", STOP and ask before Phase 7. Otherwise continue.
+If Questions for User is not "None", STOP and ask before Phase 7. Otherwise continue. (Unattended mode: do not stop — carry any questions into the wrapup / PR body as notes and continue to Phase 7; see [Unattended Mode](#unattended-mode).)
 </phase>
 
 ---

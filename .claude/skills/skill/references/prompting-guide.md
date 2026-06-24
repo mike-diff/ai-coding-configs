@@ -8,6 +8,21 @@ Targeted at Claude (Claude Code). The always-on essentials live in
 `.claude/rules/coding-standards.md` ("Prompt Structures"); this is the depth layer
 to consult when writing or reviewing a prompt.
 
+## Contents
+
+1. The two ideas everything else serves
+2. Altitude — the central authoring skill (incl. degrees of freedom)
+3. Calibrated language
+4. Canonical examples over rule lists
+5. Structure
+6. Skills and progressive disclosure
+7. Behavior control
+8. Completion is external
+9. Output and scope discipline
+10. Safety and untrusted content
+11. Iterate against evals
+12. Quick checklist for a new skill/agent prompt
+
 ---
 
 ## 1. The two ideas everything else serves
@@ -51,6 +66,20 @@ Right altitude:
   defective items are our responsibility regardless of timing. Escalate
   anything outside these bounds rather than improvising policy.
 ```
+
+**Degrees of freedom.** Altitude has a second axis: how much latitude to grant.
+Match it to the task's fragility, not your comfort.
+
+- **High** (prose heuristics) — many valid approaches, decisions depend on context.
+  *Code review:* "analyze structure, check edge cases, suggest improvements."
+- **Medium** (parameterized script or pseudocode) — a preferred pattern with room
+  to vary. *Report generation:* a template function with format/options arguments.
+- **Low** (one exact script, few/no parameters) — fragile, error-prone, consistency
+  is critical. *A migration:* "Run exactly `scripts/migrate.py --verify --backup`;
+  do not add flags."
+
+The narrow-bridge-vs-open-field test: a migration that must run in sequence is a
+bridge with cliffs (low freedom); a code review is an open field (high freedom).
 
 ---
 
@@ -212,6 +241,16 @@ Newer Claude models are terser by default — legacy "be concise" instructions c
 over-trim. Prefer native structured-output / JSON-schema modes over a
 schema-in-prompt when the platform enforces them.
 
+**Offer one default, not a menu.** Listing many options ("use pypdf, or pdfplumber,
+or PyMuPDF, or…") forces a choice the agent shouldn't have to make. Give one default
+plus a single escape hatch for the known exception: "Use pdfplumber for text
+extraction; for scanned PDFs needing OCR, use pdf2image with pytesseract."
+
+**Keep content timeless and consistent.** Avoid dated phrasing ("before August
+2025, use…") — state the current method and isolate deprecated guidance in an
+`## Old patterns` `<details>` aside. Pick one term per concept and reuse it; mixing
+"endpoint"/"URL"/"route" makes instructions harder to follow.
+
 ---
 
 ## 10. Safety and untrusted content
@@ -241,6 +280,11 @@ LLM-as-judge with a written rubric (calibrate against human labels first), and
 human transcript reading (lowest volume, highest insight — transcripts reveal
 *why* a prompt failed). Write an eval the second time the same failure appears.
 
+For a skill specifically: build evals **before** writing extensive content — run
+the task without the skill, capture ≥3 representative failures, then write only
+enough to fix them. Test the finished skill across the models it will run under
+(Haiku/Sonnet/Opus): what reads as concise to Opus may underspecify for Haiku.
+
 ---
 
 ## Quick checklist for a new skill/agent prompt
@@ -252,4 +296,7 @@ human transcript reading (lowest volume, highest insight — transcripts reveal
 - [ ] 3–5 canonical examples (contrastive where behavior is ambiguous), not rule sprawl
 - [ ] Each rule stated once, in the right section; constraints early
 - [ ] Completion defined by a checkable signal, not "done"
+- [ ] One default + single escape hatch, not a menu of options
+- [ ] Timeless phrasing; consistent terminology throughout
+- [ ] ≥3 evals built from real gaps; tested across target models (Haiku/Sonnet/Opus)
 - [ ] Scope constraints at the end

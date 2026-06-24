@@ -2,6 +2,13 @@
 
 Ready-to-use templates for the three skill types. Copy the relevant template as your starting SKILL.md, then populate. Starter files for each type also live in `assets/`.
 
+## Contents
+
+- Choosing a Type (and degrees of freedom)
+- Technique Template
+- Reference Template
+- Guardrail Template
+
 ---
 
 ## Choosing a Type
@@ -11,6 +18,16 @@ Ready-to-use templates for the three skill types. Copy the relevant template as 
 | **Technique** | Teaching a concrete procedure with steps | Pattern, Implementation, Common Mistakes |
 | **Reference** | Providing quick-lookup docs or API patterns | Quick Reference tables, code snippets |
 | **Guardrail** | Enforcing a critical practice, preventing mistakes | STOP block, Rationalization Defense, The Process |
+
+**Match the degree of freedom to the task.** High freedom = prose heuristics (many
+valid approaches — most Technique skills). Medium = a parameterized script or
+pseudocode (a preferred pattern with room to vary). Low = one exact command to run
+verbatim (fragile, consistency-critical — often a Guardrail). See
+[prompting-guide.md](prompting-guide.md) §2.
+
+For multi-step procedures, give a copy-able checklist; for quality-critical work,
+add a validate→fix→repeat feedback loop; when output shape matters, include
+input/output example pairs rather than describing the format.
 
 ---
 

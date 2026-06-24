@@ -68,8 +68,11 @@ Verified by spike (private `claude-dispatch-spike` repo, real CI runs):
 ## Behavior to expect
 
 - On `issues` events, tag mode **pushes the `claude/issue-<n>` branch and posts a "Create PR"
-  link** in the issue comment — it does NOT auto-open the PR (that is a `pull_request`-event
-  behavior). Click the link to open the PR.
+  link** in the issue comment — the action itself does NOT auto-open the PR (that is a
+  `pull_request`-event behavior). The dispatch workflow adds an **"Open pull request" step**
+  after the action that opens the PR automatically from `steps.claude.outputs.branch_name`
+  (guarded: skips if the branch has no commits ahead of the base or a PR already exists).
+  Note: PRs opened by the default `GITHUB_TOKEN` do not themselves trigger other workflows.
 - `branch_prefix: "claude/"` — the action appends `issue-<n>` itself. Do NOT use
   `branch_prefix: "claude/issue-"` or you get a doubled `claude/issue-issue-<n>` branch name.
 

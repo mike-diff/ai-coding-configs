@@ -50,7 +50,9 @@ fi
 FRONTMATTER=$(awk '/^---$/{if(++c==2) exit} c==1' "$SKILL_FILE")
 
 # ── name field ────────────────────────────────────────────────────────────────
-NAME=$(echo "$FRONTMATTER" | grep '^name:' | sed 's/^name: *//' | tr -d '"'"'" | xargs)
+trim() { sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'; }
+
+NAME=$(echo "$FRONTMATTER" | grep '^name:' | sed 's/^name: *//' | tr -d '"'"'" | trim)
 
 if [[ -z "$NAME" ]]; then
   fail "Missing required 'name' field"
@@ -85,6 +87,20 @@ else
     pass "name has no consecutive hyphens"
   fi
 
+  # No XML tags
+  if echo "$NAME" | grep -q '[<>]'; then
+    fail "name must not contain XML tags (< or >)"
+  else
+    pass "name has no XML tags"
+  fi
+
+  # No reserved words
+  if echo "$NAME" | grep -qiE 'anthropic|claude'; then
+    fail "name must not contain reserved words (anthropic, claude)"
+  else
+    pass "name has no reserved words"
+  fi
+
   # Matches directory name
   if [[ "$NAME" != "$DIR_NAME" ]]; then
     fail "name '$NAME' does not match directory name '$DIR_NAME'"
@@ -97,7 +113,7 @@ fi
 echo ""
 echo "Description"
 
-DESC=$(echo "$FRONTMATTER" | grep '^description:' | sed 's/^description: *//' | tr -d '"' | xargs)
+DESC=$(echo "$FRONTMATTER" | grep '^description:' | sed 's/^description: *//' | tr -d '"' | trim)
 
 if [[ -z "$DESC" ]]; then
   fail "Missing required 'description' field"
@@ -116,6 +132,20 @@ else
     pass "description includes when-to-use trigger"
   else
     warn "description may be missing a when-to-use trigger (e.g. 'Use when...')"
+  fi
+
+  # No XML tags (injected into the system prompt)
+  if echo "$DESC" | grep -q '[<>]'; then
+    fail "description must not contain XML tags (< or >)"
+  else
+    pass "description has no XML tags"
+  fi
+
+  # Third person (heuristic): first/second person hurts discovery
+  if echo "$DESC" | grep -iqE '\b(I can|I will|I help|you can|you will|you'"'"'ll|we can)\b'; then
+    warn "description may not be third person (avoid 'I can…' / 'You can…')"
+  else
+    pass "description appears to be third person"
   fi
 fi
 
@@ -156,6 +186,35 @@ if [[ -n "$DEEP_REFS" ]]; then
   echo "$DEEP_REFS" | sed 's/^/    /'
 else
   pass "No deep file references detected"
+fi
+
+# Windows-style (backslash) paths in markdown links
+BACKSLASH_REFS=$(grep -oE '\]\([^)]*\\[^)]*\)' "$SKILL_FILE" 2>/dev/null || true)
+if [[ -n "$BACKSLASH_REFS" ]]; then
+  warn "Windows-style (backslash) paths found — use forward slashes:"
+  echo "$BACKSLASH_REFS" | sed 's/^/    /'
+else
+  pass "No Windows-style paths detected"
+fi
+
+# ── Reference tables of contents ──────────────────────────────────────────────
+# Reference files >100 lines should open with a table of contents so partial
+# reads still reveal the full scope. Warning only — long refs without a ToC are
+# a smell, not a spec violation.
+if [[ -d "$SKILL_DIR/references" ]]; then
+  echo ""
+  echo "Reference Tables of Contents"
+  while IFS= read -r ref; do
+    [[ -z "$ref" ]] && continue
+    REF_LINES=$(wc -l < "$ref")
+    if [[ $REF_LINES -gt 100 ]]; then
+      if head -30 "$ref" | grep -qiE '^##+ +(Contents|Table of Contents)'; then
+        pass "$(basename "$ref") (${REF_LINES} lines) has a table of contents"
+      else
+        warn "$(basename "$ref") (${REF_LINES} lines) >100 lines without a '## Contents' table of contents"
+      fi
+    fi
+  done < <(find "$SKILL_DIR/references" -maxdepth 1 -type f -name '*.md')
 fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────

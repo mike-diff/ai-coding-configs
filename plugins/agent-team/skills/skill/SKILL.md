@@ -59,9 +59,9 @@ skill-name/
 
 | Field | Required | Rules |
 |-------|----------|-------|
-| `name` | Yes | 1–64 chars. Lowercase + hyphens only (`a-z`, `0-9`, `-`). No leading/trailing/consecutive hyphens. Must match directory name exactly. |
-| `description` | Yes | 1–1024 chars. Must include **what** it does AND **when** to use it. Include trigger keywords. |
-| `compatibility` | Recommended | Use `"Designed for Claude Code"` for Claude Code skills. |
+| `name` | Yes | 1–64 chars. Lowercase + hyphens only (`a-z`, `0-9`, `-`). No leading/trailing/consecutive hyphens. No XML tags. No reserved words (`anthropic`, `claude`). Must match directory name exactly. |
+| `description` | Yes | 1–1024 chars. Must include **what** it does AND **when** to use it. Include trigger keywords. Write in **third person**. No XML tags. |
+| `compatibility` | Optional | Use only for specific environment needs, e.g. `"Designed for Claude Code"` for Claude Code skills. |
 | `license` | No | License name or reference to LICENSE file. |
 | `metadata` | No | Key-value map for custom properties. |
 
@@ -75,11 +75,13 @@ description: "Extracts text and tables from PDF files, fills PDF forms, merges P
 description: "Helps with PDFs."
 ```
 
+**Naming:** prefer gerund form (`processing-pdfs`, `testing-code`); noun phrases (`pdf-processing`) and action-oriented names (`process-pdfs`) are fine. Avoid vague (`helper`, `utils`) and generic (`data`, `files`) names. See [agent-skills-spec.md](references/agent-skills-spec.md) for the full naming and content rules.
+
 ---
 
 ## File Reference Rules
 
-Use relative paths from the skill root. One level deep only.
+Use relative paths from the skill root, with forward slashes. One level deep only.
 
 ```markdown
 See [API reference](references/api-patterns.md) for details.
@@ -87,6 +89,7 @@ Run the validation script: scripts/validate.sh
 ```
 
 ❌ Never: `references/sub/deep.md` — nested chains break progressive disclosure.
+❌ Never: backslash paths (`references\guide.md`) — they break on Unix.
 
 ---
 
@@ -97,6 +100,7 @@ Run the validation script: scripts/validate.sh
 4. **Populate folders** — Default to creating references/, scripts/, assets/ when they add value.
 5. **Validate before closing** — Run `scripts/validate-skill.sh` on the result.
 6. **Prompt quality** — The SKILL.md is a prompt; it must follow [prompting-guide.md](references/prompting-guide.md) (right altitude, calibrated language, canonical examples over rule lists, lean SKILL.md, external completion).
+7. **Evaluate, don't assume** — Identify real gaps from baseline behavior and build ≥3 evaluations from them before writing extensive content. Test the skill across the models it will run under (Haiku/Sonnet/Opus): Haiku needs enough guidance, Opus needs no over-explaining.
 </principles>
 
 <red_flags>
@@ -160,10 +164,17 @@ The SKILL.md is a prompt — follow .claude/skills/skill/references/prompting-gu
   (reserve ALWAYS/NEVER for true invariants), canonical examples over rule lists,
   lean SKILL.md with depth in references/, completion defined by a checkable signal.
 
+Frontmatter & content rules (.claude/skills/skill/references/agent-skills-spec.md):
+  name in gerund form where natural, no XML tags, no reserved words (anthropic/claude);
+  description in third person ("Processes…", not "I can…"), no XML tags, what + when;
+  forward slashes in all file references; a ## Contents ToC for any reference file >100 lines;
+  no time-sensitive info (isolate legacy in an "Old patterns" details block);
+  fully-qualified ServerName:tool_name for any MCP tools the skill references.
+
 TDD process:
-1. Baseline test WITHOUT the skill — record failures verbatim
+1. Baseline test WITHOUT the skill — record failures verbatim; turn them into ≥3 eval scenarios
 2. Write SKILL.md + populate folders addressing those failures
-3. Test WITH the skill — verify fix
+3. Test WITH the skill — verify fix; check it across the models it will run under (Haiku/Sonnet/Opus)
 4. Close loopholes, re-test
 
 Return a <skill-author-result> block."

@@ -2,6 +2,13 @@
 
 Ready-to-use templates for the three skill types. Copy the relevant template as your starting SKILL.md, then populate. Starter files for each type also live in `assets/`.
 
+## Contents
+
+- Choosing a Type (incl. degrees of freedom)
+- Technique Template
+- Reference Template
+- Guardrail Template
+
 ---
 
 ## Choosing a Type
@@ -11,6 +18,12 @@ Ready-to-use templates for the three skill types. Copy the relevant template as 
 | **Technique** | Teaching a concrete procedure with steps | Pattern, Implementation, Common Mistakes |
 | **Reference** | Providing quick-lookup docs or API patterns | Quick Reference tables, code snippets |
 | **Guardrail** | Enforcing a critical practice, preventing mistakes | STOP block, Rationalization Defense, The Process |
+
+**Match the degrees of freedom to the task** (see [prompting-guide.md](prompting-guide.md) §2): high-freedom prose for open-ended judgment, a parameterized script for a preferred-but-variable pattern, one exact command for fragile sequences. Beyond the templates, reach for:
+
+- a **copy-able checklist** for any multi-step procedure (the agent checks items off as it goes);
+- a **validate → fix → repeat feedback loop** for quality-critical output (the "validator" can be a script *or* a reference doc to compare against);
+- **input/output example pairs** when output quality depends on seeing the desired shape.
 
 ---
 

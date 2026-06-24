@@ -56,6 +56,14 @@ Verified by spike (private `claude-dispatch-spike` repo, real CI runs):
    the workflow passes `--allowedTools Task,Bash,Read,Write,Edit,Grep,Glob` in `claude_args`.
 4. **Imperative prompt.** A bare `/dev` makes the model DESCRIBE the skill instead of running it.
    The workflow prompt must instruct it to invoke and execute now.
+5. **`--dangerously-skip-permissions` to write under `.claude/`.** Claude Code guards its own
+   config dir: the `Edit`/`Write` tools will not auto-approve writes under `.claude/**` headless,
+   and normal `permissions.allow` rules and `--permission-mode acceptEdits` do NOT override the
+   guard (verified empirically — only `--dangerously-skip-permissions` or a Bash file-write does).
+   The dispatch workflow passes this flag so `/dev --unattended` can self-edit skills/agents.
+   This is acceptable in CI: the runner is an ephemeral sandbox, the unattended contract still
+   halts on destructive/irreversible ops, and `--allowedTools` already bounds the toolset.
+   Omit it only if you want `.claude/`-targeting issues to return `blocked` instead of a PR.
 
 ## Behavior to expect
 

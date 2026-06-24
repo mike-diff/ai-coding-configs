@@ -42,10 +42,16 @@ jobs:
             ${{ github.event.issue.body }}
           # --model sets only the lead; sub-agents keep their model: frontmatter.
           # --allowedTools is required to spawn sub-agents in tag mode. See unattended-ci.md.
+          # --dangerously-skip-permissions: required to write under .claude/ — Claude Code
+          #   guards its own config dir and normal allow-rules/acceptEdits do NOT override it
+          #   (verified). Acceptable here: the runner is an ephemeral sandbox, the unattended
+          #   contract still halts on destructive/irreversible ops, and --allowedTools bounds
+          #   the toolset. Without it, .claude/-targeting issues return `blocked`. See unattended-ci.md.
           claude_args: >-
             --model opus
             --max-turns 60
             --max-budget-usd 15
             --allowedTools Task,Bash,Read,Write,Edit,Grep,Glob
+            --dangerously-skip-permissions
           branch_prefix: "claude/"   # action appends issue-<n>; avoids doubled name
           track_progress: true

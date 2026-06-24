@@ -1,0 +1,54 @@
+name: Claude Dispatch
+# Trigger the /dispatch multi-agent build when an issue is labeled 'dispatch'.
+#
+# Setup (one-time): see .claude/skills/dispatch/references/ci-overrides.md
+#   1. Install the Claude GitHub App on this repo: https://github.com/apps/claude
+#   2. Add repo secret CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`)
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: dispatch-${{ github.event.issue.number }}
+  cancel-in-progress: false     # let an in-flight run finish; don't kill mid-build
+
+jobs:
+  dispatch:
+    if: github.event.label.name == 'dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45          # wall-clock backstop — the only hard stop for a hung sub-agent
+    permissions:
+      contents: write            # create the claude/issue-<n> branch + commit
+      issues: write              # read the issue body, post status back
+      pull-requests: write       # surface the PR
+      id-token: write            # REQUIRED even for OAuth (OIDC -> GitHub App token exchange)
+      actions: read
+    steps:
+      - uses: actions/checkout@v4   # loads .claude/skills/dispatch + .claude/agents headless
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Imperative invocation: a bare "/dispatch" makes the model DESCRIBE the skill
+          # instead of EXECUTING it. Tell it to run the skill now.
+          prompt: |
+            Invoke the /dispatch skill now and carry out its full workflow to implement
+            this GitHub issue end-to-end. Do not just describe the skill — execute it:
+            delegate to the explorer/implementer/reviewer/qa sub-agents via the Task tool,
+            run the build loop with the review and QA gates, and commit the result.
+
+            Issue title: ${{ github.event.issue.title }}
+
+            Issue body:
+            ${{ github.event.issue.body }}
+          # --model sets ONLY the lead; sub-agents keep their own model: frontmatter
+          # (explorer=sonnet, implementer=opus, reviewer=opus, qa=sonnet).
+          # --allowedTools expands tag mode's read-only allowlist so the lead can spawn
+          # sub-agents (Task) and act — without this, no orchestration is possible.
+          claude_args: >-
+            --model opus
+            --max-turns 60
+            --max-budget-usd 15
+            --allowedTools Task,Bash,Read,Write,Edit,Grep,Glob
+          # The action appends issue-<n> itself; "claude/" yields claude/issue-<n>.
+          branch_prefix: "claude/"
+          track_progress: true

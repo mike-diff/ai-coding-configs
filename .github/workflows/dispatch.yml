@@ -24,7 +24,8 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@v4   # loads .claude/skills/dev + .claude/agents headless
-      - uses: anthropics/claude-code-action@v1
+      - id: claude                  # expose branch_name output for the auto-PR step
+        uses: anthropics/claude-code-action@v1
         env:
           DEV_UNATTENDED: "1"        # signals /dev to suspend its human-input gates
         with:
@@ -55,3 +56,46 @@ jobs:
             --dangerously-skip-permissions
           branch_prefix: "claude/"   # action appends issue-<n>; avoids doubled name
           track_progress: true
+
+      # Auto-open the PR. Tag mode (issues event) pushes the branch but does NOT open a PR
+      # itself — it only posts a "Create PR" link. This step opens it automatically.
+      - name: Open pull request
+        if: ${{ steps.claude.outputs.branch_name != '' && steps.claude.outputs.branch_name != github.event.repository.default_branch }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BASE: ${{ github.event.repository.default_branch }}
+          BRANCH: ${{ steps.claude.outputs.branch_name }}
+          ISSUE_NUM: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          # Skip if the run made a branch but committed nothing (e.g. a `blocked` result).
+          # Use the compare API so we don't depend on local refs from a shallow checkout.
+          ahead="$(gh api "repos/${REPO}/compare/${BASE}...${BRANCH}" --jq '.ahead_by')"
+          if [ "${ahead:-0}" -eq 0 ]; then
+            echo "Branch ${BRANCH} is not ahead of ${BASE}; nothing to PR."
+            exit 0
+          fi
+
+          # Idempotent: don't open a second PR if one already exists for this branch.
+          if [ -n "$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number --jq '.[0].number // empty')" ]; then
+            echo "An open PR already exists for ${BRANCH}; not creating another."
+            exit 0
+          fi
+
+          printf '%s\n' \
+            "Automated by the dispatch workflow for #${ISSUE_NUM}." \
+            "" \
+            "Built by \`/dev --unattended\`. See the issue for the run's progress, gap analysis, and verification." \
+            "" \
+            "Run: ${RUN_URL}" \
+            "" \
+            "Closes #${ISSUE_NUM}" > /tmp/pr-body.md
+
+          gh pr create --repo "$REPO" \
+            --base "$BASE" --head "$BRANCH" \
+            --title "${ISSUE_TITLE} (#${ISSUE_NUM})" \
+            --body-file /tmp/pr-body.md

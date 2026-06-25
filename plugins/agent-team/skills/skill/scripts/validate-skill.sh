@@ -88,15 +88,18 @@ else
     pass "name has no consecutive hyphens"
   fi
 
-  # No XML tags
-  if echo "$NAME" | grep -q '[<>]'; then
-    fail "name must not contain XML tags (< or >)"
+  # No XML tags — match an actual tag (<tag> or </tag>), not a bare '<'/'>' which
+  # can appear legitimately (comparisons, arrows). A name with raw <> already fails
+  # the charset check above; this keeps the message accurate.
+  if echo "$NAME" | grep -qE '</?[a-zA-Z]'; then
+    fail "name must not contain XML tags (e.g. <tag>)"
   else
     pass "name has no XML tags"
   fi
 
-  # No reserved words
-  if echo "$NAME" | grep -qiE 'anthropic|claude'; then
+  # No reserved words — whole-token match so a coincidental substring (e.g.
+  # 'claudette') is not rejected, while 'claude' or 'my-claude-tool' is.
+  if echo "$NAME" | grep -qiwE 'anthropic|claude'; then
     fail "name must not contain reserved words (anthropic, claude)"
   else
     pass "name has no reserved words"
@@ -129,9 +132,12 @@ else
     pass "description length OK ($DESC_LEN chars)"
   fi
 
-  # No XML tags (the description is injected into the system prompt)
-  if echo "$DESC" | grep -q '[<>]'; then
-    fail "description must not contain XML tags (< or >)"
+  # No XML tags (the description is injected into the system prompt). Match an actual
+  # tag (<tag> or </tag>), not a bare '<'/'>' — descriptions legitimately use these
+  # for comparisons ('use when > 3 columns') and the skill's own docs recommend
+  # mentioning <details> for old patterns.
+  if echo "$DESC" | grep -qE '</?[a-zA-Z]'; then
+    fail "description must not contain XML tags (e.g. <tag>)"
   else
     pass "description has no XML tags"
   fi

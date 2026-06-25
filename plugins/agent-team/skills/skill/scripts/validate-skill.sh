@@ -50,7 +50,10 @@ fi
 FRONTMATTER=$(awk '/^---$/{if(++c==2) exit} c==1' "$SKILL_FILE")
 
 # ── name field ────────────────────────────────────────────────────────────────
-NAME=$(echo "$FRONTMATTER" | grep '^name:' | sed 's/^name: *//' | tr -d '"'"'" | xargs)
+# Strip the key, surrounding quotes, and edge whitespace (xargs avoided — it
+# chokes on unbalanced quotes/apostrophes in values).
+NAME=$(echo "$FRONTMATTER" | grep '^name:' | head -1 \
+  | sed -e 's/^name:[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^["'"'"']//' -e 's/["'"'"']$//')
 
 if [[ -z "$NAME" ]]; then
   fail "Missing required 'name' field"
@@ -85,6 +88,23 @@ else
     pass "name has no consecutive hyphens"
   fi
 
+  # No XML tags — match an actual tag (<tag> or </tag>), not a bare '<'/'>' which
+  # can appear legitimately (comparisons, arrows). A name with raw <> already fails
+  # the charset check above; this keeps the message accurate.
+  if echo "$NAME" | grep -qE '</?[a-zA-Z]'; then
+    fail "name must not contain XML tags (e.g. <tag>)"
+  else
+    pass "name has no XML tags"
+  fi
+
+  # No reserved words — whole-token match so a coincidental substring (e.g.
+  # 'claudette') is not rejected, while 'claude' or 'my-claude-tool' is.
+  if echo "$NAME" | grep -qiwE 'anthropic|claude'; then
+    fail "name must not contain reserved words (anthropic, claude)"
+  else
+    pass "name has no reserved words"
+  fi
+
   # Matches directory name
   if [[ "$NAME" != "$DIR_NAME" ]]; then
     fail "name '$NAME' does not match directory name '$DIR_NAME'"
@@ -97,7 +117,8 @@ fi
 echo ""
 echo "Description"
 
-DESC=$(echo "$FRONTMATTER" | grep '^description:' | sed 's/^description: *//' | tr -d '"' | xargs)
+DESC=$(echo "$FRONTMATTER" | grep '^description:' | head -1 \
+  | sed -e 's/^description:[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^["'"'"']//' -e 's/["'"'"']$//')
 
 if [[ -z "$DESC" ]]; then
   fail "Missing required 'description' field"
@@ -111,11 +132,28 @@ else
     pass "description length OK ($DESC_LEN chars)"
   fi
 
+  # No XML tags (the description is injected into the system prompt). Match an actual
+  # tag (<tag> or </tag>), not a bare '<'/'>' — descriptions legitimately use these
+  # for comparisons ('use when > 3 columns') and the skill's own docs recommend
+  # mentioning <details> for old patterns.
+  if echo "$DESC" | grep -qE '</?[a-zA-Z]'; then
+    fail "description must not contain XML tags (e.g. <tag>)"
+  else
+    pass "description has no XML tags"
+  fi
+
   # Heuristic: should contain "use when" or "activates when" or "when working"
   if echo "$DESC" | grep -iqE 'use when|activates when|when working|when building|when creating|when you need'; then
     pass "description includes when-to-use trigger"
   else
     warn "description may be missing a when-to-use trigger (e.g. 'Use when...')"
+  fi
+
+  # Heuristic: should be third person (no first/second person)
+  if echo "$DESC" | grep -iqE '\bI can\b|\bI will\b|\byou can\b|\byou will\b|\byou.ll\b|\bwe can\b'; then
+    warn "description may not be in third person (avoid 'I can…'/'You can…')"
+  else
+    pass "description reads as third person"
   fi
 fi
 
@@ -156,6 +194,39 @@ if [[ -n "$DEEP_REFS" ]]; then
   echo "$DEEP_REFS" | sed 's/^/    /'
 else
   pass "No deep file references detected"
+fi
+
+# Windows-style backslash paths in markdown links (warn — many skills are clean,
+# so a violation shouldn't fail the build).
+BACKSLASH_REFS=$(grep -oE '\]\([^)]*\\[^)]*\)' "$SKILL_FILE" 2>/dev/null || true)
+if [[ -n "$BACKSLASH_REFS" ]]; then
+  warn "Backslash in file reference (use forward slashes):"
+  echo "$BACKSLASH_REFS" | sed 's/^/    /'
+else
+  pass "No Windows-style (backslash) paths in references"
+fi
+
+# ── Reference tables of contents ──────────────────────────────────────────────
+# Reference files >100 lines should open with a table of contents so Claude sees
+# the full scope under partial reads. Warn-only — long refs without a ToC are
+# common across skills and must not fail the build.
+if [[ -d "$SKILL_DIR/references" ]]; then
+  echo ""
+  echo "Reference Tables of Contents"
+  TOC_CHECKED=0
+  while IFS= read -r ref; do
+    [[ -z "$ref" ]] && continue
+    REF_LINES=$(wc -l < "$ref")
+    if [[ $REF_LINES -gt 100 ]]; then
+      TOC_CHECKED=1
+      if head -30 "$ref" | grep -qiE '^##+[[:space:]]+(contents|table of contents)'; then
+        pass "$(basename "$ref") (${REF_LINES} lines) has a table of contents"
+      else
+        warn "$(basename "$ref") (${REF_LINES} lines) is missing a '## Contents' table of contents"
+      fi
+    fi
+  done < <(find "$SKILL_DIR/references" -maxdepth 1 -type f -name '*.md')
+  [[ $TOC_CHECKED -eq 0 ]] && pass "No reference files over 100 lines"
 fi
 
 # ── Summary ───────────────────────────────────────────────────────────────────

@@ -37,6 +37,20 @@ jobs:
             reviewer/qa sub-agents via the Task tool, run the build loop with the review
             and QA gates, and commit the result.
 
+            Verification bar (no human will review before merge — verify, don't assume):
+            - "Existing inputs still pass" is NOT sufficient evidence a change is correct.
+              For any code that classifies input — a regex, parser, validator, matcher,
+              or conditional — test BOTH directions on inputs that do not yet exist in the
+              repo: (a) a VALID input your new rule might wrongly reject (e.g. a description
+              containing `>` or `<details>`; a name like `claudette` that merely contains a
+              banned substring), and (b) an INVALID input your rule must catch. A rule that
+              passes every current case but mis-handles a plausible future one is a defect.
+            - Prefer narrow, intent-matching patterns over broad proxies: match what the
+              rule actually means (an XML tag is `</?[a-zA-Z]`, not "any `<` or `>`"; a
+              banned word is a whole token, not a substring). State the boundary cases you
+              tested in PR_BODY.md.
+            - No magic constants without a stated reason (line windows, limits, thresholds).
+
             Before finishing, write a file `PR_BODY.md` at the repo root with the pull
             request description: a short summary of what changed and why, the key changes
             (bulleted), how it was verified (tests/validators run + results), any

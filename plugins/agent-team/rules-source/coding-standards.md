@@ -39,8 +39,17 @@ When modifying existing code:
 ## Git Conventions
 
 - Branch naming: `claude/issue-<number>`
-- Commit format: `type(scope): description (#issue-number)`
+- Commit format: `type(scope): description` — a single line, nothing else
 - Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
+- One line only, ≤ 72 characters, imperative mood, lowercase description,
+  no trailing period. No body, no footers.
+- Scope names a durable part of the codebase (module, command, config
+  file); omit it if the change spans areas. Never use a unit of work or
+  session state as scope: no `phase-N`, `step`, `wip`, `spec`, or task names.
+- Describe the change itself. Never include process narration (test
+  counts, "review passed"), issue/PR numbers, or tool names.
+- One logical change per commit; if the description needs "and" or a
+  comma list, split the commit or name the dominant change.
 
 ## Prompt Structures
 

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Discuss"
+  short_description: "Explore and validate an idea"
+  default_prompt: "Use $discuss to explore and validate this idea before implementation."
+policy:
+  allow_implicit_invocation: false

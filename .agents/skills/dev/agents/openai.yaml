@@ -1,0 +1,6 @@
+interface:
+  display_name: "Dev"
+  short_description: "Implement and verify approved work"
+  default_prompt: "Use $dev to implement and verify this approved feature or specification phase."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Spec"
+  short_description: "Create an approved implementation spec"
+  default_prompt: "Use $spec to turn this validated feature into an implementation-ready specification."
+policy:
+  allow_implicit_invocation: false

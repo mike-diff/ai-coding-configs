@@ -1,12 +1,12 @@
 # AI Coding Configurations
 
-An opinionated collection of **Cursor** and **Claude Code** configurations for AI-assisted development, with project-local **pi** maintainer skills for editing the workflows safely. Drop the relevant folder into any project to get structured workflows, specialized subagents, safety hooks, and reusable skills - all working together out of the box.
+An opinionated collection of **Cursor**, **Claude Code**, and **Codex** configurations for AI-assisted development, with project-local **pi** maintainer skills for editing the workflows safely. Install the relevant surface to get structured workflows, specialized subagents, safety hooks, and reusable skills.
 
 ---
 
 ## Install
 
-Two paths, pick one:
+Choose the path for your coding agent:
 
 ### Option A — Plugin (recommended for sharing)
 
@@ -27,6 +27,24 @@ cp -r ai-coding-configs/.claude/ /path/to/your/project/
 
 Commands surface as `/discuss`, `/dev`, etc.
 See [.claude/README.md](.claude/README.md) for details.
+
+### Option C — Codex (personal global skills)
+
+```bash
+git clone https://github.com/mike-diff/ai-coding-configs.git
+cd ai-coding-configs
+./scripts/install-codex.sh
+```
+
+The installer creates conflict-safe symlinks in `~/.agents/skills/`. Restart Codex if needed, confirm the skills with `/skills`, then invoke them explicitly:
+
+```text
+$discuss Explore adding a caching layer.
+$spec Turn the validated caching handoff in this thread into a specification.
+$dev Implement Phase 1 from .context/specs/spec-caching.md.
+```
+
+The repo-tracked Codex source lives in `.agents/skills/`. The installer never replaces an existing path or a symlink to another source.
 
 ### Working on this repo with pi
 
@@ -50,8 +68,9 @@ These are not another product surface. They are operator workflows for safely ed
 |------|--------------|
 | Claude Code | `.claude/` |
 | Cursor | `.cursor/` |
+| Codex | `.agents/skills/` |
 
-Both share the same core philosophy and command set, with each adapted to their platform's native capabilities.
+All surfaces share the same core philosophy, with each adapted to its platform's native capabilities. Codex preserves the `discuss → spec → dev` lifecycle through explicit `$skill` mentions and uses one writer by default to avoid shared-worktree conflicts.
 
 ---
 
@@ -61,7 +80,7 @@ Each configuration gives your AI assistant a set of **commands** to run, **subag
 
 ### Commands
 
-Commands are slash commands you run to kick off a workflow. Both tools share the same set, implemented as Agent Skills following the [agentskills.io](https://agentskills.io) specification:
+Claude Code and Cursor use slash commands to kick off these workflows. Codex exposes the ported core lifecycle through `$discuss`, `$spec`, and `$dev`; all are implemented as Agent Skills following the [agentskills.io](https://agentskills.io) specification:
 
 | Command | What it does |
 |---------|-------------|
@@ -217,9 +236,31 @@ Skills are reference documents the AI draws on automatically based on context. T
 
 Specs are local planning artifacts by default. They save under `.context/specs/`, which is gitignored, and should only be promoted into committed documentation when explicitly requested.
 
+The Codex equivalent is:
+
+```text
+$discuss Explore adding a caching layer.
+  → validated plan + ADLC handoff
+
+$spec Turn that handoff into a complete specification.
+  → requirement approval gate → validated architecture → self-contained phases
+
+$dev Implement all phases from .context/specs/spec-caching.md and leave it PR-ready.
+  → preflight → implementation → reflection → independent review/QA → wrapup
+```
+
 ---
 
 ## Setup
+
+### Codex
+
+1. Run `./scripts/install-codex.sh` from this checkout.
+2. Restart Codex if the new skills do not appear immediately.
+3. Run `/skills` or type `$` to confirm `discuss`, `spec`, and `dev` are discoverable.
+4. Invoke them as `$discuss`, `$spec`, and `$dev`. Their metadata disables implicit invocation, so they do not launch unexpectedly from ordinary prompts.
+
+The installer respects `CODEX_WORKFLOW_HOME` for isolated testing or an alternate user root. It links only the three workflow directories and refuses to overwrite conflicts. Generated specs remain local to the project being worked on under `.context/specs/`.
 
 ### Claude Code
 
@@ -258,7 +299,7 @@ Useful Cursor 3.x workflows:
 
 ## Context Directory
 
-Both configurations write ephemeral data to a `.context/` directory in your project:
+The workflows write ephemeral data to a `.context/` directory in your project:
 
 ```
 .context/

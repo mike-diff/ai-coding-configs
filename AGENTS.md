@@ -10,12 +10,14 @@ reference and test fixtures; pi only auto-loads this root file.)
 - Claude standalone: `.claude/`
 - Claude Code plugin: `plugins/agent-team/`
 - Cursor: `.cursor/`
+- Codex personal workflows: `.agents/skills/`
 - pi maintainer cockpit: `.pi/`
 
 ## Source of truth rules
 
 - Claude standalone (`.claude/`) is the source of truth for the Claude Code plugin. After changing `.claude/`, run `scripts/sync-plugin.sh` and review `plugins/agent-team/` diffs.
 - Cursor is a separate runtime. When workflow semantics change, update `.cursor/` explicitly rather than assuming plugin sync covers it.
+- Codex is a separate native runtime. `.agents/skills/` is the repo-tracked source for `$discuss`, `$spec`, and `$dev`; `scripts/install-codex.sh` links those skills into the current user's global `~/.agents/skills/` discovery path. Do not copy Claude-only team or task primitives into the Codex skills.
 - pi skills (`.pi/skills/`) are maintainer/operator wrappers. They must point back to the Claude/Cursor workflow files as source of truth and must not become a fourth independent workflow implementation. `.pi/` syncs nowhere automatically, so when `.claude` workflow semantics or skill frontmatter change, manually re-check the three `.pi/skills/agent-team-*` wrappers and re-run `./tests/workflow-contract.sh`.
 
 ## pi runtime notes
@@ -27,6 +29,7 @@ reference and test fixtures; pi only auto-loads this root file.)
 ## Workflow constraints
 
 - Preserve the lightweight public UX: `/discuss`, `/spec`, and `/dev` remain the core flow.
+- On Codex, preserve the equivalent explicit UX: `$discuss`, `$spec`, and `$dev`.
 - Do not add separate public ADLC commands like `/validate`, `/architect`, `/reflect`, `/review`, or `/wrapup`.
 - Generated specs default to `.context/specs/spec-[feature-name].md`. `.context/` is gitignored.
 - Do not save generated specs to `docs/specs/` unless the user explicitly asks to promote a spec into committed project documentation.
@@ -38,7 +41,8 @@ Run these after workflow changes:
 
 ```bash
 ./tests/workflow-contract.sh
-bash -n tests/workflow-contract.sh tests/smoke.sh scripts/sync-plugin.sh .claude/hooks/*.sh .cursor/hooks/*.sh plugins/agent-team/hooks/*.sh
+./tests/codex-workflow-contract.sh
+bash -n tests/workflow-contract.sh tests/codex-workflow-contract.sh tests/smoke.sh scripts/sync-plugin.sh scripts/install-codex.sh .claude/hooks/*.sh .cursor/hooks/*.sh plugins/agent-team/hooks/*.sh
 git diff --check
 ```
 

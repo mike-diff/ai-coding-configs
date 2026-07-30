@@ -133,7 +133,6 @@ target_user: [primary user or actor]
 hypothesis: [why the proposed change should improve the outcome]
 success_metrics:
   - [measurable signal or proof artifact]
-core_workflow_break: [what is manual, repeated, missing, or broken]
 assumptions:
   - [assumption] — [verified / likely / risk]
 risks:

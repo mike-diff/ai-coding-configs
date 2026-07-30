@@ -18,7 +18,7 @@ This repo maintains the Agent Team workflows across three product surfaces plus 
 
 - Claude standalone is the source of truth for the Claude Code plugin. After changing `.claude/`, run `scripts/sync-plugin.sh` and review `plugins/agent-team/` diffs.
 - Cursor is a separate runtime. When workflow semantics change, update `.cursor/` explicitly rather than assuming plugin sync covers it.
-- Pi skills are maintainer/operator wrappers. They must point back to Claude/Cursor workflow files as source of truth and must not become a fourth independent workflow implementation. `.pi/` syncs nowhere automatically, so when `.claude` workflow semantics or skill frontmatter change, manually re-check the three `.pi/skills/agent-team-*` wrappers (and this file vs root `AGENTS.md`), then re-run `./tests/workflow-contract.sh`.
+- Pi skills are maintainer/operator wrappers. They point back to the `.claude/` workflow files — the canonical workflow semantics — as their only source of truth, and must not become a fourth independent workflow implementation (`.cursor/` is a runtime adaptation, not a co-equal source). `.pi/` syncs nowhere automatically, so when `.claude` workflow semantics or skill frontmatter change, manually re-check the three `.pi/skills/agent-team-*` wrappers (and this file vs root `AGENTS.md`), then re-run `./tests/workflow-contract.sh`.
 
 ## Workflow constraints
 

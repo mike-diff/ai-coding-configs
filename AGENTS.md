@@ -18,11 +18,11 @@ reference and test fixtures; pi only auto-loads this root file.)
 - Claude standalone (`.claude/`) is the source of truth for the Claude Code plugin. After changing `.claude/`, run `scripts/sync-plugin.sh` and review `plugins/agent-team/` diffs.
 - Cursor is a separate runtime. When workflow semantics change, update `.cursor/` explicitly rather than assuming plugin sync covers it.
 - Codex is a separate native runtime. `.agents/skills/` is the repo-tracked source for `$discuss`, `$spec`, and `$dev`; `scripts/install-codex.sh` links those skills into the current user's global `~/.agents/skills/` discovery path. Do not copy Claude-only team or task primitives into the Codex skills.
-- pi skills (`.pi/skills/`) are maintainer/operator wrappers. They must point back to the Claude/Cursor workflow files as source of truth and must not become a fourth independent workflow implementation. `.pi/` syncs nowhere automatically, so when `.claude` workflow semantics or skill frontmatter change, manually re-check the three `.pi/skills/agent-team-*` wrappers and re-run `./tests/workflow-contract.sh`.
+- pi skills (`.pi/skills/`) are maintainer/operator wrappers. They point back to the `.claude/` workflow files — the canonical workflow semantics — as their only source of truth, and must not become a fourth independent workflow implementation. (`.cursor/` and `.agents/` are runtime adaptations of those semantics, not co-equal sources; pointing wrappers at two sources is how they drift.) `.pi/` syncs nowhere automatically, so when `.claude` workflow semantics or skill frontmatter change, manually re-check the three `.pi/skills/agent-team-*` wrappers and re-run `./tests/workflow-contract.sh`.
 
 ## pi runtime notes
 
-- pi is single-agent: there is no team/subagent/delegate primitive and no `TaskCreate` or shared task list. Workflows that read as "spawn a team" / "review council" on the Claude surface run as sequential, single-session passes on pi.
+- pi is single-agent: there is no subagent primitive and no `TaskCreate` or shared task list. Workflow steps that read as "background research subagents", "fresh-context reviewer", or "parallel review lenses" on the Claude surface run as sequential, single-session passes on pi.
 - `/goal` and `/loop` are Claude Code commands, not pi features. A spec's "Goal Condition" block is portable copy-paste text for a Claude session, not executable on pi.
 - pi has native context compaction; long sweeps do not need a custom harness.
 

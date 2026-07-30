@@ -85,8 +85,8 @@ Claude Code and Cursor use slash commands to kick off these workflows. Codex exp
 | Command | What it does |
 |---------|-------------|
 | `/discuss` | Think through an idea before building. Spawns background research, interviews you, validates the plan, and emits an ADLC handoff. |
-| `/spec` | Turn a feature description into a spec-backed contract: requirement validation, architecture planning, architecture validation, and phased tasks. |
-| `/dev` | Build a feature end-to-end with a coordinated subagent team, then reflect, review/QA, commit or report PR-ready, and wrap up learnings. |
+| `/spec` | Turn a feature description into a right-sized spec: triage (no spec / light / full), one approval gate, and self-contained phases with transcript-verifiable goal conditions. |
+| `/dev` | Build a feature end-to-end: implement directly by default, delegate when work decomposes, pass an external verify gate (checks + fresh-context review), then commit or report PR-ready. |
 | `/to-dos` | Break down a feature into detailed, dependency-tracked tasks. |
 | `/issue` | Fetch a GitHub issue, explore the codebase, produce an implementation plan. |
 | `/ticket` | Create a well-structured GitHub issue through a guided interview. |
@@ -162,12 +162,9 @@ Hooks are scripts that run automatically at specific points in the workflow - be
 | `validate-commit.sh` | Before shell commands | Rejects commits that don't match `type(scope): description` |
 | `redact-secrets.sh` | Before file reads | Blocks `.env*`, credential files, and content with AWS keys, GitHub tokens, private keys |
 | `post-edit-lint.sh` | After every file edit | Auto-lints the edited file (ESLint, ruff) |
-| `teammate-idle.sh` | When a teammate goes idle or stops | Requires a `<*-result>` block before the agent can stop |
-| `task-completed.sh` | On task completion | Requires a `<*-result>` block before the task can be marked done |
 | `notify-compact.sh` | Before context compaction | Shows context usage %; logs which rules and skills survive compaction |
 | `session-start.sh` | On session start | Logs session digest; validates all hook scripts are executable |
 | `permission-denied.sh` | On permission denied | Logs the blocked tool and reason to `.claude/.logs/permission-denied.log` |
-| `file-changed.sh` | When a file changes | Logs file path and change type to `.claude/.logs/hooks.log` |
 | `cwd-changed.sh` | When working directory changes | Logs new cwd to `.claude/.logs/hooks.log` |
 | `task-created.sh` | When a task is created | Logs task id, teammate, and subject to `.claude/.logs/tasks.log` |
 | `stop-failure.sh` | On API-error termination | Logs failure mode and raw payload to `.claude/.logs/stop-failures.log` |
@@ -265,19 +262,7 @@ The installer respects `CODEX_WORKFLOW_HOME` for isolated testing or an alternat
 ### Claude Code
 
 1. Copy `.claude/` into your project root.
-2. Enable Agent Teams by adding this to your **user-level** `~/.claude/settings.json` (not the project-level one):
-   ```json
-   {
-     "env": {
-       "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-     },
-     "teammateMode": "auto"
-   }
-   ```
-   Set `teammateMode` to `tmux` for each agent in its own pane (requires tmux), or `in-process` to keep everything in one terminal. You can also pass it as a flag: `claude --teammate-mode tmux`.
-3. Run `/orient` to map your codebase, then start with any command.
-
-> The env var must live in user-level settings because Claude Code validates project hooks before applying project-level env vars - putting it in the project file can silently prevent slash commands from loading.
+2. Run `/orient` to map your codebase, then start with any command. Subagent delegation works out of the box — every session has an implicit team, no env flag needed.
 
 **Recent Claude Code features that pair well with this config** (v2.1.x):
 - The command skills (`/dev`, `/discuss`, `/spec`, etc.) set `disable-model-invocation: true` in their `SKILL.md` frontmatter, so the model won't auto-launch them mid-conversation — you still invoke them with `/`. (This travels with the skill, so plugin installs keep the guard too.)

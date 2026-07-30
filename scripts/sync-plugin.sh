@@ -13,20 +13,19 @@ SKILL_NAMES='ask|dev|discuss|goal-or-loop|issue|loop-patterns|orient|primitives|
 
 echo "Syncing $SRC -> $DST"
 
-# 1. Agents (byte-identical, hooks: already stripped from source)
+# 1. Agents (byte-identical, mirror: stale agents removed)
+rm -rf "$DST/agents"
 mkdir -p "$DST/agents"
 cp -R "$SRC/agents/." "$DST/agents/"
 
-# 2. Output styles (byte-identical)
-mkdir -p "$DST/output-styles"
-cp -R "$SRC/output-styles/." "$DST/output-styles/"
+# 2. Output styles removed from Claude Code — drop any stale plugin copy
+rm -rf "$DST/output-styles"
 
 # 3. Rules source (byte-identical)
 mkdir -p "$DST/rules-source"
 cp -R "$SRC/rules/." "$DST/rules-source/"
 
-# 4. Hooks (byte-identical, log-path env-fallback already in source)
-mkdir -p "$DST/hooks"
+# 4. Hooks (byte-identical, mirror: stale hooks removed; plugin-only files preserved)
 # preserve hooks.json (plugin-only, not in source)
 HOOKS_JSON_BACKUP=""
 if [ -f "$DST/hooks/hooks.json" ]; then
@@ -37,6 +36,8 @@ INJECT_RULES_BACKUP=""
 if [ -f "$DST/hooks/inject-rules.sh" ]; then
   INJECT_RULES_BACKUP="$(cat "$DST/hooks/inject-rules.sh")"
 fi
+rm -rf "$DST/hooks"
+mkdir -p "$DST/hooks"
 cp -R "$SRC/hooks/." "$DST/hooks/"
 # restore plugin-only files
 if [ -n "$HOOKS_JSON_BACKUP" ]; then

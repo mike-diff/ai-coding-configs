@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # tests/workflow-contract.sh
-# Static contract tests for the lightweight ADLC flow across discuss/spec/dev.
+# Static contract tests for the ADLC flow across discuss/spec/dev.
+# .claude assertions track the 2026 rebuilt workflows (right-sized specs, direct-build
+# /dev with external verify gate, background-subagent /discuss). .cursor and .pi keep
+# their own assertions until those surfaces are migrated.
 
 set -euo pipefail
 
@@ -16,6 +19,14 @@ assert_file_contains() {
   local file="$1"
   local needle="$2"
   grep -Fq "$needle" "$file" || fail "$file missing required text: $needle"
+}
+
+assert_max_lines() {
+  local file="$1"
+  local max="$2"
+  local n
+  n=$(wc -l < "$file")
+  [ "$n" -le "$max" ] || fail "$file is $n lines (ceiling $max) — spec volume is a bug, trim it"
 }
 
 assert_no_default_docs_specs() {
@@ -36,63 +47,94 @@ assert_order() {
   [ "$first_line" -lt "$second_line" ] || fail "$file expected '$first' before '$second'"
 }
 
-# /discuss must hand off a compact ADLC seed to /spec.
-for prefix in .claude .cursor; do
-  assert_file_contains "$prefix/skills/discuss/references/phases.md" "<adlc-handoff>"
-  assert_file_contains "$prefix/skills/discuss/references/phases.md" "human_decisions_required:"
-done
+########################################
+# .claude — rebuilt workflows
+########################################
 
-# /spec must perform spec validation and architecture validation internally.
-for prefix in .claude .cursor; do
-  assert_file_contains "$prefix/skills/spec/references/workflow.md" "## Requirement Contract"
-  assert_file_contains "$prefix/skills/spec/references/workflow.md" "## Requirement Validation"
-  assert_file_contains "$prefix/skills/spec/references/workflow.md" "## Architecture Plan"
-  assert_file_contains "$prefix/skills/spec/references/workflow.md" "## Architecture Validation"
-  assert_file_contains "$prefix/skills/spec/references/workflow.md" "component:"
-  assert_file_contains "$prefix/skills/spec/references/workflow.md" "concerns: []"
+# No references to removed Claude Code primitives (teams lifecycle, delegate mode,
+# teams env flag, removed hook events) anywhere in the live config.
+stale=$(rg -n 'TeamDelete|TeamCreate|Shift\+Tab|CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS|TeammateIdle|TaskCompleted|shutdown_request|delegate mode' .claude --glob '!.logs/**' || true)
+[ -z "$stale" ] || fail "removed-primitive references remain in .claude:\n$stale"
+
+# /discuss hands off a compact ADLC seed and triages before spinning up research.
+assert_file_contains ".claude/skills/discuss/references/phases.md" "<adlc-handoff>"
+assert_file_contains ".claude/skills/discuss/references/phases.md" "human_decisions_required:"
+assert_file_contains ".claude/skills/discuss/SKILL.md" "Triage first"
+
+# /spec right-sizes, keeps the contract sections, and saves as uncommitted context.
+assert_file_contains ".claude/skills/spec/SKILL.md" "No spec"
+assert_file_contains ".claude/skills/spec/SKILL.md" "Light spec"
+assert_file_contains ".claude/skills/spec/references/workflow.md" "## Requirement Contract"
+assert_file_contains ".claude/skills/spec/references/workflow.md" "## Architecture Plan"
+assert_file_contains ".claude/skills/spec/references/workflow.md" "component:"
+assert_file_contains ".claude/skills/spec/references/workflow.md" "concerns: []"
+assert_file_contains ".claude/skills/spec/references/workflow.md" ".context/specs/spec-[feature-name].md"
+assert_file_contains ".claude/skills/spec/references/workflow.md" "Implement all phases autonomously"
+
+# /spec emits a transcript-verifiable Goal Condition per phase (native /goal driver).
+assert_file_contains ".claude/skills/spec/references/workflow.md" "## Goal Condition"
+assert_file_contains ".claude/skills/spec/references/workflow.md" "or after"
+assert_file_contains ".claude/skills/loop-patterns/SKILL.md" "goal-gated cross-phase walk"
+
+# /dev clarifies before building, verifies externally, and supports council escalation.
+assert_order ".claude/skills/dev/references/workflow.md" "## Phase 3: Clarify" "## Phase 4: Build"
+assert_order ".claude/skills/dev/references/workflow.md" "## Phase 4: Build" "## Phase 5: Verify"
+assert_file_contains ".claude/skills/dev/references/workflow.md" "Spec-backed mode"
+assert_file_contains ".claude/skills/dev/references/workflow.md" "## Phase 6: Reflect"
+assert_file_contains ".claude/skills/dev/references/workflow.md" "Wrapup"
+assert_file_contains ".claude/skills/dev/references/workflow.md" "Review council triggers"
+assert_file_contains ".claude/skills/dev/references/workflow.md" "@.context/specs/..."
+
+# /dev sweep mode runs all phases autonomously, committing per phase, halting on failure.
+assert_file_contains ".claude/skills/dev/references/workflow.md" "## Spec Sweep Mode"
+assert_file_contains ".claude/skills/dev/references/workflow.md" "Commit at the phase boundary"
+assert_file_contains ".claude/skills/dev/references/workflow.md" "Halt the sweep"
+assert_file_contains ".claude/skills/dev/references/workflow.md" "Operational guardrails"
+assert_file_contains ".claude/skills/dev/SKILL.md" "Spec Sweep Mode"
+
+# Volume ceilings — long workflow prompts measurably reduce compliance.
+assert_max_lines ".claude/skills/discuss/SKILL.md" 150
+assert_max_lines ".claude/skills/spec/SKILL.md" 150
+assert_max_lines ".claude/skills/dev/SKILL.md" 150
+assert_max_lines ".claude/skills/discuss/references/phases.md" 250
+assert_max_lines ".claude/skills/spec/references/workflow.md" 300
+assert_max_lines ".claude/skills/dev/references/workflow.md" 350
+
+# Implementer escalates high-risk assumptions instead of always proceeding.
+assert_file_contains ".claude/agents/implementer.md" "High-risk assumptions"
+assert_file_contains ".claude/agents/implementer.md" "stop and ask"
+
+# Reviewer is briefed for coverage over filtering (severity-suppression regression trap).
+assert_file_contains ".claude/agents/reviewer.md" "Report every issue you find"
+
+########################################
+# .cursor — separate runtime, unchanged until migrated
+########################################
+
+assert_file_contains ".cursor/skills/discuss/references/phases.md" "<adlc-handoff>"
+assert_file_contains ".cursor/skills/discuss/references/phases.md" "human_decisions_required:"
+for needle in "## Requirement Contract" "## Requirement Validation" "## Architecture Plan" "## Architecture Validation" "component:" "concerns: []"; do
+  assert_file_contains ".cursor/skills/spec/references/workflow.md" "$needle"
 done
 assert_file_contains ".cursor/skills/spec/references/workflow.md" "Build in Parallel"
 assert_file_contains ".cursor/skills/spec/references/workflow.md" "Safe Parallelization"
-
-# /dev must clarify before team-up/plan and include reflect/review/wrapup phases.
-assert_order ".claude/skills/dev/references/workflow.md" "## Phase 3: Clarify" "## Phase 4: Team Up"
+assert_file_contains ".cursor/skills/spec/references/workflow.md" "Implement all phases autonomously"
+assert_file_contains ".cursor/skills/spec/references/workflow.md" "## Goal Condition"
+assert_file_contains ".cursor/skills/spec/references/workflow.md" "or after"
 assert_order ".cursor/skills/dev/references/workflow.md" "## Phase 3: Clarify" "## Phase 4: Plan"
-for prefix in .claude .cursor; do
-  assert_file_contains "$prefix/skills/dev/references/workflow.md" "Spec-backed mode"
-  assert_file_contains "$prefix/skills/dev/references/workflow.md" "## Phase 6: Reflect"
-  assert_file_contains "$prefix/skills/dev/references/workflow.md" "Wrapup"
-  assert_file_contains "$prefix/skills/dev/references/workflow.md" "Review council triggers"
+for needle in "Spec-backed mode" "## Phase 6: Reflect" "Wrapup" "Review council triggers" "## Spec Sweep Mode" "Commit at the phase boundary" "Halt the sweep" "Operational guardrails"; do
+  assert_file_contains ".cursor/skills/dev/references/workflow.md" "$needle"
 done
 assert_file_contains ".cursor/skills/dev/references/workflow.md" "/multitask"
+assert_file_contains ".cursor/skills/dev/references/workflow.md" "@.context/specs/..."
+assert_file_contains ".cursor/skills/dev/SKILL.md" "Spec Sweep Mode"
+assert_file_contains ".cursor/agents/implementer.md" "High-risk assumptions"
+assert_file_contains ".cursor/agents/implementer.md" "stop and ask"
 
-# /dev sweep mode orchestrates all spec phases autonomously, committing per phase and halting on failure.
-for prefix in .claude .cursor; do
-  assert_file_contains "$prefix/skills/dev/references/workflow.md" "## Spec Sweep Mode"
-  assert_file_contains "$prefix/skills/dev/references/workflow.md" "Commit at the phase boundary"
-  assert_file_contains "$prefix/skills/dev/references/workflow.md" "Halt the sweep"
-  assert_file_contains "$prefix/skills/dev/references/workflow.md" "Operational guardrails"
-  assert_file_contains "$prefix/skills/dev/SKILL.md" "Spec Sweep Mode"
-done
+########################################
+# Pi maintainer wrappers + shared conventions
+########################################
 
-# /spec recommends the autonomous sweep one-liner as the next step.
-for prefix in .claude .cursor; do
-  assert_file_contains "$prefix/skills/spec/references/workflow.md" "Implement all phases autonomously"
-done
-
-# /spec emits a transcript-verifiable Goal Condition per phase (native /goal driver).
-for prefix in .claude .cursor; do
-  assert_file_contains "$prefix/skills/spec/references/workflow.md" "## Goal Condition"
-  assert_file_contains "$prefix/skills/spec/references/workflow.md" "or after"
-done
-assert_file_contains ".claude/skills/loop-patterns/SKILL.md" "goal-gated cross-phase walk"
-
-# Implementers must escalate high-risk assumptions instead of always proceeding.
-for agent in .claude/agents/implementer.md .cursor/agents/implementer.md; do
-  assert_file_contains "$agent" "High-risk assumptions"
-  assert_file_contains "$agent" "stop and ask"
-done
-
-# Pi project-local skills provide maintainer entry points without adding a fourth source of truth.
 # Root AGENTS.md is the file pi actually auto-loads (cwd->root walk); .pi/AGENTS.md is human/fixture only.
 assert_file_contains "AGENTS.md" "Agent Team"
 assert_file_contains ".pi/AGENTS.md" "Agent Team"
@@ -110,9 +152,7 @@ assert_file_contains ".pi/skills/agent-team-discuss/SKILL.md" "<adlc-handoff>"
 
 # Specs default to uncommitted agent context, not committed docs.
 assert_file_contains ".gitignore" ".context/"
-assert_file_contains ".claude/skills/spec/references/workflow.md" ".context/specs/spec-[feature-name].md"
 assert_file_contains ".cursor/skills/spec/references/workflow.md" ".context/specs/spec-[feature-name].md"
-assert_file_contains ".claude/skills/dev/references/workflow.md" "@.context/specs/..."
 assert_file_contains ".cursor/skills/dev/references/workflow.md" "@.context/specs/..."
 assert_no_default_docs_specs
 
@@ -132,6 +172,7 @@ assert_file_contains ".claude/agents/reviewer.md" "skills: review-patterns"
 # Command skills are guarded from model auto-invocation via per-skill frontmatter.
 assert_file_contains ".claude/skills/dev/SKILL.md" "disable-model-invocation: true"
 assert_file_contains ".claude/skills/spec/SKILL.md" "disable-model-invocation: true"
+assert_file_contains ".claude/skills/discuss/SKILL.md" "disable-model-invocation: true"
 
 # Compact hook emits a desktop notification; post-edit-lint surfaces lint via additionalContext.
 assert_file_contains ".claude/hooks/notify-compact.sh" "terminalSequence"

@@ -44,20 +44,6 @@
         ]
       }
     ],
-    "TeammateIdle": [
-      {
-        "hooks": [
-          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/require-result-block.sh idle" }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "hooks": [
-          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/require-result-block.sh completion" }
-        ]
-      }
-    ],
     "PreCompact": [
       {
         "hooks": [

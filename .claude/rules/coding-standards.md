@@ -94,7 +94,7 @@ When authoring or reviewing a skill or agent prompt, consult the full guide at `
 
 ## Structured Outputs
 
-All teammates must return structured result blocks:
+All subagents must return structured result blocks:
 
 - Explorer: `<explorer-result>` block
 - Implementer: `<implementer-result>` block with self-review table

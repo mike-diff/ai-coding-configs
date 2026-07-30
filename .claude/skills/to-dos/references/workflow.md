@@ -201,7 +201,7 @@ Updates an existing task.
 **Parameters:**
 - `taskId` (required): The task to update
 - `status`: Change task status (open, in_progress, complete, blocked)
-- `owner`: Assign to a teammate name
+- `owner`: Assign to an agent name
 - `subject`: Update the title
 - `description`: Update the description
 - `addBlocks`: Array of task IDs this task blocks (downstream dependencies)
@@ -511,7 +511,7 @@ TaskUpdate: taskId=[tests-task-id], addBlockedBy=[checks-task-id]
 
 <dev_integration>
 When `/dev` needs to create its shared task list, it should follow this same task format.
-The rich descriptions ensure that teammates (explorer, implementer, reviewer, QA) have
+The rich descriptions ensure that subagents (explorer, implementer, reviewer, QA) have
 full context when they claim tasks - they start with clean context windows and need
 everything spelled out.
 
@@ -527,7 +527,7 @@ User: /to-dos Add authentication with JWT
 User: /dev Implement the authentication tasks
   -> Discovers existing tasks via TaskGet
   -> Assigns owners via TaskUpdate
-  -> Runs the build loop
+  -> Runs the build with the verify gate
 ```
 </dev_integration>
 

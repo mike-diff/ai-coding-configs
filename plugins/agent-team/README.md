@@ -1,6 +1,6 @@
 # agent-team — Claude Code Plugin
 
-Coordinated multi-agent workflow with skills, hooks, and structured output gates.
+Workflow commands, specialized subagents, safety hooks, and reusable skills.
 Plugin version of the standalone `.claude/` config at `mike-diff/ai-coding-configs`.
 
 ## Install
@@ -14,21 +14,13 @@ After install, all commands are namespaced: `/agent-team:discuss`, `/agent-team:
 
 ## Prerequisites
 
-- Claude Code 2.1.108 or later (verify with `claude --version`).
-- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` set in your **user-level** `~/.claude/settings.json`:
-
-  ```json
-  { "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
-  ```
-
-  Without this, multi-agent workflows silently fail. The plugin's SessionStart hook will warn you if it's missing.
+- Claude Code 2.1.178 or later (verify with `claude --version`). Subagent delegation is native — no env flag needed.
 
 ## What This Plugin Provides
 
 - **15 skills** — `ask`, `dev`, `discuss`, `issue`, `loop-patterns`, `orient`, `primitives`, `review-patterns`, `skill`, `slop-check`, `spec`, `team-orchestration`, `testing-patterns`, `ticket`, `to-dos`
 - **5 specialized agents** — `explorer`, `implementer`, `qa`, `reviewer`, `skill-author`
-- **13 hooks** across 11 lifecycle events (`SessionStart`, `PreToolUse`, `PostToolUse`, `PermissionDenied`, `TeammateIdle`, `TaskCompleted`, `PreCompact`, `FileChanged`, `CwdChanged`, `TaskCreated`, `StopFailure`)
-- **1 output style** — `teaching`
+- **11 hooks** across 9 lifecycle events (`SessionStart`, `PreToolUse`, `PostToolUse`, `PermissionDenied`, `PreCompact`, `CwdChanged`, `TaskCreated`, `StopFailure`)
 - **2 rules** — `coding-standards`, `mcp-caching` (auto-injected via SessionStart hook)
 
 ## What This Plugin Does NOT Provide
@@ -76,7 +68,7 @@ bash tests/smoke.sh
 ## Known Limitations
 
 - **SessionStart hook on brand-new sessions** ([issue #10373](https://github.com/anthropics/claude-code/issues/10373)): some Claude Code versions only fire SessionStart on `/clear`, `/compact`, or resume. If rules don't appear in your context, switch the `inject-rules.sh` hook to `UserPromptSubmit` in `hooks/hooks.json` (one-line change).
-- **Per-agent Stop hooks unavailable**: plugin agents cannot declare `hooks:` frontmatter (security restriction). Structured output is enforced via inlined `<output_gate>` assertions in each agent prompt and the project-level `TeammateIdle` hook in `hooks/hooks.json`.
+- **Structured output is prompt-enforced**: subagents return `<*-result>` blocks per their agent prompts; there is no hook-level gate (the teams-era `TeammateIdle`/`TaskCompleted` hook events no longer exist in Claude Code).
 
 ## See Also
 

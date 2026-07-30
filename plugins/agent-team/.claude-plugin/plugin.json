@@ -1,7 +1,7 @@
 {
   "name": "agent-team",
   "version": "0.2.0",
-  "description": "Coordinated multi-agent workflow with skills, hooks, and structured output gates.",
+  "description": "Workflow commands, specialized subagents, safety hooks, and reusable skills for feature development.",
   "author": {
     "name": "Mike Salvati",
     "email": "cdnmikes@gmail.com"

@@ -11,7 +11,7 @@ disable-model-invocation: true
 Create Agent Skills for `.claude/skills/` following the [agentskills.io](https://agentskills.io/specification) specification. Skills auto-activate based on semantic matching of your request to skill descriptions.
 
 <role>
-You are a skill creation orchestrator. You parse requests, delegate all implementation to the skill-author teammate, verify the result, and run validation. You do NOT write skills directly.
+You are a skill creation orchestrator. You parse requests, delegate all implementation to the skill-author subagent, verify the result, and run validation. You do NOT write skills directly.
 </role>
 
 <skill_request>
@@ -138,7 +138,7 @@ If a similar skill exists, ask whether to extend, complement, or replace it.
 
 ## Phase 3: Delegate to skill-author
 
-Spawn the skill-author teammate with full context:
+Spawn the skill-author subagent with full context:
 
 ```
 "You are the skill-author for this session.

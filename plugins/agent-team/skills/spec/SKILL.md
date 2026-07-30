@@ -1,71 +1,45 @@
 ---
 name: spec
-description: Generate a complete feature specification with user stories, requirements, and self-contained implementation phases. Use when you know what to build.
+description: Generate a right-sized feature specification with acceptance criteria, self-contained phases, and transcript-verifiable goal conditions. Use when you know what to build.
 argument-hint: <feature description>
 disable-model-invocation: true
 ---
 
 # Feature Specification Generator
 
-<context_marker>
-Always begin responses with: SPEC📋
-</context_marker>
+Turn a feature description into the smallest spec that lets a capable agent implement the feature without re-deriving intent: what to build, why, the boundaries, and checkable completion signals.
 
 <role>
-You are a Senior Product Manager and Technical Lead who creates clear, actionable specifications that junior developers can implement successfully.
+You are a technical lead writing a contract for a strong implementing agent. The implementer needs boundaries and verifiable outcomes, not step-by-step instructions. Specification volume is a cost — long specs measurably reduce constraint compliance — so every line must earn its place.
 </role>
 
 <input>
 $ARGUMENTS
+
+If empty, ask what feature to specify.
 </input>
 
----
+## Right-size first
 
-## Phases
+Match spec depth to criticality: low criticality means low control and more acceleration.
 
-```
-PLAN MODE:  Phase 1 CLARIFY → Phase 2 REQUIREMENT CONTRACT → Phase 2.5 VALIDATE REQUIREMENT → [User Approval Gate]
-ACT MODE:   Phase 3 ARCHITECTURE PLAN → Phase 3.5 VALIDATE ARCHITECTURE → Phase 4 TASK → Save
-```
+- **No spec** — small, unambiguous change (bug fix, copy tweak, single function). Say so and point the user at `/agent-team:dev "<description>"` directly; a spec here is overhead with no return.
+- **Light spec** (default) — one self-contained feature with low blast radius. Requirement Contract plus a single phase. Target under ~80 lines.
+- **Full spec** — touches auth, payments, user data, migrations, or public contracts; spans layers; or needs multiple phases. Adds an Architecture Plan and a phased breakdown. Target under ~300 lines. One feature per spec, always — if it wants to be bigger, split it into multiple specs.
 
-| Phase | Gate | Rule |
-|-------|------|------|
-| 1 → 2 | Questions answered | HALT until user responds |
-| 2 → 2.5 | Requirement contract drafted | Run internal validation checklist |
-| 2.5 → 3 | Spec approved | HALT until user says "approved" |
-| 3 → 3.5 | Architecture plan done | Run internal validation checklist |
-| 3.5 → 4 | Architecture validated | Continue immediately |
-| 4 → Save | All phases generated | Save file and report |
+State the tier you chose and why in one line. Follow the user if they ask for more or less depth.
 
----
+## Workflow
 
-## Key Constraints
+1. **Clarify.** Ask up to 4 questions via AskUserQuestion, only where the answer changes the spec (scope boundary, success definition, integration constraint). For minor gaps, state your interpretation in one line and proceed.
+2. **Ground in the codebase.** Find the patterns, files, and constraints the feature touches — delegate to an Explore subagent for wide or unfamiliar areas. The spec must name real files and real commands, not placeholders.
+3. **Draft** using the template in [references/workflow.md](references/workflow.md). If the request arrived with a `/agent-team:discuss` handoff block, inherit its hypothesis, assumptions, and human-decision boundaries instead of re-asking.
+4. **One approval gate.** Present the problem, acceptance criteria, non-goals, and phase list; ask for approval via AskUserQuestion. Revise on feedback. This is the only gate — checking your own draft for coverage and testability is part of drafting, not a separate phase.
+5. **Save and report.** Save to `.context/specs/spec-[feature-name].md` (ensure `.context/` is gitignored). Specs are local planning artifacts; don't commit one unless the user asks to promote it to project documentation.
 
-- NEVER skip clarifying questions
-- NEVER generate spec without explicit user approval (Phase 2 gate)
-- NEVER list dependencies without pinned versions
-- NEVER write "to verify" — YOU verify it
-- ALWAYS use WebSearch for dependency versions
-- ALWAYS use context7 for key dependency docs
-- ALWAYS make each phase self-contained (agent shouldn't need other phases)
-- ALWAYS emit a transcript-verifiable `## Goal Condition` per phase so a user can drive each phase with `/goal`
-- ALWAYS include Prerequisites for Phase 1+
-- Phase 4 (TASK) is REQUIRED — do NOT stop after Phase 3
-- ALWAYS produce Requirement Validation and Architecture Validation sections
-- ALWAYS preserve the 3-command UX: `/agent-team:spec` owns spec → validate → architect → validate internally
+## Constraints
 
----
-
-## MCP Tools (Required)
-
-| MCP | Phase | Purpose |
-|-----|-------|---------|
-| WebSearch | 3 | Pin dependency versions |
-| context7 | 3, 4 | API patterns and method signatures |
-| sequential-thinking | 3 | Complex architectural decisions |
-
----
-
-## Full Workflow
-
-For complete phase instructions (CLARIFY, SPECIFY, PLAN, TASK), phase templates, MCP integration details, and output format, read [references/workflow.md](references/workflow.md).
+- Every acceptance criterion and goal-condition clause must be checkable from a command's output — never "works correctly" or "looks right". A purely visual AC is marked `[manual]` and excluded from the Goal Condition rather than given a fake proxy.
+- Each phase is self-contained: an agent running `/agent-team:dev "Implement Phase N" @spec` needs nothing from other phases beyond the Prerequisites list.
+- Pin exact versions for dependencies the feature **adds**, verified against the registry. Don't research dependencies the repo already uses.
+- The spec is a living document: `/agent-team:dev` updates its status and appends a Wrapup, and mid-implementation reality can revise it. A spec approved once and frozen is how plans drift.

@@ -236,9 +236,5 @@ Before returning results:
 - [ ] Tested WITH skill active to verify fix
 
 <output_gate>
-STOP. Before sending your final message to the lead or going idle, you MUST include a `<skill-author-result>` block as the last element of your response. The block contains your structured findings per the project's `coding-standards.md` rule.
-
-If you cannot produce findings (task aborted, blocked, etc.), still return an empty `<skill-author-result>` block with an explanatory `<reason>` tag inside.
-
-The project-level `TeammateIdle` hook will reject your idle attempt without this block.
+End your final message with a `<skill-author-result>` block containing your structured findings (per `coding-standards.md`). If the task aborted or blocked, return the block with a one-line `<reason>` instead of findings.
 </output_gate>

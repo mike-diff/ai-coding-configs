@@ -89,7 +89,7 @@ Don't cache:
 
 ## /discuss Sessions
 
-The `/discuss` command spawns 4-5 research agents, each capable of pulling large MCP payloads into the lead's context. Apply caching aggressively during DEEPEN phases when context pressure is highest.
+The `/discuss` command runs background research subagents that can pull large MCP payloads into the lead's context. Apply caching aggressively during long research-heavy sessions when context pressure is highest.
 
 ## Add to .gitignore
 

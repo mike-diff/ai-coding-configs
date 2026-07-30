@@ -6,63 +6,28 @@ disable-model-invocation: true
 
 # Agent Team Discuss
 
-Use this skill to run the Agent Team `/discuss` workflow from pi while maintaining repo parity.
+Run the Agent Team `/discuss` workflow from pi. This wrapper is a pointer plus pi-runtime translation — not an independent workflow implementation. When it disagrees with the source of truth, the source wins.
 
 ## Source of truth
 
-The product workflow source of truth is:
-
 - `.claude/skills/discuss/SKILL.md`
 - `.claude/skills/discuss/references/phases.md`
-- `.cursor/skills/discuss/SKILL.md`
-- `.cursor/skills/discuss/references/phases.md`
 
-Read those files when details matter. This pi skill is a maintainer/operator wrapper, not a fourth independent workflow implementation.
+Read those files before running the workflow. (`.cursor/` is a separate runtime adaptation, not a source for pi.)
 
-## Goal
+## pi runtime translation
 
-Answer: Should we build this, what are we assuming, and what should flow into `/skill:agent-team-spec` or `/skill:agent-team-dev`?
+pi is single-agent: the source's background research subagents and adversarial challenger run here as **sequential inline passes** in one session:
 
-## Process
-
-1. Parse the idea and detect mode:
-   - Fresh idea
-   - Revisit existing implementation
-   - Reference-driven discussion using files, docs, URLs, or prior context
-2. Ask at most 3 clarifying questions at a time.
-3. Use repo search and file reads to ground the conversation in existing patterns.
-4. Do the research inline, sequentially (pi is single-agent — there is no team/subagent spawn):
-   - Scout the codebase for implementation patterns
-   - Research external libraries or current platform behavior (web/docs)
-   - Stress-test high-risk plans for blind spots
-   For heavy parallel research, the multi-agent COUNCIL flow lives in the source-of-truth `.claude/skills/discuss/references/phases.md` / `.cursor` — run it there.
-5. Blind-spot check is MANDATORY before recommending build — never skip it, and do not gate it on "high-risk only" (per the source-of-truth phases.md).
-6. Validate the plan before recommending build.
-7. Do not implement.
-8. End with a compact validated plan and an `<adlc-handoff>` block.
-
-## Required final handoff
-
-```xml
-<adlc-handoff>
-problem: [one-sentence problem]
-target_user: [primary user or actor]
-hypothesis: [why this approach should work]
-success_metrics:
-  - [measurable success signal]
-core_workflow_break: [what is broken or missing today]
-assumptions:
-  - [assumption to validate]
-risks:
-  - [risk to mitigate]
-human_decisions_required:
-  - [decision user must make before build, or None]
-recommended_next: /skill:agent-team-spec "[feature]" or /skill:agent-team-dev "[small validated change]"
-</adlc-handoff>
-```
+1. **Triage** (from the source): if the idea is small and already clear, say so and recommend `/skill:agent-team-dev` directly.
+2. **Research passes**: scout the codebase for patterns and integration points; then research the external landscape (libraries, platform features, recent releases). Ground the conversation in what you find.
+3. **Converse**: at most 2-3 questions per turn; let findings change your questions.
+4. **Adversarial pass**: before delivering, deliberately try to break the drafted plan — feasibility against the real codebase, simpler alternatives, native features that replace custom work, unverified assumptions. Report only findings that would change the plan.
+5. **Deliver** the validated plan with the handoff block from the source's Phase 4, ending in `<adlc-handoff>` (see phases.md for the current field list — don't reconstruct it from memory).
+6. Do not implement.
 
 ## Guardrails
 
-- Keep the public workflow lightweight. Do not introduce new ADLC commands.
-- If a spec is needed, recommend `.context/specs/spec-[feature-name].md`.
-- If you notice drift between `.claude/`, plugin and `.cursor/`, flag it before proceeding.
+- Keep the public workflow lightweight; do not introduce new ADLC commands.
+- If a spec is needed, recommend `.context/specs/spec-[feature-name].md` via `/skill:agent-team-spec`.
+- If this wrapper appears to contradict the `.claude` source files, the source wins — and flag the drift.

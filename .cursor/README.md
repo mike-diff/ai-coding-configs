@@ -36,16 +36,11 @@ This directory contains Cursor-specific configuration for AI-assisted developmen
 │   ├── debug-ops/      # /debug operational guidance
 │   ├── canvas-ops/     # Canvas usage guidance
 │   └── skill-creator/  # Agent Skills spec, templates, and validation script
-├── agents/             # Subagents for task delegation
-│   ├── explorer.md     # Codebase analysis
-│   ├── implementer.md  # Code implementation
-│   ├── spec-reviewer.md # Spec compliance verification
-│   ├── checker.md      # Lint/typecheck
-│   ├── tester.md       # Test execution
-│   ├── browser-tester.md # UI verification
+├── agents/             # Custom subagents (built-in Explore/Bash/Browser cover the rest)
+│   ├── implementer.md  # Parallel-track code implementation
+│   ├── spec-reviewer.md # Fresh-context compliance + quality review (readonly)
 │   └── skill-author.md # Skill creation via TDD
 ├── rules/              # Project rules (auto-applied based on context)
-│   ├── dev-workflow.mdc      # /dev workflow conventions
 │   ├── coding-standards.mdc  # Code style and quality
 │   ├── commit-conventions.mdc # Git commit format
 │   ├── subagent-outputs.mdc  # Required subagent result formats
@@ -127,21 +122,16 @@ Subagents are specialized agents that handle specific tasks:
 
 | Agent | Purpose | Invocation |
 |-------|---------|------------|
-| explorer | Codebase analysis | `/explorer [task]` |
-| implementer | Code changes | `/implementer [task]` |
-| spec-reviewer | Spec compliance | `/spec-reviewer [task]` |
-| checker | Lint/typecheck | `/checker` |
-| tester | Run tests | `/tester` |
-| browser-tester | UI verification | `/browser-tester [url]` |
+| implementer | Parallel-track code changes | `/implementer [task]` or via /multitask |
+| spec-reviewer | Fresh-context compliance + quality review (readonly) | `/spec-reviewer [task]` |
 | skill-author | Skill creation via TDD | Spawned by `/skill` |
 
-Subagents are supported in current Cursor 3.x builds. Use Nightly only when you explicitly need preview-only capabilities.
+Cursor's **built-in** Explore, Bash, and Browser subagents cover codebase analysis, verbose check runs, and UI verification — no custom agents needed for those.
 
 ### Rules
 
 Rules auto-apply based on file patterns:
 
-- `dev-workflow.mdc` - Active during /dev command
 - `coding-standards.mdc` - Active for code files (*.ts, *.py, etc.)
 - `commit-conventions.mdc` - Active for git operations
 - `subagent-outputs.mdc` - Active for subagent files

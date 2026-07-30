@@ -35,7 +35,7 @@ Do not infer unattended operation, commits, deployment, pushes, or pull-request 
 2. Run `git status --short --branch` when the workspace is a Git repository.
 3. Record every pre-existing modified, staged, and untracked path. Treat these as user-owned unless the request clearly includes them.
 4. Read the relevant spec or request completely.
-5. In Spec-backed mode, verify Requirement Validation and Architecture Validation are PASS or explicitly accepted. If not, stop for direction.
+5. In Spec-backed mode, verify the spec's status is approved (or explicitly accepted by the user). If not, stop for direction.
 6. Detect manifests, stack, and configured lint, typecheck, test, build, browser, or CLI verification commands.
 7. Identify destructive operations, external side effects, and human approval boundaries before editing.
 

@@ -108,12 +108,20 @@ assert_file_contains ".claude/agents/implementer.md" "stop and ask"
 assert_file_contains ".claude/agents/reviewer.md" "Report every issue you find"
 
 ########################################
-# .cursor — separate runtime, unchanged until migrated
+# .cursor — rebuilt workflows (Cursor 2.4+ native subagents/skills)
 ########################################
+
+# No references to superseded Cursor primitives (custom agents replaced by built-ins,
+# the deleted delegation-first rule) in the live config.
+cursor_stale=$(rg -n '/explorer|/checker|/tester|/browser-tester|dev-workflow\.mdc|\.cursorrules' .cursor || true)
+[ -z "$cursor_stale" ] || fail "superseded-primitive references remain in .cursor:\n$cursor_stale"
 
 assert_file_contains ".cursor/skills/discuss/references/phases.md" "<adlc-handoff>"
 assert_file_contains ".cursor/skills/discuss/references/phases.md" "human_decisions_required:"
-for needle in "## Requirement Contract" "## Requirement Validation" "## Architecture Plan" "## Architecture Validation" "component:" "concerns: []"; do
+assert_file_contains ".cursor/skills/discuss/SKILL.md" "Triage first"
+assert_file_contains ".cursor/skills/spec/SKILL.md" "No spec"
+assert_file_contains ".cursor/skills/spec/SKILL.md" "Light spec"
+for needle in "## Requirement Contract" "## Architecture Plan" "component:" "concerns: []"; do
   assert_file_contains ".cursor/skills/spec/references/workflow.md" "$needle"
 done
 assert_file_contains ".cursor/skills/spec/references/workflow.md" "Build in Parallel"
@@ -121,15 +129,23 @@ assert_file_contains ".cursor/skills/spec/references/workflow.md" "Safe Parallel
 assert_file_contains ".cursor/skills/spec/references/workflow.md" "Implement all phases autonomously"
 assert_file_contains ".cursor/skills/spec/references/workflow.md" "## Goal Condition"
 assert_file_contains ".cursor/skills/spec/references/workflow.md" "or after"
-assert_order ".cursor/skills/dev/references/workflow.md" "## Phase 3: Clarify" "## Phase 4: Plan"
+assert_order ".cursor/skills/dev/references/workflow.md" "## Phase 3: Clarify" "## Phase 4: Build"
+assert_order ".cursor/skills/dev/references/workflow.md" "## Phase 4: Build" "## Phase 5: Verify"
 for needle in "Spec-backed mode" "## Phase 6: Reflect" "Wrapup" "Review council triggers" "## Spec Sweep Mode" "Commit at the phase boundary" "Halt the sweep" "Operational guardrails"; do
   assert_file_contains ".cursor/skills/dev/references/workflow.md" "$needle"
 done
 assert_file_contains ".cursor/skills/dev/references/workflow.md" "/multitask"
 assert_file_contains ".cursor/skills/dev/references/workflow.md" "@.context/specs/..."
 assert_file_contains ".cursor/skills/dev/SKILL.md" "Spec Sweep Mode"
+assert_max_lines ".cursor/skills/discuss/SKILL.md" 150
+assert_max_lines ".cursor/skills/spec/SKILL.md" 150
+assert_max_lines ".cursor/skills/dev/SKILL.md" 150
+assert_max_lines ".cursor/skills/discuss/references/phases.md" 250
+assert_max_lines ".cursor/skills/spec/references/workflow.md" 300
+assert_max_lines ".cursor/skills/dev/references/workflow.md" 350
 assert_file_contains ".cursor/agents/implementer.md" "High-risk assumptions"
 assert_file_contains ".cursor/agents/implementer.md" "stop and ask"
+assert_file_contains ".cursor/agents/spec-reviewer.md" "Report every issue you find"
 
 ########################################
 # Pi maintainer wrappers + shared conventions

@@ -16,7 +16,7 @@ $ARGUMENTS
 
 <principles>
 1. **Analysis-First**: Thoroughly understand the issue before planning
-2. **Delegation-First**: Codebase exploration is delegated to `/explorer`
+2. **Context isolation**: wide codebase exploration is delegated to the built-in Explore subagent
 3. **Clarification-First**: Ask questions before committing to a plan
 4. **Plan-Only**: Create the plan and todo list, then STOP
 5. **Stay on Current Branch**: Do NOT create new branches
@@ -25,7 +25,7 @@ $ARGUMENTS
 <constraints>
 CRITICAL RULES:
 - You MUST fetch the issue using `gh` CLI commands
-- You MUST delegate exploration to `/explorer` - do NOT explore directly
+- Delegate wide exploration to the built-in Explore subagent; explore directly only when the area is already known
 - You MUST stop after planning and wait for user to run `/dev`
 - You MUST create a todo list for the implementation tasks
 - Do NOT implement any code changes
@@ -159,12 +159,10 @@ echo "$ISSUE_BODY" | grep -qiE "ui|frontend|component|page|button|form|modal|das
 <phase name="explore">
 **Goal:** Understand the codebase before planning.
 
-### Step 3.1: Delegate to Explorer
-
-Invoke the explorer subagent:
+### Step 3.1: Dispatch the Explore subagent
 
 ```
-/explorer Analyze codebase for implementing this GitHub issue:
+Analyze the codebase for implementing this GitHub issue:
 
 **Issue #[number]:** [title]
 
@@ -176,30 +174,16 @@ Invoke the explorer subagent:
 
 Find:
 1. Similar features and their implementation patterns
-2. Files that likely need to be modified
-3. Files that may need to be created
-4. Architecture patterns to follow
-5. Dependencies and integrations
-6. Potential concerns or edge cases
-
-Return findings in <explorer-result> block.
+2. Files that likely need to be modified or created
+3. Architecture patterns to follow
+4. Dependencies, integrations, and potential concerns
 ```
 
-### Step 3.2: Verify Explorer Output
+### Step 3.2: Verify the findings
 
-**WAIT for explorer to complete.** Verify output contains:
-
-```xml
-<explorer-result>
-status: COMPLETE
-files_analyzed: [count]
-essential_files: [list]
-patterns_found: [list]
-concerns: [list]
-</explorer-result>
-```
-
-If incomplete or missing, re-delegate with more specific guidance.
+The findings should name essential files, patterns to follow, files to modify/create,
+and concerns. If a dimension is missing, re-dispatch with more specific guidance
+rather than planning on gaps.
 </phase>
 
 ---
@@ -432,7 +416,7 @@ When complete, you will have:
 
 1. ✅ Fetched and analyzed the GitHub issue
 2. ✅ Detected the project stack
-3. ✅ Explored the codebase via `/explorer`
+3. ✅ Explored the codebase via the Explore subagent
 4. ✅ Clarified ambiguities with the user
 5. ✅ Created a detailed implementation plan
 6. ✅ Performed AI assessment of risks and strategy

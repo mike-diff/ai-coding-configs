@@ -25,7 +25,7 @@ $ARGUMENTS
 |---|-------|-------------|
 | 1 | **Fetch** | Parse input (number or URL), fetch issue via `gh issue view` |
 | 2 | **Detect** | Identify tech stack from manifest files |
-| 3 | **Explore** | Delegate to `/explorer`, get affected files and patterns |
+| 3 | **Explore** | Delegate to the built-in Explore subagent, get affected files and patterns |
 | 4 | **Clarify** | Present understanding, ask questions — STOP for user input |
 | 5 | **Plan** | Create implementation plan with AI risk assessment |
 | 6 | **Todo** | Generate task list via TodoWrite, then STOP |
@@ -35,7 +35,7 @@ $ARGUMENTS
 ## Key Constraints
 
 - **MUST** fetch the issue using `gh` CLI
-- **MUST** delegate codebase exploration to `/explorer`
+- Delegate wide codebase exploration to the built-in Explore subagent; explore directly only when the area is already known
 - **MUST** stop after creating the todo list — do NOT implement
 - Use sequential-thinking MCP for complex planning decisions
 - Use context7 MCP for library documentation lookups

@@ -1,70 +1,47 @@
 ---
 name: spec
-description: "Generate a complete feature specification with requirement validation, architecture validation, and Cursor-parallelizable implementation phases. Use when you know what to build and need a spec ready to hand to /dev."
+description: "Generate a right-sized feature specification with acceptance criteria, self-contained phases, and safe parallelization guidance for Cursor. Use when you know what to build and need a spec ready to hand to /dev."
 argument-hint: <feature description>
 disable-model-invocation: true
 ---
 
 # /spec — Feature Specification Generator
 
-Transform a feature description into a complete, phased specification document. Each phase is self-contained and can be passed directly to `/dev`.
+Turn a feature description into the smallest spec that lets a capable agent implement the feature without re-deriving intent: what to build, why, the boundaries, and checkable completion signals.
 
 <role>
-You are a Senior Product Manager and Technical Lead who creates clear, actionable specifications that developers can implement without ambiguity.
+You are a technical lead writing a contract for a strong implementing agent. The implementer needs boundaries and verifiable outcomes, not step-by-step instructions. Specification volume is a cost — long specs measurably reduce constraint compliance — so every line must earn its place.
 </role>
 
 <input>
 $ARGUMENTS
+
+If empty, ask what feature to specify.
 </input>
 
----
+## Right-size first
 
-## Phases
+Match spec depth to criticality: low criticality means low control and more acceleration.
 
-```
-CLARIFY → REQUIREMENT CONTRACT → VALIDATE REQUIREMENT → [approval gate] → ARCHITECTURE PLAN → VALIDATE ARCHITECTURE → TASK → SAVE
-```
+- **No spec** — small, unambiguous change (bug fix, copy tweak, single function). Say so and point the user at `/dev "<description>"` directly; a spec here is overhead with no return.
+- **Light spec** (default) — one self-contained feature with low blast radius. Requirement Contract plus a single phase. Target under ~80 lines.
+- **Full spec** — touches auth, payments, user data, migrations, or public contracts; spans layers; or needs multiple phases. Adds an Architecture Plan, a phased breakdown, and Safe Parallelization guidance. Target under ~300 lines. One feature per spec, always — split anything bigger.
 
-| # | Phase | Gate | Output |
-|---|-------|------|--------|
-| 1 | **CLARIFY** | User answers questions | Scope confirmed |
-| 2 | **REQUIREMENT CONTRACT** | User approves validated contract | Problem, hypothesis, success metrics, acceptance criteria, assumptions |
-| 2.5 | **VALIDATE REQUIREMENT** | Must pass before planning | Requirement Validation checklist |
-| 3 | **ARCHITECTURE PLAN** | Auto-continues after approval | Dependencies, codebase analysis, task graph, Cursor parallelization map |
-| 3.5 | **VALIDATE ARCHITECTURE** | Must pass before tasks | Architecture Validation checklist |
-| 4 | **TASK** | Auto-continues after validation | Self-contained phase sections |
-| — | **SAVE** | — | `.context/specs/spec-[name].md` |
+State the tier you chose and why in one line. Follow the user if they ask for more or less depth.
 
-Each phase section in the output is fully self-contained with: Prerequisites, User Stories, Functional Requirements, Non-Goals, pinned dependencies, implementation guidance, numbered tasks, and a Verify Before Proceeding checklist.
+## Workflow
 
----
+1. **Clarify.** Ask up to 4 questions, only where the answer changes the spec (scope boundary, success definition, integration constraint). For minor gaps, state your interpretation in one line and proceed.
+2. **Ground in the codebase.** Use the built-in Explore subagent for wide or unfamiliar areas. The spec must name real files and real commands, not placeholders. For architecture-heavy features, Plan Mode (Shift+Tab) is a good grounding pass before drafting.
+3. **Draft** using the template in [references/workflow.md](references/workflow.md). If the request arrived with a `/discuss` handoff block, inherit its hypothesis, assumptions, and human decision boundaries instead of re-asking.
+4. **One approval gate.** Present the problem, acceptance criteria, non-goals, and phase list; wait for approval. Revise on feedback. This is the only gate — checking your own draft for coverage and testability is part of drafting, not a separate phase.
+5. **Save and report.** Save to `.context/specs/spec-[feature-name].md` (ensure `.context/` is gitignored). Specs are local planning artifacts; don't commit one unless the user asks to promote it.
 
-## Key Constraints
+## Constraints
 
-- **NEVER** skip clarifying questions
-- **NEVER** generate spec without explicit user approval at the gate
-- **ALWAYS** pin dependency versions (use WebSearch + context7 — never leave unversioned)
-- **ALWAYS** complete through Phase 4 — stopping at Phase 3 is incomplete
-- **ALWAYS** include Requirement Validation and Architecture Validation sections
-- **ALWAYS** include Cursor Build in Parallel guidance when tasks are independent
-- **ALWAYS** wait at gates — do not auto-proceed past Requirement Contract without "approved"
-- **ALWAYS** emit a transcript-verifiable `## Goal Condition` per phase so a user can drive each phase with `/goal`
-- Make each phase self-contained — no cross-phase story or task references
+- Every acceptance criterion and goal-condition clause must be checkable from a command's output — never "works correctly" or "looks right". A purely visual AC is marked `[manual]` and excluded from the Goal Condition rather than given a fake proxy.
+- Each phase is self-contained: an agent running `/dev "Implement Phase N" @spec` needs nothing from other phases beyond the Prerequisites list.
+- Pin exact versions for dependencies the feature **adds**, verified against the registry. Don't research dependencies the repo already uses.
+- The spec is a living document: `/dev` updates its status and appends a Wrapup, and mid-implementation reality can revise it. A spec approved once and frozen is how plans drift.
 
----
-
-## Passing a Phase to /dev
-
-```
-/dev "Implement Phase 1" @.context/specs/spec-[name].md
-```
-
-Or drive a phase natively with the phase's Goal Condition: `/goal "<phase Goal Condition>"`. Don't set `/goal` on a phase `/dev` is already driving.
-
-**`/spec` vs `/discuss`:** Use `/spec` when you know what to build. Use `/discuss` when you're still exploring — it interviews you, researches the codebase, validates the plan, and optionally deepens into a spec.
-
----
-
-## Full Workflow
-
-For complete phase-by-phase instructions, MCP integration details, output format, and spec file structure, see [references/workflow.md](references/workflow.md).
+**`/spec` vs `/discuss`:** use `/spec` when you know what to build; use `/discuss` when you're still exploring.

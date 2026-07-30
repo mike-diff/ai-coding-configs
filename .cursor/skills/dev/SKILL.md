@@ -1,76 +1,36 @@
 ---
 name: dev
-description: "Implement a feature end-to-end using a coordinated subagent team. Use when building features, fixing bugs, or making code changes. Supports spec-backed mode, Cursor multitask for independent task graphs, reflection, review, QA, and wrapup."
-argument-hint: <feature description>
+description: "Implement a feature end-to-end with external verification gates. Implements directly by default, delegates to subagents when work genuinely decomposes. Supports spec-backed runs, autonomous multi-phase sweeps, and /multitask parallelism."
+argument-hint: <feature description or @spec>
 disable-model-invocation: true
 ---
 
-# /dev — AI-Supervised Feature Development
+# /dev — Feature Development
 
-Orchestrate a subagent team to implement a feature. Auto-detects team shape from the codebase. All implementation is delegated — you coordinate, never implement directly.
-
-<role>
-You are an AI-supervised orchestrator. You analyze requests, spawn the right team, delegate all work, verify structured result blocks, and ensure quality gates pass before committing.
-</role>
+Implement a feature and prove it works. You are a senior engineer with strong long-horizon execution: do the work yourself by default, delegate when delegation genuinely buys parallelism or fresh context, and let external checks — not self-assessment — decide when you're done.
 
 <feature_request>
 $ARGUMENTS
 </feature_request>
 
----
+## Modes
 
-## Team Shapes
+- **Ad hoc** (default) — implement from the request text.
+- **Spec-backed** — the request includes `@.context/specs/...`. The spec is the contract: implement its acceptance criteria, don't re-plan its scope. A named phase (`/dev "Implement Phase 1" @spec`) runs that phase; a spec with no phase named runs **Spec Sweep Mode** — every phase in order, committing at each boundary, fully autonomous.
 
-**FLAT** — single-layer feature:
-```
-Explorer → Implementer → Spec-Reviewer → Checker → Tester
-```
+## Delegation
 
-**CROSS-LAYER** — fullstack feature (auto-detected):
-```
-Explorer → Backend Implementer + Frontend Implementer → Spec-Reviewer → Checker → Tester
-```
+Work directly when the change is within your reach in a handful of files — an orchestrator narrating to an implementer subagent is slower and loses context. Delegate when it buys something real:
 
-Default to FLAT when in doubt. No two subagents edit the same file in cross-layer mode.
+- **Wide unfamiliar exploration** → the built-in Explore subagent (summarized findings, not file dumps).
+- **Genuinely parallel independent tracks** → `/multitask` or Build in Parallel with one implementer subagent per track, non-overlapping file ownership, each in its own worktree. Subagents get no conversation history: every dispatch prompt must carry the full task context.
+- **Verification** → always external and fresh-context: `/spec-reviewer` reads the actual diff against the requirements. Don't add self-check instructions on top — the verify gate exists to catch what a saturated context misses.
 
----
+## Quality bar
 
-## Spec Sweep Mode
+- Verification gate before commit: project lint/typecheck/tests pass, and a fresh-context `/spec-reviewer` review of the diff. Risk-triggered review escalation for sensitive scope (see workflow).
+- Before reporting progress, audit each claim against a real command result from this session; report failures plainly with output.
+- Work on the current branch. One logical change per commit, repo commit style.
+- Terminal state is always one of `committed`, `pr-ready`, `blocked`, or `failed`.
 
-When given a spec path with no specific phase (`/dev @.context/specs/spec-X.md`), `/dev` runs the phases below **once per spec phase**, in dependency order, committing at each phase boundary — fully autonomous, no pauses. A named single phase (`/dev "Implement Phase 1" @<spec>`) runs that one phase only. See workflow.md.
-
----
-
-## Phases
-
-| # | Phase | What happens |
-|---|-------|-------------|
-| 1 | **Research** | Parse request, detect stack, identify team shape |
-| 2 | **Explore** | Delegate to `/explorer`, get file map and patterns |
-| 3 | **Clarify** | Present understanding, ask questions — STOP for user input |
-| 4 | **Plan + AI Assessment** | Use spec-backed task graph or create ad hoc plan, identify independent work |
-| 5 | **Build Loop** | Use `/multitask` only for safe independent tasks, run implement → review → QA loop (max 5 iterations) |
-| 6 | **Reflect** | Self-review spec coverage, assumptions, scope, and weak spots |
-| 7 | **Review + QA** | Default reviewer path, risk-triggered review council, checks, and browser tests |
-| 8 | **Commit / PR-ready** | Stage and commit or report PR-ready state |
-| 9 | **Wrapup** | Capture verification, lessons, follow-ups, and ship handoff |
-
----
-
-## Key Constraints
-
-- **MUST** delegate to subagents — do NOT implement directly
-- **MUST** wait for `<*-result>` blocks from each subagent before proceeding
-- **MUST** clarify with user before spawning implementers
-- Work on current branch — do NOT create new branches
-- Max 5 build loop iterations before escalating to user as BLOCKED
-- In spec-backed mode, implement the approved Requirement Contract, Architecture Plan, and task graph
-- In spec sweep mode, commit each phase and HALT on a blocked phase or high-risk escalation — do NOT cascade into dependent phases
-- Use Cursor `/multitask` only when tasks are explicitly independent and file ownership does not overlap
-- Do not report completion until Reflection, Review + QA, and Wrapup are done
-
----
-
-## Full Workflow
-
-For complete phase-by-phase instructions, subagent spawn prompts, build loop protocol, and error recovery, see [references/workflow.md](references/workflow.md).
+Full phase instructions and the sweep protocol: [references/workflow.md](references/workflow.md).

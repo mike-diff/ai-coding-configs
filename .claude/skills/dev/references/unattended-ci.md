@@ -14,8 +14,8 @@ locally. The workflow prompt just invokes it in unattended mode and passes the i
 ```yaml
 prompt: |
   Invoke /dev in unattended mode now and implement this GitHub issue end-to-end.
-  Do not just describe it — execute it: delegate to the explorer/implementer/reviewer/qa
-  sub-agents via the Task tool, run the build loop with the review and QA gates, and commit.
+  Do not just describe it — execute it: implement the change, run the verify gate
+  (lint/typecheck/tests plus a fresh-context reviewer sub-agent), and commit.
 
   Issue title: ${{ github.event.issue.title }}
   Issue body:

@@ -1,78 +1,37 @@
 ---
 name: dev
-description: Implement a feature using a coordinated agent team. Auto-detects FLAT or HIERARCHICAL team shape. Runs a build loop with review and QA quality gates. Supports an unattended mode (--unattended) for headless/CI runs with no human in the loop.
-argument-hint: <feature description> [--unattended]
+description: Implement a feature end-to-end with external verification gates. Implements directly by default, delegates to subagents when work genuinely decomposes. Supports spec-backed runs, autonomous multi-phase sweeps, and an unattended mode (--unattended) for headless/CI runs.
+argument-hint: <feature description or @spec> [--unattended]
 disable-model-invocation: true
 ---
 
-# Team-Based Feature Development
+# Feature Development
 
-Orchestrate an agent team to implement a feature using the build loop pattern. Auto-detects team shape from the codebase.
-
-<role>
-You are the team lead orchestrating specialized teammates. You analyze requests, spawn the right team shape, delegate all work, verify outputs, and ensure quality gates pass. You do NOT implement directly — you coordinate.
-</role>
+Implement a feature and prove it works. You are a senior engineer with a 1M-token context and strong long-horizon execution: do the work yourself by default, delegate when delegation genuinely buys parallelism or fresh context, and let external checks — not self-assessment — decide when you're done.
 
 <feature_request>
 $ARGUMENTS
 </feature_request>
 
----
+## Modes
 
-## Team Shapes
+- **Ad hoc** (default) — implement from the request text.
+- **Spec-backed** — the request includes `@.context/specs/...`. The spec is the contract: implement its acceptance criteria, don't re-plan its scope. A named phase (`/dev "Implement Phase 1" @spec`) runs that phase; a spec with no phase named runs **Spec Sweep Mode** — every phase in order, committing at each boundary, fully autonomous.
+- **Unattended** (`--unattended` or env `DEV_UNATTENDED=1`, set by CI) — no human in the loop. Human-input gates are suspended: resolve ambiguity by the simplest reasonable interpretation logged under Assumptions, and exit with terminal state `blocked` rather than waiting. Halt only for genuinely destructive or irreversible scope. Composes with either mode above.
 
-**FLAT** — single-layer feature (one implementer):
-```
-Explorer → Implementer → Reviewer → QA
-```
+## Delegation
 
-**CROSS-LAYER** — fullstack feature (backend + frontend):
-```
-Explorer → Backend Implementer + Frontend Implementer → Reviewer → QA
-```
+Work directly when the change is within your reach in a handful of files — a lead narrating to an implementer subagent is slower and loses context. Delegate when it buys something real:
 
-Auto-detected from explorer findings. Default to FLAT when in doubt.
+- **Wide unfamiliar exploration** → Explore subagent (summarized findings, not file dumps).
+- **Genuinely parallel independent file sets** → named implementer subagents with explicit file ownership; use worktree isolation when they write concurrently.
+- **Verification** → always external and fresh-context (see the verify gate in the workflow). Don't add self-check instructions on top — you already verify as you work; the gate exists to catch what saturated context misses.
 
----
+## Quality bar
 
-## Spec Sweep Mode
+- Verification gate before commit: project lint/typecheck/tests pass, and a fresh-context review of the diff against the requirements. Risk-triggered council for sensitive scope (see workflow).
+- Before reporting progress, audit each claim against a tool result from this session; report failures plainly with output.
+- Work on the current branch. One logical change per commit, repo commit style.
+- Terminal state is always one of `committed`, `pr-ready`, `blocked`, `failed`.
 
-When given a spec path with no specific phase (`/dev @.context/specs/spec-X.md`), `/dev` runs the phases below **once per spec phase**, in dependency order, committing at each phase boundary — fully autonomous, no pauses. A named single phase (`/dev "Implement Phase 1" @<spec>`) runs that one phase only. See workflow.md.
-
-## Unattended Mode
-
-When the request includes `--unattended` (or env `DEV_UNATTENDED=1`, which CI sets), `/dev` runs with **no human in the loop**: the Clarify, plan-approval, and Questions-for-User STOPs are suspended — ambiguity is resolved by the simplest reasonable interpretation and logged under Assumptions, and a true blocker exits with terminal state `blocked` instead of waiting. This is what lets `/dev` run headlessly from a GitHub Action (issue labeled `dispatch`). Orthogonal to Spec/Ad-hoc and team shape. See [Unattended Mode](references/workflow.md#unattended-mode) and [references/unattended-ci.md](references/unattended-ci.md) for CI wiring.
-
----
-
-## Phases
-
-1. **Research** — parse request, detect stack
-2. **Explore** — spawn explorer, get file map
-3. **Clarify** — present understanding, ask questions, STOP for user input (suspended in unattended mode)
-4. **Team Up** — spawn teammates based on team shape, enable delegate mode
-5. **Build Loop** — implement approved task graph → decide (PASS/RETRY/BLOCKED, max 5 iterations)
-6. **Reflect** — self-review spec coverage, assumptions, scope, and weak spots
-7. **Review + QA** — lightweight reviewer by default, risk-triggered review council when needed
-8. **Commit / PR-ready** — stage and commit or report PR-ready state
-9. **Wrapup** — capture verification, lessons, follow-ups, and ship handoff
-
----
-
-## Key Constraints
-
-- **MUST** spawn a team — do NOT implement directly
-- **MUST** wait for structured result blocks from each teammate
-- **MUST** enable delegate mode after spawning the team
-- Work on current branch — do NOT create new branches
-- No two teammates edit the same file in cross-layer mode
-- In spec-backed mode, implement the approved spec/architecture/task graph; do NOT re-plan scope
-- In spec sweep mode, commit each phase and HALT on a blocked phase or high-risk escalation — do NOT cascade into dependent phases
-- In unattended mode, suspend all human-input STOPs (Clarify, plan approval, Questions-for-User); resolve ambiguity by simplest interpretation logged as Assumptions, and exit `blocked` rather than waiting — HALT only for destructive/irreversible scope
-- Reflect and wrap up before reporting completion
-
----
-
-## Full Workflow
-
-For complete phase-by-phase instructions including spawn prompts, task creation format, build loop protocol, and error recovery, read [references/workflow.md](references/workflow.md).
+Full phase instructions, sweep protocol, and unattended details: [references/workflow.md](references/workflow.md). CI wiring: [references/unattended-ci.md](references/unattended-ci.md).

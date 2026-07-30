@@ -9,8 +9,7 @@ Drop `.claude/` into any project to get lightweight workflow commands, five spec
 ├── skills/                           # Auto-activating capabilities
 ├── agents/                           # Subagents for delegation
 ├── rules/                            # Standards auto-loaded every session
-├── hooks/                            # Deterministic safety and quality gates
-└── output-styles/                    # Optional system-prompt styles (e.g. teaching), opt-in via /config
+└── hooks/                            # Deterministic safety and quality gates
 ```
 
 ---
@@ -25,9 +24,9 @@ These power the slash commands. Each maps to a command of the same name.
 
 | Skill | Command | What it does |
 |-------|---------|-------------|
-| `discuss` | `/discuss` | Explore an idea through conversation and parallel research. Produces a validated plan with a blind spot check and ADLC handoff. |
-| `spec` | `/spec` | Turn a feature description into a requirement contract, validate it, plan architecture, validate the architecture, and save phased tasks. |
-| `dev` | `/dev` | Build a feature with a coordinated subagent team, then reflect, review/QA, commit or report PR-ready, and wrap up learnings. |
+| `discuss` | `/discuss` | Explore an idea through conversation and background research subagents. One adversarial validation pass, then a validated plan with an ADLC handoff. |
+| `spec` | `/spec` | Right-sized specs: triage (no spec / light / full), one approval gate, self-contained phases with transcript-verifiable goal conditions. |
+| `dev` | `/dev` | Implement directly by default, delegate when work decomposes; external verify gate (checks + fresh-context review), then commit or PR-ready and wrapup. |
 | `to-dos` | `/to-dos` | Break a feature into detailed, dependency-tracked tasks using `TaskCreate`. |
 | `issue` | `/issue` | Fetch a GitHub issue, explore the codebase, produce an implementation plan. |
 | `ticket` | `/ticket` | Create a well-structured GitHub issue through a guided interview. |
@@ -43,7 +42,7 @@ These activate automatically based on context - no command needed.
 
 | Skill | Activates when... |
 |-------|------------------|
-| `team-orchestration` | Spawning or coordinating agent teams |
+| `team-orchestration` | Deciding when to delegate, subagents vs Workflow, verification topology |
 | `review-patterns` | Reviewing code, verifying implementation against spec |
 | `testing-patterns` | Running lint, typecheck, or tests; writing new tests |
 
@@ -51,17 +50,15 @@ These activate automatically based on context - no command needed.
 
 ## Agents
 
-Agents live in `.claude/agents/`. The orchestrator (lead) spawns these via Agent Teams to handle focused work.
+Agents live in `.claude/agents/`. The lead spawns these as subagents (Agent tool) for focused work — fresh-context review, parallel implementation tracks, wide exploration. Every session has an implicit team; no env flag is needed.
 
-| Agent | Role | Mode |
-|-------|------|------|
-| `explorer` | Read-only codebase analysis | async |
-| `implementer` | Writes and modifies code | resumable |
-| `reviewer` | Spec compliance and code quality | - |
-| `qa` | Runs lint, typecheck, and tests | - |
-| `skill-author` | Creates skills using TDD | - |
-
-Requires Agent Teams: set `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in your **user-level** `~/.claude/settings.json` env block - not in the project `settings.json`. See setup note below.
+| Agent | Role |
+|-------|------|
+| `explorer` | Read-only codebase analysis |
+| `implementer` | Writes and modifies code |
+| `reviewer` | Coverage-first spec compliance and code quality review |
+| `qa` | Runs lint, typecheck, and tests |
+| `skill-author` | Creates skills using TDD |
 
 ---
 
@@ -86,8 +83,6 @@ Hooks live in `.claude/hooks/` and are configured in `settings.json`. Unlike rul
 | `validate-commit.sh` | `PreToolUse: Bash` | Rejects commit messages that don't match `type(scope): description` |
 | `redact-secrets.sh` | `PreToolUse: Read` | Blocks `.env*`, credential files, and content containing AWS keys, GitHub tokens, private keys |
 | `post-edit-lint.sh` | `PostToolUse: Write\|Edit` | Auto-lints the edited file after every write or edit |
-| `teammate-idle.sh` | `TeammateIdle` + agent `Stop` | Requires a `<*-result>` block before a teammate can go idle or stop |
-| `task-completed.sh` | `TaskCompleted` | Requires a `<*-result>` block before a task can be marked done |
 
 All hooks use `$CLAUDE_PROJECT_DIR` (injected by Claude Code) to resolve paths reliably.
 
@@ -97,22 +92,19 @@ All hooks use `$CLAUDE_PROJECT_DIR` (injected by Claude Code) to resolve paths r
 
 ```
 /discuss "idea"
-  → Lead (normal mode) interviews you
-  → Scout + Researcher teammates do parallel research
-  → Challenger stress-tests the plan
-  → Blind Spot check runs automatically
-  → Validated plan + ADLC handoff (optionally deepens into a spec)
+  → Lead interviews you; scout + researcher subagents work in the background
+  → One adversarial challenger pass stress-tests the draft plan
+  → Validated plan + ADLC handoff → /spec (complex) or /dev (small)
 
 /spec "feature"
-  → CLARIFY → REQUIREMENT CONTRACT → VALIDATE REQUIREMENT (approval gate)
-  → ARCHITECTURE PLAN → VALIDATE ARCHITECTURE → TASK
-  → Saves to .context/specs/spec-[name].md
-  → Each phase carries a Goal Condition; drive one phase solo with /goal "<condition>"
+  → Right-size triage (no spec / light / full) → clarify → draft
+  → One approval gate → saves to .context/specs/spec-[name].md
+  → Each phase carries a transcript-verifiable Goal Condition (drivable via /goal)
 
-/dev "feature" @.context/specs/spec-[name].md
-  → Spec-backed preflight → Explorer maps codebase → Clarify → Team up
-  → Implementer builds → Reflect → Review + QA (risk-triggered review council)
-  → Commit or PR-ready → Wrapup captures lessons, assumptions, follow-ups, and ship handoff
+/dev "feature" or /dev @.context/specs/spec-[name].md
+  → Orient → explore (when unfamiliar) → clarify → build (direct by default,
+    subagents when work decomposes) → verify gate (checks + fresh-context review,
+    risk-triggered council) → reflect → commit or PR-ready → wrapup
 ```
 
 Specs are local planning artifacts by default. They save under `.context/specs/`, which is gitignored, and should only be promoted into committed documentation when explicitly requested.
@@ -120,22 +112,6 @@ Specs are local planning artifacts by default. They save under `.context/specs/`
 ---
 
 ## Setup
-
-### Agent Teams
-
-`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` must be set in your **user-level** `~/.claude/settings.json`:
-
-```json
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
-}
-```
-
-Set `teammateMode` in `settings.json` to control how agents render (`auto`, `tmux`, or `in-process`), or pass it as a flag: `claude --teammate-mode tmux`. Use `tmux` for each agent in its own pane (requires tmux), or `in-process` to keep everything in one terminal.
-
-Do not set it in the project `settings.json`. Claude Code validates project hooks before applying project-level env vars - if the env var is in the same file as the `TeammateIdle` and `TaskCompleted` hooks, those hooks can silently prevent project slash commands from loading.
 
 ### Context Directory
 
@@ -147,10 +123,9 @@ echo ".context/" >> .gitignore
 
 ## User-level setup
 
-Two settings in this config live in your **user-level** `~/.claude/settings.json`, not the project-level one in this repo:
+One setting in this config lives in your **user-level** `~/.claude/settings.json`, not the project-level one in this repo:
 
-1. **`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`** — required for Agent Teams (see existing notes).
-2. **`autoMemoryDirectory` / `autoMemoryEnabled`** — Claude Code's policy rejects these keys from project settings to prevent shared projects redirecting memory writes. Copy this into `~/.claude/settings.json`:
+1. **`autoMemoryDirectory` / `autoMemoryEnabled`** — Claude Code's policy rejects these keys from project settings to prevent shared projects redirecting memory writes. Copy this into `~/.claude/settings.json`:
 
     ```json
     {

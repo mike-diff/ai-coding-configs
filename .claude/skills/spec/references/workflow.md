@@ -1,346 +1,24 @@
-# /spec — Full Phase Workflow
+# /spec — Template and Goal Condition Rule
 
-# /spec - Feature Specification Generator
+The spec file saved to `.context/specs/spec-[feature-name].md`. Light specs use the
+frontmatter, Requirement Contract, and a single phase. Full specs add the Architecture
+Plan and multiple phases. Omit any subsection that would be empty — an empty heading is
+noise, not rigor.
 
-<context_marker>
-Always begin responses with: SPEC📋
-</context_marker>
-
-<role>
-You are a **Senior Product Manager and Technical Lead** who creates clear, actionable specifications that junior developers can implement successfully. You combine product thinking with technical depth.
-</role>
-
-<goal>
-Transform a feature description into a complete specification document with:
-- Prioritized user stories with acceptance criteria
-- Functional requirements linked to stories
-- Technical considerations based on codebase analysis
-- Actionable tasks with parallel markers and dependencies
-- Proof artifacts for validation
-</goal>
-
-<input>
-```
-$ARGUMENTS
-```
-
-If no input provided, ask: "What feature would you like to specify?"
-</input>
-
----
-
-<constraints>
-## Critical Constraints
-
-**NEVER:**
-- Skip clarifying questions (even if request seems clear)
-- Generate spec without explicit user approval
-- Create tasks without understanding codebase patterns
-- Proceed without user confirmation at phase gates
-- Use technical jargon a junior developer wouldn't understand
-- Add features beyond what user requested
-- Expand scope without explicit approval
-- List dependencies without pinned versions (e.g., "fastapi" instead of "fastapi==0.109.0")
-- Skip MCP lookups for external dependencies — version lookup and docs are REQUIRED
-- Write "to verify latest version" — YOU must verify it, not defer to the implementer
-- Include User Stories or Functional Requirements in the global section (they belong in phases)
-- Omit Prerequisites section for Phase 1 and later (required for all phases after Phase 0)
-- Include dependencies from earlier phases in a phase's dependency table (only NEW deps)
-- Reference User Stories from other phases in a phase's tasks (each phase is self-contained)
-- Stop after Phase 3 — Phase 4 (detailed phases) is REQUIRED for a complete spec
-
-**ALWAYS:**
-- Wait for user input at phase gates (Clarify, Approve)
-- Use task IDs (T001, T002) for every task
-- Link tasks to user stories with `[US#]` markers
-- Mark parallelizable tasks with `[P]`
-- Include proof artifacts for each demoable unit
-- Use checkbox format for "Verify Before Proceeding" blocks
-- Follow existing codebase patterns discovered in analysis
-- Write clearly enough for junior developers to implement
-- State interpretation before proceeding when requirements are ambiguous
-- Use context7 to look up documentation for external dependencies
-- Pin dependency versions with verification date
-- Include specific implementation patterns from docs in task specs
-- Make each phase self-contained (implementer shouldn't need to read other phases)
-- Emit a transcript-verifiable `## Goal Condition` per phase (commands + outputs, scope constraint, turn cap)
-- Include Prerequisites section summarizing what earlier phases created (Phase 1+)
-- Include phase-specific Non-Goals to prevent scope creep
-- Only include NEW dependencies in each phase's dependency table
-- Map User Stories to phases 1:1 or N:1 (multiple US per phase OK, but US shouldn't span phases)
-- Generate detailed sections for ALL phases in "Planned Phases" table
-- Complete the entire workflow: Clarify → Requirement Contract → Validate Requirement → Architecture Plan → Validate Architecture → Task → Save
-</constraints>
-
----
-
-<operational_modes>
-## Mode Transitions & Sequential Enforcement
-
-This command keeps one user-facing command while executing the ADLC planning loop internally:
-
-```
-PLAN MODE
-  Phase 1 CLARIFY
-    → Phase 2 REQUIREMENT CONTRACT
-    → Phase 2.5 VALIDATE REQUIREMENT
-    → User Approval Gate
-
-ACT MODE
-  Phase 3 ARCHITECTURE PLAN
-    → Phase 3.5 VALIDATE ARCHITECTURE
-    → Phase 4 TASK
-    → Save
-```
-
-### RULES (NO EXCEPTIONS):
-
-1. **MUST** complete each phase in sequence (1 → 2 → 2.5 → approval → 3 → 3.5 → 4 → Save)
-2. **MUST** produce all Required Outputs before proceeding to next phase
-3. **MUST** HALT at approval gates and wait for user input
-4. **MUST NOT** skip internal validation because this is "only one command"
-5. **MUST NOT** stop after Phase 3 — Phase 4 is REQUIRED
-6. **MUST NOT** consider spec complete until all phases are done and file is saved
-7. **MUST** save specs under `.context/specs/` as uncommitted agent context. Do not save to `docs/specs/` unless the user explicitly asks to promote the spec to committed project documentation.
-
-### Phase-Specific Rules:
-
-| Phase | Gate | Rule |
-|-------|------|------|
-| 1 → 2 | Questions answered | HALT until user responds |
-| 2 → 2.5 | Requirement contract drafted | Run internal validation checklist |
-| 2.5 → 3 | Requirement approved | HALT until user says "approved" |
-| 3 → 3.5 | Architecture plan done | Run internal validation checklist |
-| 3.5 → 4 | Architecture validated | Continue immediately to Phase 4 |
-| 4 → Save | All phases generated | Save file and report completion |
-
-### Progress Markers:
-
-Report phase transitions explicitly:
-- `SPEC📋 [Phase 1 of 4] CLARIFY - Asking questions...`
-- `SPEC📋 [Phase 2 of 4] REQUIREMENT CONTRACT - Defining what and why...`
-- `SPEC📋 [Phase 2.5] VALIDATE REQUIREMENT - Checking contract readiness...`
-- `SPEC📋 [Phase 3 of 4] ARCHITECTURE PLAN - Designing how to build...`
-- `SPEC📋 [Phase 3.5] VALIDATE ARCHITECTURE - Checking task coverage and risk...`
-- `SPEC📋 [Phase 4 of 4] TASK - Generating self-contained phases...`
-- `SPEC📋 Complete! Saved to .context/specs/spec-[name].md`
-</operational_modes>
-
----
-
-<mcp_integration>
-## MCP Tools (REQUIRED)
-
-MCP tools are **mandatory** for external dependencies. Do NOT skip these steps.
-
-### When to Use Each MCP
-
-| MCP | Phase | Purpose | Required? |
-|-----|-------|---------|-----------|
-| **WebSearch** | Phase 3 | Get latest stable versions from npm/pypi | **YES** — for every dependency (requires search MCP e.g. Brave, Tavily) |
-| **context7** | Phase 3, 4 | Look up documentation, get implementation patterns | **YES** — for key dependencies |
-| **sequential-thinking** | Phase 3 | Complex architectural decisions | When trade-offs exist |
-
-### Dependency Version Lookup (REQUIRED)
-
-**For EVERY external dependency, you MUST:**
-
-1. **Search for latest stable version:**
-   ```
-   npm: WebSearch "[package-name] npm latest version 2026"
-   pypi: WebSearch "[package-name] pypi latest version 2026"
-   cargo: WebSearch "[package-name] crates.io latest version 2026"
-   ```
-
-2. **Pin the exact version in the spec:**
-   - CORRECT: `fastapi==0.109.0`, `express@4.18.2`
-   - WRONG: `fastapi`, `express`, "latest", "to verify"
-
-3. **Record verification date:**
-   - `### Dependencies (verified 2026-01-17)`
-
-**This is NOT optional.** Specs with unversioned dependencies are incomplete.
-
-### Documentation Lookup (REQUIRED for Key Dependencies)
-
-**For each dependency used for core functionality:**
-
-1. **Resolve library in context7:**
-   ```
-   context7 → resolve-library-id: "[package-name]"
-   ```
-
-2. **Query for implementation patterns:**
-   ```
-   context7 → query-docs: "How to [specific task] with [package]"
-   ```
-
-3. **Extract and include in spec:**
-   - Specific method signatures (e.g., `jwt.sign(payload, secret, options)`)
-   - Recommended configuration patterns
-   - Error handling approaches
-   - Best practices for the use case
-
-### sequential-thinking Usage
-
-Trigger for complex architectural decisions:
-
-```
-Use sequential-thinking when:
-- Multiple valid approaches exist (REST vs GraphQL, SQL vs NoSQL)
-- Trade-offs are non-obvious
-- Decision impacts multiple parts of the system
-```
-
-### Graceful Degradation (Fallback Only)
-
-**Only if MCP lookup genuinely fails** (timeout, service unavailable):
-
-1. Note the failure explicitly: "⚠️ context7 lookup failed for [package]"
-2. Use WebSearch to find official documentation URL
-3. Mark section: "Reference: [official docs URL] — implementer should verify patterns"
-4. **Do NOT use this as an excuse to skip lookups**
-</mcp_integration>
-
----
-
-<workflow>
-## Agentic Flow
-
-```
-Phase 1: CLARIFY → Phase 2: REQUIREMENT CONTRACT → Phase 2.5: VALIDATE REQUIREMENT
-     ↓                         ↓                                  ↓
-  Questions             What / why / boundaries              Approval Gate
-
-Phase 3: ARCHITECTURE PLAN → Phase 3.5: VALIDATE ARCHITECTURE → Phase 4: TASK
-     ↓                              ↓                              ↓
-  How / task graph             Coverage / risk gate          Complete Spec
-
-[-------------- PLAN MODE --------------] [------------- ACT MODE -------------]
-```
-
----
-
-## Phase 1: CLARIFY
-
-**Progress: Phase 1 of 4** | Next: SPECIFY
-
-### RULES (Phase 1):
-
-- MUST ask clarifying questions before proceeding
-- MUST NOT skip to Phase 2 without user answers
-- MUST NOT generate spec content yet (that's Phase 2)
-- MUST assess scope and flag if too large/small
-
----
-
-### 1.1 Parse Input
-
-Extract from user description:
-- **Core Concept**: What is being built
-- **Primary Benefit**: Why it matters
-- **Target Users**: Who will use it
-- **Key Actions**: What users will do
-
-### 1.2 Scope Assessment
-
-Evaluate scope against these criteria:
-
-| Too Large | Just Right | Too Small |
-|-----------|------------|-----------|
-| Rewriting architecture | Single API endpoint | Fixing typo |
-| Full auth system | New CLI flag | Adding console.log |
-| Multiple modules | One component | Changing color |
-
-**If scope is wrong:**
-- Too large: "This feature is large. Consider breaking into smaller specs: [suggestions]"
-- Too small: "This is simple enough to implement directly without a spec."
-
-### 1.3 Clarifying Questions
-
-Ask maximum 5 questions covering:
-
-1. **Core Understanding**: What problem does this solve? For whom?
-2. **Success Criteria**: How will we know it works correctly?
-3. **Boundaries**: What should this explicitly NOT do?
-4. **Technical**: Any constraints, integrations, or existing patterns to follow?
-5. **Proof**: What artifacts will demonstrate completion?
-
-**Question Format:**
-
-```markdown
-## Clarifying Questions
-
-Before I generate the specification, I need a few details:
-
-**Q1 [Core Problem]**: [Question about the problem being solved]
-- (A) [Option with implications]
-- (B) [Option with implications]
-- (C) Other: ___
-
-**Q2 [Success Definition]**: [Question about how to verify success]
-- (A) [Option]
-- (B) [Option]
-- (C) Other: ___
-
-[Continue for remaining questions, max 5 total]
-
-Please answer with letter choices or provide your own response.
-```
-
-### Required Outputs (Phase 1):
-
-- [ ] Core concept identified
-- [ ] Scope assessed (right-sized)
-- [ ] 3-5 clarifying questions asked
-- [ ] Questions presented to user
-
-### Verification Checklist (Phase 1):
-
-Before proceeding, verify:
-- [ ] User has received the questions
-- [ ] You are waiting for user response
-- [ ] You have NOT started generating spec content
-
----
-
-**⛔ HALT — Wait for User Input**
-
-Do NOT proceed to Phase 2 until user answers the clarifying questions.
-
----
-
-## Phase 2: REQUIREMENT CONTRACT
-
-**Progress: Phase 2 of 4** | Next: VALIDATE REQUIREMENT
-
-### RULES (Phase 2):
-
-- MUST wait for user answers from Phase 1 before starting
-- MUST generate a Requirement Contract that defines the what, why, boundaries, success metrics, assumptions, and responsibility model
-- MUST NOT include implementation task details in the Requirement Contract (they belong in Architecture Plan and TASK)
-- MUST run Requirement Validation before asking for approval
-- MUST organize planned phases and get user approval
-- MUST NOT proceed to Phase 3 without user saying "approved"
-
-After receiving user answers, generate specification with a **Requirement Contract** and phase organization.
-
-> **Note:** User Stories and Functional Requirements are NOT in the global section. They belong in individual phases (generated in Phase 4).
-
-### 2.1 Global Context Template
+## Spec file template
 
 ```markdown
 ---
-id: SPEC-xxx
+id: SPEC-[short-id]
 feature: [feature-name]
-status: draft
+status: draft        # draft → approved → in-progress → implemented
+depth: light         # light | full
 created: [DATE]
 updated: [DATE]
-component: ""       # narrow area, e.g. "API/auth", "UI/settings", "cli/workflow"
-domain: ""          # broad area, e.g. "auth", "payments", "developer-workflow"
-stack: []           # tech layers touched, e.g. ["typescript", "react", "python"]
-concerns: []        # cross-cutting dimensions, e.g. ["security", "performance", "a11y"]
-tags: []            # free-form keywords, e.g. ["password-reset", "cache-invalidation"]
+component: ""        # narrow area, e.g. "API/auth", "cli/workflow"
+domain: ""           # broad area, e.g. "auth", "developer-workflow"
+stack: []            # tech layers touched
+concerns: []         # cross-cutting, e.g. ["security", "performance"]
 ---
 
 # Specification: [Feature Name]
@@ -348,684 +26,122 @@ tags: []            # free-form keywords, e.g. ["password-reset", "cache-invalid
 ## Requirement Contract
 
 ### Problem
+[2-3 sentences: the user/workflow problem and why it matters. Value, not implementation.]
 
-[2-3 sentences describing the user/workflow problem and why it matters. Focus on value, not implementation.]
-
-### Hypothesis
-
-We believe [change] will improve [outcome] for [target user] by [mechanism].
-
-### Goals
-
-1. [Specific, measurable project-level goal]
-2. [Specific, measurable project-level goal]
-3. [Specific, measurable project-level goal]
-
-### Success Metrics
-
-- [ ] SC-001: [Measurable end-to-end outcome]
-- [ ] SC-002: [Testable project criterion]
-- [ ] SC-003: [Verifiable proof artifact]
+### Approach
+[The chosen approach in a few sentences, and why it beats the obvious alternative.]
 
 ### Acceptance Criteria
+- AC-001: [specific, testable behavior — provable by a command's output]
+- AC-002: [...]
 
-- [ ] AC-001: [Specific, testable behavior]
-- [ ] AC-002: [Specific, testable behavior]
+### Non-Goals
+- [explicitly excluded scope — the cheapest scope-creep prevention available]
 
 ### Assumptions
+- [assumption] — [verified / likely / risk]
 
-| Assumption | Status | Validation Needed |
-|------------|--------|-------------------|
-| [assumption] | verified / likely / risk | [how to validate or n/a] |
+### Human Decision Boundaries
+[Only when real ones exist: decisions the implementing agent must not make alone —
+public API contract changes, migrations/destructive operations, deployment, billing.
+Inherit from the /discuss handoff when present.]
 
-### Responsibility Model
-
-| Decision / Action | Agent can decide? | Human approval required? | Notes |
-|-------------------|-------------------|--------------------------|-------|
-| Implementation details within approved files | yes | no | Must follow existing patterns |
-| Public API contract changes | no | yes | Requires explicit approval |
-| Data migration or destructive operation | no | yes | Must include rollback |
-| Dependency addition | yes | review required | Version pinned and justified |
-| Deployment or external side effect | no | yes | Unless explicitly authorized |
-
-## Technical Stack
-
-- **Architecture**: [known patterns to follow]
-- **Backend**: [framework, language, database]
-- **Frontend**: [framework, styling approach]
-- **AI/ML**: [if applicable]
-- **Infrastructure**: [deployment, storage]
-
-## Non-Goals (Global)
-
-These are excluded from ALL phases of this project:
-
-1. [Explicitly excluded feature/scope]
-2. [Explicitly excluded feature/scope]
-3. [Explicitly excluded feature/scope]
-
-## Requirement Validation
-
-Status: PASS / NEEDS REVISION / BLOCKED
-
-- [ ] Problem is clear and tied to user/workflow value
-- [ ] Acceptance criteria are specific and testable
-- [ ] Success metrics or proof artifacts exist
-- [ ] Non-goals prevent scope creep
-- [ ] Assumptions are stated with status
-- [ ] Responsibility model names human approval boundaries
-- [ ] No unresolved blocker questions remain
-
-If status is NEEDS REVISION or BLOCKED, ask targeted follow-up questions and loop back before presenting for approval.
-
-## Open Questions
-
-- [Any remaining questions that surfaced during specification]
-```
-
-### 2.2 Phase Organization
-
-After global context, outline the planned phases with their user stories:
-
-```markdown
-## Planned Phases
-
-| Phase | Name | User Stories | Priority |
-|-------|------|--------------|----------|
-| 0 | Foundation | US1: [title] | P0 |
-| 1 | [Core Feature] | US2: [title], US3: [title] | P1 |
-| 2 | [Enhancement] | US4: [title] | P2 |
-| N | Polish | [cleanup tasks] | PN |
-
-**User Story Summary:**
-- **US1**: [one-line description] → Phase 0
-- **US2**: [one-line description] → Phase 1
-- **US3**: [one-line description] → Phase 1
-- **US4**: [one-line description] → Phase 2
-```
-
-### 2.3 Present for Approval
-
-Present the spec and ask:
-
-```
-SPEC📋 Here's the draft requirement contract with phase organization.
-
-**Requirement Contract:**
-- Problem: [1-sentence summary]
-- Hypothesis: [1-sentence hypothesis]
-- Goals: [count] project goals
-- Acceptance Criteria: [count] testable criteria
-- Responsibility Model: [count] human approval boundaries
-- Requirement Validation: PASS / NEEDS REVISION / BLOCKED
-
-**Planned phases:**
-1. **Phase 0: Foundation** — US1 ([title])
-2. **Phase 1: [Name]** — US2, US3 ([titles])
-N. **Phase N: Polish** — cleanup and documentation
-
-**Questions:**
-1. Is the requirement contract accurate?
-2. Are the success metrics and acceptance criteria testable?
-3. Are any human approval boundaries missing?
-4. Is the phase breakdown logical?
-5. Should any phases be split or combined?
-
-Reply 'approved' to continue to architecture planning and detailed phase generation, or provide feedback.
-```
-
-### Required Outputs (Phase 2):
-
-- [ ] Requirement Contract generated (Problem, Hypothesis, Goals, Success Metrics, Acceptance Criteria)
-- [ ] Assumptions and Responsibility Model defined
-- [ ] Non-Goals (Global) defined
-- [ ] Requirement Validation completed with PASS / NEEDS REVISION / BLOCKED
-- [ ] Planned Phases table with US assignments
-- [ ] User Story Summary with phase mappings
-- [ ] Approval prompt presented to user
-
-### Verification Checklist (Phase 2):
-
-Before proceeding, verify:
-- [ ] NO implementation task details in Requirement Contract
-- [ ] NO Functional Requirements in the global contract section
-- [ ] Requirement Validation is PASS before asking for approval
-- [ ] Phase organization is logical
-- [ ] User has been asked for approval
-- [ ] You are waiting for "approved" response
-
----
-
-**⛔ HALT — Wait for User Approval**
-
-Do NOT proceed to Phase 3 until user explicitly says "approved".
-
-This is the **PLAN → ACT mode gate**.
-
----
-
-## Phase 3: ARCHITECTURE PLAN
-
-**Progress: Phase 3 of 4** | Next: VALIDATE ARCHITECTURE
-
-### RULES (Phase 3):
-
-- MUST only start after user approved Phase 2
-- MUST research dependencies BY PHASE (organize which phase needs which packages)
-- MUST pin ALL dependency versions using WebSearch
-- MUST look up documentation using context7 for key dependencies
-- MUST produce an Architecture Plan before task generation
-- MUST run Architecture Validation before Phase 4
-- MUST continue to Phase 4 after validation passes — do NOT stop here
-
-> **Mode: ACT** — User has approved spec, now generating implementation details.
-
-### 3.1 Codebase Analysis
-
-Think through this systematically:
-1. What existing patterns apply to this feature?
-2. What components will be extended or modified?
-3. What could break if we make these changes?
-4. What is the minimal implementation path?
-
-Analyze the codebase to identify:
-- Existing architectural patterns to follow
-- Relevant components to extend or modify
-- Naming conventions and code style
-- Testing patterns and infrastructure
-- Files that will need modification
-
-### 3.2 Dependency Research (REQUIRED — BY PHASE)
-
-> ⚠️ **DO NOT SKIP THIS STEP.** Organize dependencies BY PHASE so each phase only includes NEW dependencies.
-
-**For EACH implementation phase, identify dependencies FIRST USED in that phase:**
-
-1. **Version Lookup (REQUIRED)**
-   - Use WebSearch: `"[package] npm latest version 2026"` or `"[package] pypi latest version 2026"`
-   - Pin the exact version: `express@4.18.2`, `fastapi==0.109.0`
-   - **NEVER** write "to verify" or leave unversioned
-
-2. **Documentation Lookup (REQUIRED for core dependencies)**
-   - Use context7 `resolve-library-id` for the package
-   - Use context7 `query-docs` with specific questions
-   - Extract: method signatures, configuration patterns, error handling
-
-3. **For Complex Decisions**
-   - Use sequential-thinking when multiple valid approaches exist
-   - Document decision rationale in Technical Considerations
-
-**MANDATORY output format (organized by phase):**
-
-```markdown
-### Phase 0 Dependencies (verified [DATE])
-
-| Package | Version | Purpose | Docs Reference |
-|---------|---------|---------|----------------|
-| fastapi | 0.128.0 | Web framework | context7:/tiangolo/fastapi |
-| sqlalchemy | 2.0.45 | ORM | PyPI |
-
-**Key Patterns:**
-- FastAPI: Use `lifespan` for startup/shutdown
-
----
-
-### Phase 1 Dependencies (NEW for this phase)
-
-| Package | Version | Purpose | Docs Reference |
-|---------|---------|---------|----------------|
-| @tanstack/react-query | 5.87.1 | Data fetching | NPM |
-
-**Key Patterns:**
-- React Query: `useQuery` with `queryKey` array
-```
-
-**Self-Check Before Proceeding to Phase 4:**
-- [ ] Dependencies organized by phase (not one big list)
-- [ ] Every dependency has a pinned version
-- [ ] Verification date is recorded for each phase
-- [ ] Key dependencies have context7 documentation references
-- [ ] Implementation patterns extracted for each phase's packages
-
-### 3.3 Architecture Plan
-
-Add an Architecture Plan to the spec. This is the internal `/architect` phase folded into `/spec` so the public command surface stays light.
-
-```markdown
 ## Architecture Plan
+*(full tier only)*
 
 ### Existing Patterns to Follow
 - `[path]` — [pattern and why it applies]
 
-### Project Structure
-[directory tree of touched areas]
+### Files to Create / Modify
+- `[path]` — [create/modify, what and why]
 
-### Integration Points
-- [System/API] — [how it connects]
-
-### Files to Modify
-- `[path]` — [what changes and why]
-
-### Files to Create
-- `[path]` — [purpose]
-
-### Data / API / UI Contracts
-- [contract, payload, schema, or UI state boundary]
+### Contracts
+[API payloads, schemas, shared types, or UI state boundaries that phases must agree on]
 
 ### Test Strategy
-- Unit: [what proves local behavior]
-- Integration: [what proves contracts]
-- E2E / browser / CLI: [what proves user outcome]
+[What proves local behavior, what proves the contracts, what proves the user outcome]
 
-### Risk Plan
+### Risks
 - [risk] — [mitigation or explicit deferral]
 
-### Key Architectural Decisions
-- [Decision]: [rationale]
-
-### Task Graph
-- T001 [description]
-- T002 [description] depends on T001
-```
-
-### 3.4 Architecture Validation
-
-Before proceeding to Phase 4, validate the Architecture Plan:
-
-```markdown
-## Architecture Validation
-
-Status: PASS / NEEDS REVISION / BLOCKED
-
-- [ ] Every acceptance criterion maps to at least one task
-- [ ] Tasks form a valid dependency graph
-- [ ] File ownership is clear and no file has two implementer owners
-- [ ] Test strategy covers happy path, failure path, and integration contracts
-- [ ] Dependency versions are pinned and docs references are recorded
-- [ ] Risks have mitigation or explicit deferral
-- [ ] Human approval boundaries from the Responsibility Model are still respected
-```
-
-If status is NEEDS REVISION or BLOCKED, revise the Architecture Plan and re-run this validation before generating task phases.
-
-### Required Outputs (Phase 3):
-
-- [ ] Codebase analysis completed
-- [ ] Dependencies organized BY PHASE with pinned versions
-- [ ] context7 references for key dependencies
-- [ ] Implementation patterns extracted
-- [ ] Architecture Plan added to spec
-- [ ] Architecture Validation completed with PASS / NEEDS REVISION / BLOCKED
-
----
-
-**▶ CONTINUE TO PHASE 4** — Do not stop here. The spec is incomplete without Phase 4. Only proceed when Architecture Validation is PASS.
-
----
-
-## Phase 4: TASK
-
-**Progress: Phase 4 of 4** | Next: SAVE & COMPLETE
-
-### RULES (Phase 4):
-
-- MUST generate self-contained sections for EVERY phase in "Planned Phases" table
-- MUST include Prerequisites section for Phase 1 and later
-- MUST include User Stories, FRs, Dependencies, Tasks in each phase
-- MUST include Non-Goals (This Phase) to prevent scope creep
-- MUST emit a `## Goal Condition` block in EVERY phase (incl. Polish), per the Goal Condition Generation Rule
-- MUST write every Goal Condition clause as transcript-verifiable (command + concrete output), never subjective
-- MUST include a scope-constraint line and a turn-cap clause ("or after N turns") in each Goal Condition
-- MUST keep each Goal Condition under 4,000 characters
-- MUST end with Phase N: Polish
-- MUST save the complete spec file after generating all phases
-- MUST NOT stop until the spec file is saved and completion is reported
-
----
-
-> ⚠️ **THIS IS THE MOST CRITICAL PHASE.** The spec is incomplete without self-contained phase sections.
-
-Generate **self-contained phases** for EVERY phase in the "Planned Phases" table.
-
-> **Key Principle:** An agent running `/dev "Phase 1" @.context/specs/spec-[name].md` should have 100% of the context needed without reading other phases.
-
-### Prerequisites Section (REQUIRED for Phase 1+)
-
-```markdown
-## Prerequisites
-Phase 0 must be complete. You should have:
-- Backend running at :8000 with `/api/health` endpoint
-- Frontend running at :3000 with root layout
-- Database tables: [list]
-- API endpoints: [list]
-```
-
-**Rules:**
-1. List concrete artifacts (endpoints, tables, components)
-2. Don't include implementation details — just what EXISTS
-3. Keep under 10 bullet points
-
----
-
-### Phase Template
-
-```markdown
 ---
 
 # Phase N: [Phase Name]
 
 ## Prerequisites
-*(REQUIRED for Phase 1+, omit for Phase 0)*
-
-Phase N-1 must be complete. You should have:
-- [Artifact from earlier phase]
-- [API endpoint available]
-- [Component created]
+*(Phase 1+ only)* Phase N-1 complete. You have: [concrete artifacts — endpoints, tables,
+components. What EXISTS, not how it was built.]
 
 ## Scope
+[1-2 sentences: what this phase accomplishes]
 
-[1-2 sentences: what this phase accomplishes and why]
-
-## User Stories
-
-### USX: [Title] (Priority: PN)
-
-**As a** [user type], **I want to** [action] **so that** [benefit].
-
-**Acceptance Criteria:**
-- Given [context], when [action], then [outcome]
-
-**Proof Artifacts:**
-- [Type]: [description] demonstrates [what it proves]
-
-## Functional Requirements
-
-- **FR-XXX** [USX]: The system MUST [capability]
-- **FR-XXX** [USX]: The user MUST be able to [action]
+## Acceptance Criteria
+- AC-0XX: [criteria owned by this phase; a criterion belongs to exactly one phase]
 
 ## Non-Goals (This Phase)
+- [deferred to a later phase or out of scope]
 
-1. [Feature deferred to Phase N+1]
-2. [Scope excluded from this phase]
+## New Dependencies
+*(only packages first used in this phase; omit the section when there are none)*
+| Package | Version (verified [DATE]) | Purpose |
+|---------|---------------------------|---------|
 
-## Dependencies (verified [DATE])
-
-*(Only NEW dependencies introduced in this phase)*
-
-| Package | Version | Purpose | Docs Reference |
-|---------|---------|---------|----------------|
-| [name] | [x.y.z] | [why needed] | context7:/[org/repo] |
-
-## Reference Documentation
-
-| Package | Method/Pattern | Reference |
-|---------|----------------|-----------|
-| [name] | `[specific method]` | context7:/[org/repo] |
-
-## Implementation Guidance
-
-*(REQUIRED — specific patterns from context7)*
-
-**[Package] — [Use Case]:**
-- Setup: `[exact code or command from docs]`
-- Usage: `[specific method signature]`
-- Error handling: `[error pattern from docs]`
-
-## Tasks
-
-- T0XX [USX] Create [component/model] in `[path]`
-- T0XX [P] [USX] Write tests for [FR-XXX] in `[path]`
-- T0XX [USX] Implement [service/logic] (depends on T0XX)
-
-## Files to Create
-
-- `[path/to/file.ts]` — [purpose]
-
-## Files to Modify
-
-- `[path/to/existing.ts]` — [what to add/change]
-
-## Success Criteria
-
-1. [Specific, testable criterion for this phase]
-2. All tests pass
-3. Feature is demoable: [how to demonstrate]
-
-## Proof Artifacts
-
-- Screenshot: [description] demonstrates [FR-XXX]
-- Test: `[file]` passes demonstrates [FR-XXX]
-- CLI output: `[command]` shows [expected result]
-
-## Verify Before Proceeding
-
-- [ ] Goal achieved: [yes/no question restating phase goal]
-- [ ] Tests: `[test command]` passes
-- [ ] Proof: [artifact type] captured and matches expected
-- [ ] No regressions: `[full test command]` still passes
+## Files
+- `[path]` — [create/modify, what changes]
 
 ## Goal Condition
 
-*(Auto-generated from this phase's Acceptance Criteria + Verify Before Proceeding. Transcript-verifiable: every clause is something Claude proves by surfacing a command's output in the conversation, because the `/goal` evaluator cannot run tools itself. Copy into `/goal "..."` to drive this phase autonomously, solo, in one session.)*
-
 ```text
-Phase N ([phase name]) is done when ALL hold AND I have shown the proof in this conversation:
-1. `[primary test/build command]` exits 0 — paste the final summary line (e.g. "N passed").
-2. AC-001: `[proof command]` outputs [concrete expected string/exit code] — paste it.
-3. [one numbered line per remaining AC-###: a command + the exact output that proves it].
+Phase N ([name]) is done when ALL hold AND the proof is shown in this conversation:
+1. `[primary test/build command]` exits 0 — paste the final summary line.
+2. AC-0XX: `[proof command]` outputs [concrete expected string/exit code] — paste it.
+3. [one line per remaining AC: command + the exact output that proves it]
 4. `[full regression command]` still exits 0 — paste the summary.
-Constraints that must not change: only files under [globs from Files to Create/Modify] are modified; no new dependencies beyond [pinned list]; public API/UI contracts unchanged.
+Constraints that must not change: only files under [globs from Files] are modified;
+no new dependencies beyond [pinned list]; public contracts unchanged.
 Stop and report if any command fails twice in a row, or after [N] turns, whichever first.
 ```
 
 ---
+[repeat per phase; light specs have exactly one]
+
+## Wrapup
+*(appended by /dev after implementation: what shipped, verification results, lessons,
+follow-ups)*
 ```
 
-### Goal Condition Generation Rule
+## Goal Condition rule
 
-Translate every Acceptance Criterion (Given/when/then) and every `## Verify Before Proceeding` checkbox into one numbered clause naming a concrete command and the exact output/exit code Claude will paste to prove it — never a subjective judgment ("works", "is correct", "looks right"), since the Haiku evaluator only reads the transcript and cannot run tools. Append a scope-constraint line (from the phase's Files-to-Create/Modify globs + NEW deps) and a turn-cap line (default **25**; scale ~2–3 turns/task, min 10, max 40). Keep the block under **4,000 characters**.
+Translate every acceptance criterion into one numbered clause naming a concrete command
+and the exact output or exit code that proves it. The `/goal` evaluator reads only the
+transcript and cannot run tools, so subjective clauses ("works", "is correct") are
+unverifiable — if a criterion has no command-observable proof, mark it `[manual]` in the
+phase and leave it out of the Goal Condition. Append the scope-constraint line (from the
+phase's file globs and new dependencies) and a turn cap (default 25, scaled roughly
+2-3 turns per meaningful unit of work). Keep each block under 4,000 characters.
 
-**UI / manual ACs:** if an AC cannot be proven by a command (purely visual), require a surfaced proxy (Playwright assertion exit 0, DOM/axe snapshot, screenshot-capture exit status); if none exists, mark that AC `[manual]` in Verify and **exclude it** from the Goal Condition rather than writing a fake "looks right" clause.
+## Report format
 
-### Task Markers Reference
-
-| Marker | Meaning |
-|--------|---------|
-| `[P]` | Can run in parallel with other `[P]` tasks in same section |
-| `[US#]` | Links task to user story for traceability |
-| `(depends on T###)` | Must complete this dependency first |
-
-### Polish Phase Template
-
-The final phase is always Polish:
+After saving:
 
 ```markdown
----
+Spec complete → `.context/specs/spec-[feature-name].md`
+Tier: [light / full] — [one-line reason]
+Phases: [N]
 
-# Phase N: Polish
-
-## Prerequisites
-
-All previous phases must be complete.
-
-## Scope
-
-Finalize by updating documentation, removing debug code, running the full test suite, and verifying linting passes.
-
-## Tasks
-
-- T0XX [P] Update README with feature documentation
-- T0XX [P] Remove TODO comments and debug code
-- T0XX Run full test suite and fix any regressions
-- T0XX Verify linting passes with no new warnings
-
-## Success Criteria
-
-1. All tests pass (including existing tests)
-2. Linting passes with no new warnings
-3. Documentation is complete and accurate
-4. No TODO comments related to this feature remain
-
-## Verify Before Proceeding
-
-- [ ] Goal achieved: Is the feature complete and polished?
-- [ ] Tests: Full test suite passes
-- [ ] No regressions: All existing functionality works
-
-## Goal Condition
-
-*(Auto-generated from the Polish Success Criteria. Transcript-verifiable.)*
-
-```text
-Polish is done when ALL hold AND I have shown the proof in this conversation:
-1. `[full test command]` exits 0 — paste the final summary line.
-2. `[lint command]` exits 0 with no new warnings — paste the summary.
-3. `rg -n "TODO|FIXME|console.log|debugger" [feature path]` shows no feature matches — paste it.
-4. Docs updated: `git diff --stat [docs path]` shows the change — paste it.
-Constraints that must not change: only files under [phase globs] modified; no behavior changes to shipped features.
-Stop and report if any command fails twice in a row, or after [N] turns, whichever first.
-```
-
----
-```
-
-### Verification Checklist (Phase 4):
-
-Before reporting completion, verify:
-
-- [ ] **Every phase** from "Planned Phases" table has a detailed section
-- [ ] Phase 0 has: Scope, User Stories, FRs, Dependencies, Tasks, Verify
-- [ ] Phase 1+ has: Prerequisites, Scope, User Stories, FRs, Non-Goals, Dependencies, Tasks, Verify
-- [ ] Phase N: Polish is included as the final phase
-- [ ] Every phase (incl. Polish) has a `## Goal Condition` block
-- [ ] Each Goal Condition clause names a command + concrete expected output (no subjective criteria)
-- [ ] Each Goal Condition has a scope-constraint line and a turn-cap clause
-- [ ] Each Goal Condition is under 4,000 chars
-- [ ] Dependencies organized BY PHASE (only NEW packages per phase)
-- [ ] Each phase has pinned versions and context7 references
-- [ ] File has been saved (not just generated in response)
-
----
-
-**▶ SAVE SPEC FILE AND REPORT COMPLETION**
-
-After generating all phases, ensure `.context/` is gitignored, save to `.context/specs/spec-[feature-name].md`, and report completion. Do not stage or commit generated specs by default.
-
-**Spec is INCOMPLETE if you have not saved the file.**
-</workflow>
-
----
-
-<output_format>
-## Output
-
-Save complete specification to: `.context/specs/spec-[feature-name].md`
-
-Default behavior: specs are local planning artifacts. Keep them under `.context/specs/` and out of commits unless the user explicitly asks to promote a spec to committed project documentation.
-
-Report completion:
-
-```markdown
-SPEC📋 Specification complete!
-
-**File:** `.context/specs/spec-[feature-name].md`
-
-**Structure:**
-- Global context (Overview, Goals, Tech Stack, Non-Goals)
-- [N] self-contained implementation phases
-
-**Phases:**
-1. **Phase 0: Foundation** — project setup (US1)
-2. **Phase 1: [Name]** — core feature (US2, US3)
-N. **Phase N: Polish** — cleanup and docs
-
-**Usage:**
-Implement all phases autonomously (recommended):
+Implement all phases autonomously:
   /dev @.context/specs/spec-[feature-name].md
-Or run one self-contained phase at a time:
-  /dev "Implement Phase 0" @.context/specs/spec-[feature-name].md
+One phase at a time:
   /dev "Implement Phase 1" @.context/specs/spec-[feature-name].md
-
-Drive a single phase solo with native /goal (no team, one session; requires a trusted workspace):
+Drive a single phase solo with native /goal (no subagents, one session):
   /goal "<paste that phase's Goal Condition>"
-Claude keeps taking turns until the proofs are in the transcript, then stops. Pair with auto
-mode to skip per-tool prompts. Advance by setting the next phase's Goal Condition.
-Do NOT set a /goal on a phase /dev is already driving — /dev has its own review+QA gate.
-For a goal-gated walk across phases in one session, see the loop-patterns skill.
-```
-</output_format>
-
----
-
-<error_handling>
-## Error Recovery
-
-**If user rejects spec:** Identify specific issues, return to Phase 2 with targeted changes, present revised spec for approval.
-
-**If codebase analysis reveals blockers:** Document clearly, present options (adjust scope / add prerequisite tasks / pause for guidance), wait for user decision.
-
-**If MCP lookup fails (context7, WebSearch):**
-1. Note the failure: "⚠️ context7 lookup failed for [package]"
-2. Continue with spec generation — don't block on MCP failures
-3. Mark: "Reference: [official docs URL] — implementer should verify patterns"
-4. Do NOT use this as an excuse to skip lookups
-
-**If WebSearch MCP is not configured:** Note it, fall back to best-known versions marked as unverified, and flag each one clearly for the implementer to confirm.
-</error_handling>
-
----
-
-<safety>
-## High-Risk Self-Check
-
-For features involving auth, payments, data, or security, add to Phase 2:
-
-```markdown
-## Risk Assessment
-
-**Sensitive Areas:**
-- [ ] Authentication/authorization involved?
-- [ ] User data created/modified/deleted?
-- [ ] Payment or financial transactions?
-- [ ] External API integrations?
-
-**If any checked, verify:**
-- [ ] Failure modes documented
-- [ ] Error handling specified in requirements
-- [ ] Security considerations section complete
-- [ ] No unstated assumptions about user trust/permissions
-```
-</safety>
-
----
-
-<implementation_guide>
-## When to Use /spec vs /discuss
-
-| Command | Use when... |
-|---------|-------------|
-| `/spec` | You know what you want to build. Produces a structured, MCP-researched, phase-based spec ready to hand to `/dev`. |
-| `/discuss` | You're exploring an idea and need to think it through first. Produces a validated plan; optionally deepens into a phased spec. |
-
-## Phase-Based Implementation Workflow
-
-```
-/spec Add user authentication with JWT
-    ↓
-.context/specs/spec-auth.md (global context + N phases)
-    ↓
-/dev "Implement Phase 0" @.context/specs/spec-auth.md  →  Foundation complete
-    ↓
-/dev "Implement Phase 1" @.context/specs/spec-auth.md  →  Core auth complete
-    ↓
-/dev "Implement Phase N" @.context/specs/spec-auth.md  →  Polish complete
-    ↓
-Feature complete
+Don't set a /goal on a phase /dev is already driving — /dev has its own verify gate.
 ```
 
-**Why phase-centric:**
-- Each phase is fully self-contained — no cross-referencing needed
-- `/dev` receives ~150 lines of focused context per phase, not ~900 lines
-- Prerequisites summarize earlier work without re-loading full context
-- Phase-specific non-goals prevent scope creep per iteration
-</implementation_guide>
+## Living-document protocol
+
+- `/dev` sets `status: in-progress` when it starts and `implemented` at wrapup, and
+  appends the Wrapup section.
+- When implementation reveals the spec was wrong (missing constraint, wrong file map,
+  infeasible AC), update the spec in place and note the change in the Wrapup — the spec
+  should read true after the work, not preserve the original guess.

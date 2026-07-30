@@ -117,13 +117,11 @@ Subagents are specialized agents that the orchestrator delegates work to. Each h
 
 | Agent | Role |
 |-------|------|
-| `explorer` | Codebase analysis |
-| `implementer` | Code implementation |
-| `spec-reviewer` | Spec compliance verification |
-| `checker` | Lint and typecheck |
-| `tester` | Test execution |
-| `browser-tester` | UI verification |
+| `implementer` | Parallel-track code implementation |
+| `spec-reviewer` | Fresh-context compliance + quality review (readonly) |
 | `skill-author` | Skill creation via TDD |
+
+Cursor's built-in Explore, Bash, and Browser subagents cover codebase analysis, verbose check runs, and UI verification.
 
 ---
 
@@ -143,7 +141,6 @@ Rules are guidelines loaded automatically by the AI at the start of every sessio
 | Rule | What it covers |
 |------|---------------|
 | `coding-standards` | Code quality, naming, structure |
-| `dev-workflow` | Orchestration conventions for `/dev` |
 | `commit-conventions` | Conventional Commits format |
 | `subagent-outputs` | Required result block formats for subagents |
 | `mcp-caching` | Cache large MCP responses to `.context/` |

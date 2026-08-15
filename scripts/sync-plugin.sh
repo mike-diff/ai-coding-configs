@@ -74,7 +74,17 @@ perl -i -pe \
   's{bash \.claude/skills/skill/scripts/validate-skill\.sh (\S+)}{bash "\${CLAUDE_PLUGIN_ROOT}/skills/skill/scripts/validate-skill.sh" "\${CLAUDE_PROJECT_DIR}/$1"}g' \
   "$DST/agents/skill-author.md"
 
-# 6. Verification: no unprefixed slash-command refs in plugin skills
+# 6. Agent Plugin mirror (agent-plugins.org open standard — loads in Cursor and
+#    other runtimes implementing the standard). plugin.json and README.md are
+#    hand-maintained like hooks.json; only skills/ is generated. No command
+#    namespacing here: the standard uses portable /command names.
+AP="$REPO_ROOT/plugins/agent-plugin"
+[ -f "$AP/plugin.json" ] || { echo "ERROR: $AP/plugin.json missing — create it before syncing" >&2; exit 1; }
+rm -rf "$AP/skills"
+mkdir -p "$AP/skills"
+cp -R "$SRC/skills/." "$AP/skills/"
+
+# 7. Verification: no unprefixed slash-command refs in plugin skills
 UNPREFIXED=$(perl -ne 'print "$ARGV:$.: $_" if /(?<![:\/\w-])\/(ask|dev|discuss|goal-or-loop|issue|loop-patterns|orient|primitives|review-patterns|skill|slop-check|spec|team-orchestration|testing-patterns|ticket|to-dos)\b(?!:)/' $(find "$DST/skills" -name "*.md") 2>/dev/null | grep -v "/agent-team:" || true)
 if [ -n "$UNPREFIXED" ]; then
   echo "WARNING: unprefixed slash-command references remain:" >&2

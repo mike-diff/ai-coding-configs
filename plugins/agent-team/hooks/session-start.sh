@@ -15,7 +15,7 @@ fi
 ts() { date '+%H:%M:%S'; }
 log() { echo "[$(ts)] [session-start] $1" >> "$LOG"; }
 
-INPUT="$(cat /dev/stdin 2>/dev/null || echo '{}')"
+INPUT="$(cat)"
 SID=$(echo "$INPUT" | jq -r '.session_id // "?"')
 SRC=$(echo "$INPUT" | jq -r '.source // "?"')
 MDL=$(echo "$INPUT" | jq -r '.model // "?"')

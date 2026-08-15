@@ -20,7 +20,7 @@ log() {
 }
 
 # Read the JSON input from stdin
-INPUT="$(cat /dev/stdin 2>/dev/null || echo "")"
+INPUT="$(cat)"
 if [[ -z "$INPUT" ]]; then
   log "SKIP: empty input"
   exit 0

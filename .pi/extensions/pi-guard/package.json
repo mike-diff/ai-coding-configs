@@ -1,0 +1,4 @@
+{
+  "name": "pi-guard",
+  "description": "Safety guard for pi coding sessions: blocks dangerous shell commands, non-conventional commits, and secret-bearing file reads (parity with the Claude Code and Cursor hooks)."
+}

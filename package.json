@@ -1,0 +1,20 @@
+{
+  "name": "ai-coding-configs",
+  "version": "0.3.0",
+  "description": "Multi-runtime agent team workflows: discuss/spec/dev for Claude Code, Cursor, Codex, and pi",
+  "private": true,
+  "keywords": [
+    "pi-package"
+  ],
+  "pi": {
+    "extensions": [
+      "./.pi/extensions/pi-guard"
+    ],
+    "skills": [
+      "./.pi/skills"
+    ],
+    "prompts": [
+      "./.pi/prompts"
+    ]
+  }
+}

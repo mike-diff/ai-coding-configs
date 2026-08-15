@@ -1,6 +1,7 @@
 ---
 name: spec
 description: Create a right-sized, implementation-ready feature specification from a clear request or validated ADLC handoff. Use when the user explicitly invokes $spec to define acceptance criteria, boundaries, self-contained phases, and optional native Codex /goal prompts before development.
+disable-model-invocation: true
 ---
 
 # Spec

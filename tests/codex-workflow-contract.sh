@@ -41,9 +41,15 @@ assert_frontmatter_keys() {
   printf '%s\n' "$frontmatter" | grep -Eq '^description: .+' ||
     fail "$file frontmatter lacks a description"
 
+  # Explicit-invocation guard. pi and Cursor load .agents/skills natively and
+  # ignore agents/openai.yaml; without this key they would auto-trigger
+  # Codex-flavored workflow semantics from ordinary prompts.
+  printf '%s\n' "$frontmatter" | grep -Fqx "disable-model-invocation: true" ||
+    fail "$file frontmatter lacks disable-model-invocation: true"
+
   local key_count
   key_count=$(printf '%s\n' "$frontmatter" | grep -Ec '^[a-zA-Z0-9_-]+:')
-  [ "$key_count" -eq 2 ] || fail "$file frontmatter must contain only name and description"
+  [ "$key_count" -eq 3 ] || fail "$file frontmatter must contain only name, description, and disable-model-invocation"
 }
 
 for skill in discuss spec dev; do

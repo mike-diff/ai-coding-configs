@@ -1,6 +1,7 @@
 ---
 name: dev
 description: Implement and verify an approved feature, bug fix, or specification phase. Use when the user explicitly invokes $dev for ad hoc or spec-backed development, a named phase or multi-phase sweep, interactive or unattended local execution, with preflight, scoped implementation, reflection, independent review, QA, and a committed, pr-ready, blocked, or failed handoff.
+disable-model-invocation: true
 ---
 
 # Dev

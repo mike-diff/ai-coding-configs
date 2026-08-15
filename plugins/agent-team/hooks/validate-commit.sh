@@ -19,7 +19,7 @@ log() {
 }
 
 # Read JSON input from stdin
-INPUT="$(cat /dev/stdin 2>/dev/null || echo "")"
+INPUT="$(cat)"
 if [[ -z "$INPUT" ]]; then
   exit 0
 fi

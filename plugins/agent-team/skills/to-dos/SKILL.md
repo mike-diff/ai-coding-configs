@@ -36,7 +36,7 @@ $ARGUMENTS
 
 1. **Parse** — extract core functionality, scope, type, tech hints
 2. **Explore** — search codebase, find patterns, detect environment
-3. **Clarify** — `AskFollowupQuestion` (max 5), wait for answer
+3. **Clarify** — `AskUserQuestion` (max 5), wait for answer
 4. **Plan** — design the task structure in read-only mode
 5. **Present** — `ExitPlanMode` to show full task plan, wait for approval
 6. **Generate** — call `TaskCreate` + `TaskUpdate` after approval

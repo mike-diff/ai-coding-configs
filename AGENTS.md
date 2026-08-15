@@ -44,6 +44,7 @@ Run these after workflow changes:
 ```bash
 ./tests/workflow-contract.sh
 ./tests/codex-workflow-contract.sh
+./tests/hooks-contract.sh
 bash -n tests/workflow-contract.sh tests/codex-workflow-contract.sh tests/smoke.sh scripts/sync-plugin.sh scripts/install-codex.sh .claude/hooks/*.sh .cursor/hooks/*.sh plugins/agent-team/hooks/*.sh
 git diff --check
 ```

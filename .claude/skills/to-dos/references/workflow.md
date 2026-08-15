@@ -95,14 +95,14 @@ Early stop criteria:
 <uncertainty_handling>
 When the request is ambiguous or underspecified:
 - Explicitly acknowledge the ambiguity
-- Ask 1-5 precise clarifying questions using `AskFollowupQuestion`
+- Ask 1-5 precise clarifying questions using `AskUserQuestion`
 - Present your understanding for confirmation
 </uncertainty_handling>
 
-Use `AskFollowupQuestion` with a summary of your understanding and up to 5 questions:
+Use `AskUserQuestion` with a summary of your understanding and up to 5 questions:
 
 ```
-AskFollowupQuestion:
+AskUserQuestion:
   question: |
     **Implementation: [short title]**
 
@@ -123,10 +123,10 @@ AskFollowupQuestion:
   options: ["proceed"]
 ```
 
-If no questions are needed, use `AskFollowupQuestion` to confirm the approach before planning:
+If no questions are needed, use `AskUserQuestion` to confirm the approach before planning:
 
 ```
-AskFollowupQuestion:
+AskUserQuestion:
   question: "Ready to generate tasks for: [tl;dr]?"
   options: ["proceed", "adjust", "cancel"]
 ```
@@ -224,7 +224,7 @@ Signals the plan is ready for user review and approval. Present the full propose
 **Parameters:**
 - `allowedPrompts` (optional): Constrain what the user can respond with (e.g. `["proceed", "adjust", "cancel"]`)
 
-### AskFollowupQuestion
+### AskUserQuestion
 Asks the user a question and waits for their response. Use this for the clarification phase instead of text-based STOP instructions.
 
 **Parameters:**
@@ -521,7 +521,7 @@ If a `/to-dos` session has already created tasks, `/dev` can use `TaskGet` to re
 
 ```
 User: /to-dos Add authentication with JWT
-  -> EnterPlanMode → explore → AskFollowupQuestion → plan → ExitPlanMode
+  -> EnterPlanMode → explore → AskUserQuestion → plan → ExitPlanMode
   -> User approves → TaskCreate tasks with dependencies
 
 User: /dev Implement the authentication tasks

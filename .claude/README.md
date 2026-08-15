@@ -16,7 +16,7 @@ Drop `.claude/` into any project to get lightweight workflow commands, five spec
 
 ## Skills
 
-Skills live in `.claude/skills/`. Each skill has a `SKILL.md` that loads automatically when its description semantically matches what you're working on. No manual activation needed.
+Skills live in `.claude/skills/`. Workflow skills are explicit slash commands (they set `disable-model-invocation`, so Claude only runs them when you type `/name`); semantic skills auto-activate when their description matches what you're working on.
 
 ### Workflow Skills
 
@@ -44,7 +44,9 @@ These activate automatically based on context - no command needed.
 |-------|------------------|
 | `team-orchestration` | Deciding when to delegate, subagents vs Workflow, verification topology |
 | `review-patterns` | Reviewing code, verifying implementation against spec |
-| `testing-patterns` | Running lint, typecheck, or tests; writing new tests |
+| `testing-patterns` | Running lint, typecheck, or tests; writing tests |
+| `goal-or-loop` | Choosing between `/goal` and `/loop` for unattended work |
+| `loop-patterns` | Asking about `/loop`, polling, watch-mode, periodic tasks |
 
 ---
 
@@ -79,12 +81,21 @@ Hooks live in `.claude/hooks/` and are configured in `settings.json`. Unlike rul
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
+| `session-start.sh` | `SessionStart` | Logs session opens; verifies hook scripts are executable |
 | `block-dangerous.sh` | `PreToolUse: Bash` | Blocks `rm -rf /`, force push to main, hard reset, `DROP TABLE`, `DELETE` without `WHERE` |
 | `validate-commit.sh` | `PreToolUse: Bash` | Rejects commit messages that don't match `type(scope): description` |
 | `redact-secrets.sh` | `PreToolUse: Read` | Blocks `.env*`, credential files, and content containing AWS keys, GitHub tokens, private keys |
 | `post-edit-lint.sh` | `PostToolUse: Write\|Edit` | Auto-lints the edited file after every write or edit |
+| `permission-denied.sh` | `PermissionDenied` | Logs auto-mode permission denials |
+| `notify-compact.sh` | `PreCompact` | Desktop notification when context compacts |
+| `cwd-changed.sh` | `CwdChanged` | Logs working-directory changes |
+| `task-created.sh` | `TaskCreated` | Logs task-creation events |
+| `stop-failure.sh` | `StopFailure` | Logs API-error turn endings |
 
-All hooks use `$CLAUDE_PROJECT_DIR` (injected by Claude Code) to resolve paths reliably.
+Hooks read their JSON payload from stdin (file descriptor 0). `permissions.deny`
+rules in `settings.json` additionally block reads of env and credential files —
+deny rules are enforced by Claude Code itself, in every permission mode, and
+extend to file reads through Bash (`cat .env` is denied too).
 
 ---
 
@@ -136,7 +147,7 @@ One setting in this config lives in your **user-level** `~/.claude/settings.json
 
     Replace `<your-project>` with a descriptive name. Claude Code will auto-create `MEMORY.md` and topic files there.
 
-**Minimum Claude Code version:** 2.1.108 (released 2026-04-14). Verify with `claude --version`. Older versions will silently ignore `ENABLE_PROMPT_CACHING_1H` and may reject other features used here. Last verified against 2.1.172 (June 2026).
+**Minimum Claude Code version:** 2.1.108 (released 2026-04-14). Verify with `claude --version`. Older versions will silently ignore `ENABLE_PROMPT_CACHING_1H` and may reject other features used here. Last verified against 2.1.229 (August 2026).
 
 ## Built-in commands leveraged
 
@@ -149,7 +160,6 @@ This config assumes the following native Claude Code commands are available. The
 | `/effort` | Switch between reasoning effort levels per task |
 | `/team-onboarding` | Generate or refresh a team onboarding guide for this project |
 | `/color` | Change session accent color (useful when running multiple sessions in parallel) |
-| `/tui` | Toggle full-screen, flicker-free rendering |
 | `/loop` | Run a prompt on a recurring or self-paced interval. See `.claude/skills/loop-patterns/SKILL.md` for per-agent recipes |
 
 ## Hardening options

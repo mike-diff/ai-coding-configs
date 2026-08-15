@@ -39,7 +39,7 @@ When modifying existing code:
 ## Git Conventions
 
 - Branch naming: `claude/issue-<number>`
-- Commit format: `type(scope): description (#issue-number)`
+- Commit format: `type(scope): description` — one line, no issue/PR numbers
 - Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
 
 ## Prompt Structures

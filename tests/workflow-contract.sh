@@ -166,6 +166,50 @@ assert_file_contains ".pi/skills/agent-team-spec/SKILL.md" ".context/specs/spec-
 assert_file_contains ".pi/skills/agent-team-dev/SKILL.md" "Spec-backed mode"
 assert_file_contains ".pi/skills/agent-team-discuss/SKILL.md" "<adlc-handoff>"
 
+# pi package delivery: the root package.json pi manifest is what makes
+# `pi install git:github.com/mike-diff/ai-coding-configs` load resources —
+# without it the package install is inert.
+assert_file_contains "package.json" '"pi-package"'
+assert_file_contains "package.json" '"./.pi/skills"'
+assert_file_contains "package.json" '"./.pi/prompts"'
+
+# pi prompt-template aliases force-load the wrapper skills deterministically.
+for t in discuss spec dev; do
+  [ -f ".pi/prompts/$t.md" ] || fail "missing .pi/prompts/$t.md"
+  assert_file_contains ".pi/prompts/$t.md" "agent-team-$t"
+done
+
+# pi safety extension: parity port of the Claude/Cursor hooks, shipped via the manifest.
+assert_file_contains "package.json" '"./.pi/extensions/pi-guard"'
+[ -f ".pi/extensions/pi-guard/index.ts" ] || fail "missing .pi/extensions/pi-guard/index.ts"
+# Parity anchors — the same patterns the .claude/.cursor hooks enforce.
+assert_file_contains ".pi/extensions/pi-guard/index.ts" 'git\s+reset\s+--hard'
+assert_file_contains ".pi/extensions/pi-guard/index.ts" 'TRUNCATE'
+assert_file_contains ".pi/extensions/pi-guard/index.ts" 'AKIA[0-9A-Z]{16}'
+assert_file_contains ".pi/extensions/pi-guard/index.ts" 'ghp'
+
+# pi agent definitions for the official subagent example extension (opt-in).
+for a in explorer implementer reviewer qa; do
+  [ -f ".pi/agents/$a.md" ] || fail "missing .pi/agents/$a.md"
+  assert_file_contains ".pi/agents/$a.md" "name: $a"
+done
+
+# Codex skills stay explicit-invocation on the runtimes that read .agents/skills
+# natively (pi, Cursor); Codex itself ignores the key and uses openai.yaml.
+for skill in discuss spec dev; do
+  assert_file_contains ".agents/skills/$skill/SKILL.md" "disable-model-invocation: true"
+done
+
+# Agent Plugins open-standard bundle ships the workflow skills for Cursor et al.
+assert_file_contains "plugins/agent-plugin/plugin.json" "agent-plugins.org/schemas"
+[ -f "plugins/agent-plugin/skills/spec/SKILL.md" ] || fail "agent-plugin missing spec skill — re-run sync-plugin.sh"
+[ -f "plugins/agent-plugin/skills/discuss/SKILL.md" ] || fail "agent-plugin missing discuss skill — re-run sync-plugin.sh"
+assert_file_contains "scripts/sync-plugin.sh" "plugins/agent-plugin"
+
+# Cursor docs live at cursor.com/docs; docs.cursor.com is a 308 redirect on borrowed time.
+stale_links=$(rg -n 'docs\.cursor\.com' .cursor --glob '!.logs/**' || true)
+[ -z "$stale_links" ] || fail "stale docs.cursor.com links in .cursor:\n$stale_links"
+
 # Specs default to uncommitted agent context, not committed docs.
 assert_file_contains ".gitignore" ".context/"
 assert_file_contains ".cursor/skills/spec/references/workflow.md" ".context/specs/spec-[feature-name].md"

@@ -9,22 +9,24 @@ reference and test fixtures; pi only auto-loads this root file.)
 
 - Claude standalone: `.claude/`
 - Claude Code plugin: `plugins/agent-team/`
+- Agent Plugins open-standard bundle (Cursor et al.): `plugins/agent-plugin/`
 - Cursor: `.cursor/`
 - Codex personal workflows: `.agents/skills/`
-- pi maintainer cockpit: `.pi/`
+- pi maintainer cockpit: `.pi/` (shipped as a pi package via the `pi` manifest in `package.json`)
 
 ## Source of truth rules
 
-- Claude standalone (`.claude/`) is the source of truth for the Claude Code plugin. After changing `.claude/`, run `scripts/sync-plugin.sh` and review `plugins/agent-team/` diffs.
+- Claude standalone (`.claude/`) is the source of truth for both generated distributions. After changing `.claude/`, run `scripts/sync-plugin.sh` and review the `plugins/agent-team/` diffs (namespaced commands, path rewrites) and the `plugins/agent-plugin/` diffs (Agent Plugins open standard, verbatim skills).
 - Cursor is a separate runtime. When workflow semantics change, update `.cursor/` explicitly rather than assuming plugin sync covers it.
-- Codex is a separate native runtime. `.agents/skills/` is the repo-tracked source for `$discuss`, `$spec`, and `$dev`; `scripts/install-codex.sh` links those skills into the current user's global `~/.agents/skills/` discovery path. Do not copy Claude-only team or task primitives into the Codex skills.
-- pi skills (`.pi/skills/`) are maintainer/operator wrappers. They point back to the `.claude/` workflow files — the canonical workflow semantics — as their only source of truth, and must not become a fourth independent workflow implementation. (`.cursor/` and `.agents/` are runtime adaptations of those semantics, not co-equal sources; pointing wrappers at two sources is how they drift.) `.pi/` syncs nowhere automatically, so when `.claude` workflow semantics or skill frontmatter change, manually re-check the three `.pi/skills/agent-team-*` wrappers and re-run `./tests/workflow-contract.sh`.
+- Codex is a separate native runtime. `.agents/skills/` is the repo-tracked source for `$discuss`, `$spec`, and `$dev`; `scripts/install-codex.sh` links those skills into the current user's global `~/.agents/skills/` discovery path. Do not copy Claude-only team or task primitives into the Codex skills. The skills carry `disable-model-invocation: true`: a no-op on Codex (invocation policy lives in `agents/openai.yaml`), but it keeps pi and Cursor — which read `.agents/skills/` natively — from auto-triggering them.
+- pi skills (`.pi/skills/`) are maintainer/operator wrappers. They point back to the `.claude/` workflow files — the canonical workflow semantics — as their only source of truth, and must not become a fourth independent workflow implementation. (`.cursor/` and `.agents/` are runtime adaptations of those semantics, not co-equal sources; pointing wrappers at two sources is how they drift.) `.pi/` syncs nowhere automatically, so when `.claude` workflow semantics or skill frontmatter change, manually re-check the three `.pi/skills/agent-team-*` wrappers and re-run `./tests/workflow-contract.sh`. The root `package.json` `pi` manifest is what makes `pi install git:github.com/mike-diff/ai-coding-configs` deliver `.pi/skills/` and `.pi/prompts/` — update it when adding pi resources, or the package install goes inert.
 
 ## pi runtime notes
 
-- pi is single-agent: there is no subagent primitive and no `TaskCreate` or shared task list. Workflow steps that read as "background research subagents", "fresh-context reviewer", or "parallel review lenses" on the Claude surface run as sequential, single-session passes on pi.
-- `/goal` and `/loop` are Claude Code commands, not pi features. A spec's "Goal Condition" block is portable copy-paste text for a Claude session, not executable on pi.
+- pi is single-agent at its core: no built-in subagent primitive and no `TaskCreate` or shared task list. The official `subagent` and `todo` example extensions add those when installed; `.pi/agents/*.md` ships definitions for the subagent extension (project scope is opt-in via its `agentScope` setting). Workflow steps that read as "background research subagents", "fresh-context reviewer", or "parallel review lenses" on the Claude surface run as sequential, single-session passes on pi unless that extension is active.
+- `/goal` and `/loop` are Claude Code commands, not pi features (Cursor is rolling out a native CLI `/goal`, gated as of 2026-08). A spec's "Goal Condition" block is portable copy-paste text, not executable on pi.
 - pi has native context compaction; long sweeps do not need a custom harness.
+- `.pi/extensions/pi-guard/` is the pi port of the Claude/Cursor safety hooks (dangerous shell commands, commit-message format, secret-bearing reads), shipped through the package manifest. Keep its patterns in lockstep with `.claude/hooks/` and `.cursor/hooks/`; the contract test asserts the parity anchors.
 
 ## Workflow constraints
 

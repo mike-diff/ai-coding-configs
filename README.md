@@ -44,7 +44,15 @@ $spec Turn the validated caching handoff in this thread into a specification.
 $dev Implement Phase 1 from .context/specs/spec-caching.md.
 ```
 
-The repo-tracked Codex source lives in `.agents/skills/`. The installer never replaces an existing path or a symlink to another source.
+The repo-tracked Codex source lives in `.agents/skills/`. The installer never replaces an existing path or a symlink to another source. The skills carry `disable-model-invocation: true`, so they only launch on explicit `$discuss`/`$spec`/`$dev` — and stay out of auto-invocation on runtimes (pi, Cursor) that read `.agents/skills/` directly.
+
+### Option D — pi (package install)
+
+```bash
+pi install git:github.com/mike-diff/ai-coding-configs
+```
+
+The `pi` manifest in `package.json` delivers the pi-adapted workflow skills to every session: `/skill:agent-team-discuss`, `/skill:agent-team-spec`, `/skill:agent-team-dev`, plus short prompt-template aliases `/discuss`, `/spec`, `/dev` with argument hints. `.pi/agents/*.md` ships agent definitions (explorer, implementer, reviewer, qa) for pi's official `subagent` example extension — opt-in on that extension's side, inert otherwise. The install also ships **pi-guard**, a safety extension that blocks dangerous shell commands, non-conventional commit messages, and secret-bearing file reads — the same rules as the Claude Code and Cursor hooks.
 
 ### Working on this repo with pi
 
@@ -56,9 +64,9 @@ This repository includes project-local pi maintainer skills:
 /skill:agent-team-dev
 ```
 
-These are not another product surface. They are operator workflows for safely editing and validating the Agent Team configs across `.claude/`, `plugins/agent-team/` and `.cursor/`.
+These are not another product surface. They are operator workflows for safely editing and validating the Agent Team configs across `.claude/`, `plugins/agent-team/`, `plugins/agent-plugin/` and `.cursor/`. Prompt-template aliases (`.pi/prompts/`) force-load them deterministically.
 
-> **Note:** pi v0.79.0+ prompts for project trust before loading `.pi/skills/`. Approve the prompt (or run with `--approve`, or manage saved decisions via `/trust`) for these skills to appear.
+> **Note:** pi prompts for project trust before loading `.pi/` resources (v0.79+). Approve the prompt (or run with `--approve`, or manage saved decisions via `/trust`) for these skills to appear. Verified against pi 0.84.x.
 
 ---
 
@@ -67,8 +75,9 @@ These are not another product surface. They are operator workflows for safely ed
 | Tool | Config Folder |
 |------|--------------|
 | Claude Code | `.claude/` |
-| Cursor | `.cursor/` |
+| Cursor | `.cursor/` (+ `plugins/agent-plugin/` as an installable [Agent Plugins](https://agent-plugins.org) bundle) |
 | Codex | `.agents/skills/` |
+| pi | `.pi/` + `package.json` `pi` manifest |
 
 All surfaces share the same core philosophy, with each adapted to its platform's native capabilities. Codex preserves the `discuss → spec → dev` lifecycle through explicit `$skill` mentions and uses one writer by default to avoid shared-worktree conflicts.
 
@@ -268,7 +277,7 @@ The installer respects `CODEX_WORKFLOW_HOME` for isolated testing or an alternat
 
 ### Cursor
 
-1. Copy `.cursor/` into your project root.
+1. Copy `.cursor/` into your project root — or install the Agent Plugin instead: symlink `plugins/agent-plugin` into `~/.cursor/plugins/local/agent-team` and reload, which surfaces the workflow skills without copying anything (see [its README](./plugins/agent-plugin/README.md)).
 2. Make hook scripts executable: `chmod +x .cursor/hooks/*.sh`
 3. Run `/orient` to map your codebase, then start with any skill.
 

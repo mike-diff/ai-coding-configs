@@ -155,7 +155,7 @@ Re-test until no new rationalizations emerge.
 Run the validator:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/skills/skill/scripts/validate-skill.sh" "${CLAUDE_PROJECT_DIR}/.claude/skills/[skill-name]/
+bash "${CLAUDE_PLUGIN_ROOT}/skills/skill/scripts/validate-skill.sh" "${CLAUDE_PROJECT_DIR}/.claude/skills/[skill-name]/"
 ```
 
 Fix any errors before returning results.

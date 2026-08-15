@@ -1,6 +1,6 @@
 {
   "name": "agent-team",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Workflow commands, specialized subagents, safety hooks, and reusable skills for feature development.",
   "author": {
     "name": "Mike Salvati",

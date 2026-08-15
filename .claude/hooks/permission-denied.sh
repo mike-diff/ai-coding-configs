@@ -5,7 +5,7 @@ LOG_DIR="${CLAUDE_PLUGIN_DATA:-${CLAUDE_PROJECT_DIR:-.}/.claude/.logs}"
 mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/permission-denied.log"
 
-INPUT="$(cat /dev/stdin 2>/dev/null || echo '{}')"
+INPUT="$(cat)"
 TOOL=$(echo "$INPUT" | jq -r '.tool_name // "?"' 2>/dev/null || echo '?')
 REASON=$(echo "$INPUT" | jq -r '.reason // "?"' 2>/dev/null || echo '?')
 

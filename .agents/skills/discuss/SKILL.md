@@ -1,6 +1,7 @@
 ---
 name: discuss
 description: Explore and validate a rough product or technical idea before implementation. Use when the user explicitly invokes $discuss to examine a new idea, revisit an existing implementation, study supplied references, compare approaches, surface risks, and produce an ADLC handoff for $spec or $dev.
+disable-model-invocation: true
 ---
 
 # Discuss

@@ -279,4 +279,10 @@ Add entries to `.cursor/hooks.json` and create scripts in `.cursor/hooks/`:
 }
 ```
 
-Hook scripts receive JSON via stdin and return JSON via stdout. Exit code `0` allows the action, exit code `2` blocks it. See the [Cursor hooks documentation](https://docs.cursor.com/agent/hooks) for full details.
+Hook scripts receive JSON via stdin and return JSON via stdout. Exit code `0` allows the action, exit code `2` blocks it. See the [Cursor hooks documentation](https://cursor.com/docs/hooks) for full details.
+
+#### Claude Code hook compatibility
+
+Cursor can also load hooks from `.claude/settings*.json` when the "Third-party skills" toggle is enabled in Cursor settings (Settings → Rules, Skills, Subagents). This repo ships equivalent hooks in both formats, so in a project carrying `.claude/` with that toggle on, the shared safety hooks (`block-dangerous`, `validate-commit`, `redact-secrets`) run twice — once from `.cursor/hooks.json` and once from the Claude compat layer; when responses conflict, the `.cursor/hooks.json` source takes precedence. Keep the toggle off unless you want both; the `.cursor/hooks.json` wiring is the Cursor-native authority here.
+
+> Cursor release notes are date-slugged (`cursor.com/changelog/<mm-dd-yy>`); there are no version-numbered changelog entries anymore.

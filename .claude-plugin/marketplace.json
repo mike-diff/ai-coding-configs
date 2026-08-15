@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Mike's AI coding workflow plugins",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "plugins": [
     {
       "name": "agent-team",
       "source": "./plugins/agent-team",
       "description": "Workflow commands, specialized subagents, safety hooks, and reusable skills for feature development.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "category": "workflow",
       "keywords": ["agent-team", "workflow", "skills", "hooks"]
     }

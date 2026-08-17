@@ -70,8 +70,10 @@ Rules live in `.claude/rules/`. Claude Code loads these automatically at every s
 
 | Rule | What it covers |
 |------|---------------|
-| `coding-standards` | Code quality, naming conventions, structured output requirements |
-| `mcp-caching` | Cache large MCP responses to `.context/mcp-cache/` to avoid bloating context windows |
+| `coding-standards` | Code quality, naming, change and git conventions, structured outputs |
+| `typescript-javascript` | Stack-specific style — path-scoped, loads only when TS/JS files are touched |
+
+`/discuss` carries its own MCP-caching reference (`.claude/skills/discuss/references/mcp-caching.md`), loaded only during research sessions instead of every session.
 
 ---
 
@@ -126,7 +128,7 @@ Specs are local planning artifacts by default. They save under `.context/specs/`
 
 ### Context Directory
 
-The `mcp-caching` rule and Cursor's session hooks write to `.context/` in your project root. Add it to your `.gitignore`:
+The `/discuss` MCP-caching reference and Cursor's session hooks write to `.context/` in your project root. Add it to your `.gitignore`:
 
 ```bash
 echo ".context/" >> .gitignore

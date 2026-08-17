@@ -33,7 +33,7 @@ No two writers on one file, ever. Give each implementer subagent an explicit fil
 ## Coordination
 
 - **Task list** — TaskCreate/TaskUpdate with dependency chains when coordinating multiple agents or sweeping phases; skip the bookkeeping for direct single-pass work. Task descriptions carry the context a clean-context agent needs: goal, files, acceptance criteria, patterns to follow.
-- **Briefs** — role + full task spec + what to return. Project context (CLAUDE.md, rules, skills, memory) loads automatically; don't paste it. Have subagents return summaries with `<*-result>`-style structure — findings and paths, not transcripts.
+- **Briefs** — role + full task spec + what to return. Project context (CLAUDE.md, rules, skills, memory) loads automatically; don't paste it. Have subagents return summaries in their `<*-result>` block (`<explorer-result>`, `<implementer-result>`, `<reviewer-result>`, `<qa-result>` — defined in each agent file) — findings and paths, not transcripts.
 - **Messaging** — SendMessage to steer a running agent or continue a finished one. Intervene when a subagent is off track or missing context rather than waiting for a bad result.
 
 ## Verification topology

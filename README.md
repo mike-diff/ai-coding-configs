@@ -142,8 +142,8 @@ Rules are guidelines loaded automatically by the AI at the start of every sessio
 
 | Rule | What it covers |
 |------|---------------|
-| `coding-standards` | Code quality, naming, structure, and prompt design (calibrated language, altitude, lean skills) |
-| `mcp-caching` | Cache large MCP responses to `.context/` to avoid bloating context windows |
+| `coding-standards` | Code quality, naming, change rules, git conventions, structured outputs |
+| `typescript-javascript` | Stack-specific style — path-scoped, loads only when TS/JS files are touched |
 
 **Cursor** (`.cursor/rules/`):
 

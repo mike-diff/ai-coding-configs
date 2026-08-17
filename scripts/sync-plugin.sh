@@ -21,7 +21,8 @@ cp -R "$SRC/agents/." "$DST/agents/"
 # 2. Output styles removed from Claude Code — drop any stale plugin copy
 rm -rf "$DST/output-styles"
 
-# 3. Rules source (byte-identical)
+# 3. Rules source (byte-identical, mirror: stale rules removed)
+rm -rf "$DST/rules-source"
 mkdir -p "$DST/rules-source"
 cp -R "$SRC/rules/." "$DST/rules-source/"
 

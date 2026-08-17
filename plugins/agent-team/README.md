@@ -20,8 +20,8 @@ After install, all commands are namespaced: `/agent-team:discuss`, `/agent-team:
 
 - **16 skills** — `ask`, `dev`, `discuss`, `goal-or-loop`, `issue`, `loop-patterns`, `orient`, `primitives`, `review-patterns`, `skill`, `slop-check`, `spec`, `team-orchestration`, `testing-patterns`, `ticket`, `to-dos`
 - **5 specialized agents** — `explorer`, `implementer`, `qa`, `reviewer`, `skill-author`
-- **11 hooks** across 8 lifecycle events (`SessionStart`, `PreToolUse`, `PostToolUse`, `PermissionDenied`, `PreCompact`, `CwdChanged`, `TaskCreated`, `StopFailure`)
-- **2 rules** — `coding-standards`, `mcp-caching` (auto-injected via SessionStart hook)
+- **12 hooks** across 9 lifecycle events (`SessionStart`, `PreToolUse`, `PostToolUse`, `PermissionDenied`, `PreCompact`, `CwdChanged`, `TaskCreated`, `StopFailure`, `Notification`)
+- **2 rules** — `coding-standards`, `typescript-javascript` (auto-injected via SessionStart hook)
 
 ## What This Plugin Does NOT Provide
 

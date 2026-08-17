@@ -4,9 +4,9 @@ The standard for every prompt in this repo — skill `SKILL.md` files, subagent
 briefs, rules, and command instructions. This repo *is* a library of prompts, so
 prompt quality is the quality bar.
 
-Targeted at Claude (Claude Code). The always-on essentials live in
-`.claude/rules/coding-standards.md` ("Prompt Structures"); this is the depth layer
-to consult when writing or reviewing a prompt.
+Targeted at Claude (Claude Code). This guide is the standard to consult when
+writing or reviewing a prompt — the essentials are not duplicated in
+`.claude/rules/`.
 
 ## Contents
 

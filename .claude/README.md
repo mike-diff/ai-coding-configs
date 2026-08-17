@@ -134,6 +134,14 @@ The `/discuss` MCP-caching reference and Cursor's session hooks write to `.conte
 echo ".context/" >> .gitignore
 ```
 
+### Project CLAUDE.md
+
+Rules carry conventions; the project's own facts belong in a root `CLAUDE.md`
+that loads every session: exact build/test commands, conventions Claude can't
+infer, known gotchas. Start from `CLAUDE.md.example` in this directory (copy
+to your project root as `CLAUDE.md`), or run `/orient` and accept its offer
+to draft one from the codebase map.
+
 ## User-level setup
 
 One setting in this config lives in your **user-level** `~/.claude/settings.json`, not the project-level one in this repo:

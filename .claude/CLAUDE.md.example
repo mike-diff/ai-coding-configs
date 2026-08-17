@@ -1,0 +1,31 @@
+# Project: [name]
+
+Copy to your project root as `CLAUDE.md` and fill in per repo — `/orient`
+will offer to draft this from its codebase map. Keep it under ~50 lines;
+every line loads into every session, so include only facts Claude cannot
+infer from reading the code, and prune anything whose removal would not
+cause a mistake.
+
+## Commands
+
+- Install: [e.g. `npm ci` / `uv sync`]
+- Dev/run: [e.g. `npm run dev`]
+- Test (single file — prefer over the full suite): [e.g. `npm test -- path/to/file`]
+- Test (all): [e.g. `npm test`]
+- Typecheck: [e.g. `npx tsc --noEmit`]
+- Lint + fix: [e.g. `npm run lint -- --fix`]
+- Format: [e.g. `npx prettier --write .`]
+
+## Conventions
+
+- [Style rules that differ from language defaults — at most 2-3]
+- [Commit format and branch naming]
+
+## Verification
+
+- After any code change, run [typecheck] and the relevant test file before
+  reporting done. Show the command output, not a claim that it passed.
+
+## Known gotchas
+
+- [Things that cost an hour to learn — add as discovered, delete stale ones]

@@ -31,6 +31,20 @@ When modifying existing code:
 - Do NOT add features beyond requirements
 - Verify changes compile/parse before completing
 
+## Lean Builds
+
+Before editing a non-trivial change, restate the smallest useful version in a
+sentence and name the non-goals; the plan earns each touched file.
+
+- Prefer existing extension points and repo-native patterns over new
+  dependencies, services, or frameworks built for one use case
+- Challenge every new file, dependency, config knob, and shared-file edit —
+  if it only serves a hypothetical future, cut it
+- No parallel versions (v1/v2 paths), no unused exports, no plumbing for
+  future requirements; maintain one codebase
+- Before reporting done: review `git diff --stat`, delete code and comments
+  that did not earn their place, and collapse abstractions that didn't pay
+
 ## Git Conventions
 
 - Branch naming: `claude/issue-<number>`

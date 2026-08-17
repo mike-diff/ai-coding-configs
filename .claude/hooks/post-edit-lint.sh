@@ -54,12 +54,16 @@ esac
 LINT_CMD=""
 
 if [[ -f "package.json" ]]; then
-  # Check for common Node.js lint scripts; always scope to the edited file —
-  # a whole-project lint here puts multi-second runs on every single edit.
-  if jq -e '.scripts.lint' package.json >/dev/null 2>&1; then
-    LINT_CMD="npm run lint -- --no-error-on-unmatched-pattern \"$FILE_PATH\""
-  elif jq -e '.scripts.eslint' package.json >/dev/null 2>&1; then
-    LINT_CMD="npm run eslint -- \"$FILE_PATH\""
+  # Invoke the eslint binary directly on the edited file only. Routing through
+  # `npm run lint -- <args>` appends args to an arbitrary script: flags land on
+  # node itself (`node: bad option`) and `eslint .`-style scripts still lint
+  # the whole project. With no local or global eslint, skip — the verify gate
+  # runs the project's own lint script in full at phase end.
+  PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  if [[ -x "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
+    LINT_CMD="\"$PROJECT_ROOT/node_modules/.bin/eslint\" --no-error-on-unmatched-pattern \"$FILE_PATH\""
+  elif command -v eslint >/dev/null 2>&1; then
+    LINT_CMD="eslint --no-error-on-unmatched-pattern \"$FILE_PATH\""
   fi
 elif [[ -f "pyproject.toml" ]]; then
   # Check for Python linters

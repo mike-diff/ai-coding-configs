@@ -142,6 +142,39 @@ infer, known gotchas. Start from `CLAUDE.md.example` in this directory (copy
 to your project root as `CLAUDE.md`), or run `/orient` and accept its offer
 to draft one from the codebase map.
 
+### Code intelligence plugin (recommended)
+
+Install the LSP plugin for your stack from the official marketplace — it
+activates native diagnostics (type errors and missing imports surface
+automatically after every edit) and symbol navigation, which the
+`post-edit-lint` hook cannot provide:
+
+```text
+/plugin install typescript-lsp@claude-plugins-official    # or pyright-lsp, gopls-lsp,
+                                                          # rust-analyzer-lsp, ...
+```
+
+The language-server binary must be on your `PATH` (`typescript-language-server`,
+`pyright-langserver`, `gopls`, `rust-analyzer`, ...).
+
+### Permissions
+
+`settings.json` ships a small universal allow list (read-only git, `ls`,
+`pwd`). Give your stack's check commands friction-free runs by extending it —
+for example:
+
+```json
+"allow": [
+  "Bash(npm run lint*)",
+  "Bash(npm run typecheck*)",
+  "Bash(npm test*)",
+  "Bash(npx tsc --noEmit)"
+]
+```
+
+(Python: `ruff`, `mypy`, `pytest` equivalents; keep the list to commands you
+would approve every time anyway.)
+
 ## User-level setup
 
 One setting in this config lives in your **user-level** `~/.claude/settings.json`, not the project-level one in this repo:

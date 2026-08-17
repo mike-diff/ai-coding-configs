@@ -18,6 +18,13 @@ log() {
   echo "[$(date '+%H:%M:%S')] [validate-commit] $1" >> "$LOG_FILE"
 }
 
+# CHECK/ALLOWED lines are per-commit noise; blocks always log.
+# Set CLAUDE_HOOK_DEBUG=1 to trace every invocation.
+debug() {
+  [[ "${CLAUDE_HOOK_DEBUG:-0}" == "1" ]] || return 0
+  log "$1"
+}
+
 # Read JSON input from stdin
 INPUT="$(cat)"
 if [[ -z "$INPUT" ]]; then
@@ -41,7 +48,7 @@ if ! echo "$COMMAND" | grep -qE '(-m|--message)'; then
   exit 0
 fi
 
-log "CHECK: $COMMAND"
+debug "CHECK: $COMMAND"
 
 # Extract the commit message from -m "message" or -m 'message'
 # Handle: git commit -m "msg", git commit -am "msg", heredoc patterns
@@ -66,7 +73,7 @@ fi
 PATTERN='^(feat|fix|refactor|docs|test|chore|style|perf|ci|revert)(\([a-zA-Z0-9_-]+\))?!?: .+'
 
 if echo "$MSG" | grep -qE "$PATTERN"; then
-  log "ALLOWED: valid commit message"
+  debug "ALLOWED: valid commit message"
   exit 0
 fi
 

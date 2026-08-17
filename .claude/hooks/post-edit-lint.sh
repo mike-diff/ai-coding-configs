@@ -47,11 +47,12 @@ esac
 LINT_CMD=""
 
 if [[ -f "package.json" ]]; then
-  # Check for common Node.js lint scripts
+  # Check for common Node.js lint scripts; always scope to the edited file —
+  # a whole-project lint here puts multi-second runs on every single edit.
   if jq -e '.scripts.lint' package.json >/dev/null 2>&1; then
-    LINT_CMD="npm run lint -- --no-error-on-unmatched-pattern"
+    LINT_CMD="npm run lint -- --no-error-on-unmatched-pattern \"$FILE_PATH\""
   elif jq -e '.scripts.eslint' package.json >/dev/null 2>&1; then
-    LINT_CMD="npm run eslint"
+    LINT_CMD="npm run eslint -- \"$FILE_PATH\""
   fi
 elif [[ -f "pyproject.toml" ]]; then
   # Check for Python linters

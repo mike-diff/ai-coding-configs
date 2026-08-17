@@ -1,7 +1,7 @@
 ---
 name: discuss
 description: Explore a rough idea through conversation and parallel background research. Produces a validated plan with an adversarial check. Hands off to /spec or /dev.
-argument-hint: <idea or question>
+argument-hint: <idea or question> [--unattended]
 disable-model-invocation: true
 ---
 
@@ -38,5 +38,12 @@ Modes combine; detect and adapt.
 - Ask at most 2-3 questions per turn; genuine exploration beats interrogation.
 - Let findings change your questions. If research contradicts a user assumption, surface it plainly.
 - The adversarial pass runs before delivery on any plan headed for implementation; skip it only when the outcome of discussion is "don't build this."
+- **Unattended mode** (`--unattended` in the request, or `DEV_UNATTENDED=1` —
+  print/CI runs with no user to answer): don't end the turn on a question and
+  don't wait on the interview. Run the research and the adversarial pass,
+  adopt the most reasonable interpretation for each open question and list
+  every adopted assumption in the plan, then deliver the plan and the
+  `<adlc-handoff>` with the handoff tagged `assumptions: unreviewed` so a
+  human can veto before `/spec` or `/dev` consumes it.
 
 Full phase instructions and subagent briefs: [references/phases.md](references/phases.md).

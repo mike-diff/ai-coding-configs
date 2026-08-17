@@ -1,10 +1,11 @@
 # MCP Response Caching
 
 <purpose>
-Prevent context window bloat by caching large MCP tool responses to files. This enables:
+Prevent context window bloat during research-heavy `/agent-team:discuss` sessions by
+caching large MCP tool responses to files. This enables:
 - Re-reading cached data without re-calling MCP tools
 - Surviving context compaction without data loss
-- Reducing token usage across long /discuss sessions and multi-agent workflows
+- Reducing token usage across long sessions and multi-agent workflows
 </purpose>
 
 ## When to Cache
@@ -58,27 +59,6 @@ cat .context/mcp-cache/context7-query-react-hooks-20260116.md
 ```
 </protocol>
 
-## Cache Directory Structure
-
-```
-.context/
-└── mcp-cache/
-    ├── context7-query-[topic]-[timestamp].md
-    ├── browser-snapshot-[page]-[timestamp].md
-    ├── browser-content-[page]-[timestamp].md
-    └── thinking-[task]-[timestamp].md
-```
-
-## Cache Naming Convention
-
-| MCP Server | Tool | Filename Pattern |
-|------------|------|------------------|
-| context7 | query-docs | `context7-query-[topic]-[ts].md` |
-| context7 | resolve-library-id | `context7-resolve-[lib]-[ts].md` |
-| browser (Chrome) | snapshot | `browser-snapshot-[page]-[ts].md` |
-| browser (Chrome) | content | `browser-content-[page]-[ts].md` |
-| sequential-thinking | sequentialthinking | `thinking-[task]-[ts].md` |
-
 ## When NOT to Cache
 
 Don't cache:
@@ -87,19 +67,11 @@ Don't cache:
 - Rapidly changing data (live server status)
 - Sensitive information (credentials, tokens)
 
-## /discuss Sessions
+## Research sessions
 
-The `/discuss` command runs background research subagents that can pull large MCP payloads into the lead's context. Apply caching aggressively during long research-heavy sessions when context pressure is highest.
+`/agent-team:discuss` runs background research subagents that can pull large MCP payloads
+into the lead's context. Apply caching aggressively during long research-heavy
+sessions when context pressure is highest — and have researchers return
+summaries with cache paths, not full payloads, in their results.
 
-## Add to .gitignore
-
-The `.context/` directory contains ephemeral session data:
-
-```bash
-echo ".context/" >> .gitignore
-```
-
-```gitignore
-# Claude Code AI context management (ephemeral)
-.context/
-```
+`.context/` is ephemeral session data and belongs in `.gitignore`.

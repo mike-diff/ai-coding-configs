@@ -17,6 +17,13 @@ log() {
   echo "[$(date '+%H:%M:%S')] [redact-secrets] $1" >> "$LOG_FILE"
 }
 
+# CHECK/ALLOWED lines are per-call noise; blocks always log.
+# Set CLAUDE_HOOK_DEBUG=1 to trace every invocation.
+debug() {
+  [[ "${CLAUDE_HOOK_DEBUG:-0}" == "1" ]] || return 0
+  log "$1"
+}
+
 # Read JSON input from stdin
 INPUT="$(cat)"
 if [[ -z "$INPUT" ]]; then
@@ -31,7 +38,7 @@ fi
 
 BASENAME="$(basename "$FILE_PATH")"
 
-log "CHECK: $FILE_PATH"
+debug "CHECK: $FILE_PATH"
 
 # --- Block known sensitive file patterns by name ---
 
@@ -92,5 +99,5 @@ if [[ -f "$FILE_PATH" ]] && [[ -r "$FILE_PATH" ]]; then
   fi
 fi
 
-log "ALLOWED"
+debug "ALLOWED"
 exit 0

@@ -19,26 +19,33 @@ log() {
   echo "[$(date '+%H:%M:%S')] [post-edit-lint] $1" >> "$LOG_FILE"
 }
 
+# Per-call noise (SKIP/FIRED lines) only when debugging; blocks and lint
+# findings always log. Set CLAUDE_HOOK_DEBUG=1 to see every invocation.
+debug() {
+  [[ "${CLAUDE_HOOK_DEBUG:-0}" == "1" ]] || return 0
+  log "$1"
+}
+
 # Read the JSON input from stdin
 INPUT="$(cat)"
 if [[ -z "$INPUT" ]]; then
-  log "SKIP: empty input"
+  debug "SKIP: empty input"
   exit 0
 fi
 
 # Extract the file path from tool input
 FILE_PATH="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null)"
 if [[ -z "$FILE_PATH" ]]; then
-  log "SKIP: no file_path in input"
+  debug "SKIP: no file_path in input"
   exit 0
 fi
 
-log "FIRED: file=$FILE_PATH"
+debug "FIRED: file=$FILE_PATH"
 
 # Skip non-code files
 case "$FILE_PATH" in
   *.md|*.txt|*.json|*.yaml|*.yml|*.toml|*.lock|*.log|*.csv)
-    log "SKIP: non-code file ($FILE_PATH)"
+    debug "SKIP: non-code file ($FILE_PATH)"
     exit 0
     ;;
 esac
@@ -47,11 +54,12 @@ esac
 LINT_CMD=""
 
 if [[ -f "package.json" ]]; then
-  # Check for common Node.js lint scripts
+  # Check for common Node.js lint scripts; always scope to the edited file —
+  # a whole-project lint here puts multi-second runs on every single edit.
   if jq -e '.scripts.lint' package.json >/dev/null 2>&1; then
-    LINT_CMD="npm run lint -- --no-error-on-unmatched-pattern"
+    LINT_CMD="npm run lint -- --no-error-on-unmatched-pattern \"$FILE_PATH\""
   elif jq -e '.scripts.eslint' package.json >/dev/null 2>&1; then
-    LINT_CMD="npm run eslint"
+    LINT_CMD="npm run eslint -- \"$FILE_PATH\""
   fi
 elif [[ -f "pyproject.toml" ]]; then
   # Check for Python linters

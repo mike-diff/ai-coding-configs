@@ -69,16 +69,32 @@ If a step fails, still run subsequent steps. Report all failures together.
 
 ## Writing Tests
 
-When writing new tests, follow these principles:
+AI makes tests cheap to produce and easy to fake — passing is not the bar.
+Before writing or keeping any test, answer the one question:
+
+> **What single one-line change to production code would make this test fail?**
+
+If you cannot name that change, the test proves nothing. Do not write it; if
+it already exists, delete it.
 
 <constraints>
 - Follow existing test patterns in the project
-- Test behavior, not implementation details
-- Include edge cases from the plan
-- Use descriptive test names that explain what's being tested
-- Keep tests focused and independent
-- Avoid testing mock behavior - test real outcomes
-- One assertion per test where practical
+- Test behavior, not implementation details: real input/output contracts and
+  real failure paths (assert the error type the code actually throws)
+- Prefer writing the failing test first, then the smallest change that passes;
+  never write a test after the code just to lock in what it currently does
+- Delete on sight: tautologies (`expect(true).toBe(true)`, constant vs its own
+  literal), "does not throw" green-but-empty tests, mock echo (asserting the
+  fake, not the code), compiler-guaranteed assertions
+- Exception — contract pins: asserting a named constant equals its wire/SQL/
+  protocol literal is legitimate when the literal is a real external contract;
+  say why in the test name
+- Flaky tests are worse than no test: wait on a condition, never a clock;
+  fix or delete, never quarantine
+- More tests is not more safety: fewer tests that each pin distinct, real
+  behavior beat many that overlap or assert nothing
+- Use descriptive test names that explain what's being tested; keep tests
+  focused and independent; one assertion per test where practical
 </constraints>
 
 ### Test Structure

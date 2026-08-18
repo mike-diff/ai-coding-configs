@@ -165,15 +165,18 @@ for example:
 
 ```json
 "allow": [
-  "Bash(npm run lint*)",
-  "Bash(npm run typecheck*)",
-  "Bash(npm test*)",
+  "Bash(npm run lint:*)",
+  "Bash(npm run typecheck:*)",
+  "Bash(npm test:*)",
   "Bash(npx tsc --noEmit)"
 ]
 ```
 
-(Python: `ruff`, `mypy`, `pytest` equivalents; keep the list to commands you
-would approve every time anyway.)
+Use the `:*` prefix form (`Bash(npm run lint:*)`, not `Bash(npm run lint*)`):
+it matches the command plus any arguments without glob-matching other
+commands that share a prefix (verified live: `git diff:*` does not cover
+`git difftool`). Keep the list to commands you would approve every time
+anyway; Python stacks use the `ruff`, `mypy`, and `pytest` equivalents.
 
 ## User-level setup
 

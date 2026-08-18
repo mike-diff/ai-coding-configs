@@ -49,10 +49,11 @@ if [ -n "$INJECT_RULES_BACKUP" ]; then
 fi
 chmod +x "$DST/hooks/"*.sh
 
-# 5. Skills (copy + namespace prefix sed + hardcoded path rewrites)
 mkdir -p "$DST/skills"
-# Clear destination first to avoid stale files when source removes a skill
-rm -rf "$DST/skills/"*
+# Clear destination first (whole directory, so dotfiles don't survive) to
+# avoid stale files when source removes a skill
+rm -rf "$DST/skills"
+mkdir -p "$DST/skills"
 cp -R "$SRC/skills/." "$DST/skills/"
 
 # Apply namespace prefix to all .md files in plugin skills

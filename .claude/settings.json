@@ -4,21 +4,21 @@
   },
   "permissions": {
     "allow": [
-      "Bash(git status*)",
-      "Bash(git diff*)",
-      "Bash(git log*)",
-      "Bash(git show*)",
-      "Bash(git branch*)",
-      "Bash(ls*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch)",
+      "Bash(ls)",
       "Bash(pwd)"
     ],
     "deny": [
-      "Read(.env*)",
-      "Read(*.pem)",
-      "Read(*.key)",
+      "Read(**/.env*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
       "Read(~/.ssh/**)",
-      "Read(credentials.json)",
-      "Read(service-account.json)"
+      "Read(**/credentials.json)",
+      "Read(**/service-account.json)"
     ]
   },
   "statusLine": {

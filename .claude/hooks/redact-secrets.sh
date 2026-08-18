@@ -73,39 +73,32 @@ if echo "$BASENAME" | grep -qE '^\.env\.'; then
 fi
 
 # --- Scan file content for high-confidence secret patterns ---
+# grep reads the file directly (streamed, no size cap) so a secret at any
+# offset is caught.
 
-# Only scan if the file exists and is readable
 if [[ -f "$FILE_PATH" ]] && [[ -r "$FILE_PATH" ]]; then
-  CONTENT="$(head -c 50000 "$FILE_PATH" 2>/dev/null)" || true
+  if grep -qE 'AKIA[0-9A-Z]{16}' "$FILE_PATH" 2>/dev/null; then
+    log "BLOCKED: contains AWS access key"
+    echo "Blocked: file contains what appears to be an AWS access key." >&2
+    exit 2
+  fi
 
-  if [[ -n "$CONTENT" ]]; then
-    # AWS access keys
-    if echo "$CONTENT" | grep -qE 'AKIA[0-9A-Z]{16}'; then
-      log "BLOCKED: contains AWS access key"
-      echo "Blocked: file contains what appears to be an AWS access key." >&2
-      exit 2
-    fi
+  if grep -qE '(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}' "$FILE_PATH" 2>/dev/null; then
+    log "BLOCKED: contains GitHub token"
+    echo "Blocked: file contains what appears to be a GitHub token." >&2
+    exit 2
+  fi
 
-    # GitHub tokens
-    if echo "$CONTENT" | grep -qE '(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}'; then
-      log "BLOCKED: contains GitHub token"
-      echo "Blocked: file contains what appears to be a GitHub token." >&2
-      exit 2
-    fi
+  if grep -qE -- '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' "$FILE_PATH" 2>/dev/null; then
+    log "BLOCKED: contains private key"
+    echo "Blocked: file contains a private key." >&2
+    exit 2
+  fi
 
-    # Private keys (RSA, EC, OpenSSH)
-    if echo "$CONTENT" | grep -qE -- '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'; then
-      log "BLOCKED: contains private key"
-      echo "Blocked: file contains a private key." >&2
-      exit 2
-    fi
-
-    # Slack tokens
-    if echo "$CONTENT" | grep -qE 'xox[bpors]-[0-9a-zA-Z-]{10,}'; then
-      log "BLOCKED: contains Slack token"
-      echo "Blocked: file contains what appears to be a Slack token." >&2
-      exit 2
-    fi
+  if grep -qE 'xox[bpors]-[0-9a-zA-Z-]{10,}' "$FILE_PATH" 2>/dev/null; then
+    log "BLOCKED: contains Slack token"
+    echo "Blocked: file contains what appears to be a Slack token." >&2
+    exit 2
   fi
 fi
 

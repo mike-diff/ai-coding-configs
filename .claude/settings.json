@@ -16,9 +16,7 @@
       "Read(.env*)",
       "Read(*.pem)",
       "Read(*.key)",
-      "Read(id_rsa)",
-      "Read(id_ed25519)",
-      "Read(id_ecdsa)",
+      "Read(~/.ssh/**)",
       "Read(credentials.json)",
       "Read(service-account.json)"
     ]

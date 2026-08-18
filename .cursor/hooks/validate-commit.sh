@@ -35,13 +35,14 @@ if [[ -z "$MSG" ]]; then
 fi
 
 # Conventional commits pattern: type(scope): description or type: description
-# Types: feat, fix, refactor, docs, test, chore, style, perf, ci, revert
-PATTERN='^(feat|fix|refactor|docs|test|chore|style|perf|ci|revert)(\([a-zA-Z0-9_-]+\))?!?: .+'
+# Types match the repo doctrine: feat, fix, refactor, docs, test, chore
+# (lockstep with .claude hook and pi-guard)
+PATTERN='^(feat|fix|refactor|docs|test|chore)(\([a-zA-Z0-9_-]+\))?!?: .+'
 
 if echo "$MSG" | grep -qE "$PATTERN"; then
   echo '{"permission": "allow"}'
   exit 0
 fi
 
-echo "{\"permission\": \"deny\", \"user_message\": \"Commit message does not follow conventional commits format.\", \"agent_message\": \"Commit blocked: message must match 'type(scope): description'. Valid types: feat, fix, refactor, docs, test, chore, style, perf, ci, revert. Example: 'feat(auth): add JWT token refresh'. Please fix the commit message and retry.\"}"
+echo "{\"permission\": \"deny\", \"user_message\": \"Commit message does not follow conventional commits format.\", \"agent_message\": \"Commit blocked: message must match 'type(scope): description'. Valid types: feat, fix, refactor, docs, test, chore. Example: 'feat(auth): add JWT token refresh'. Please fix the commit message and retry.\"}"
 exit 2

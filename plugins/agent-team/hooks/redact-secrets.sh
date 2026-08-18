@@ -40,6 +40,16 @@ BASENAME="$(basename "$FILE_PATH")"
 
 debug "CHECK: $FILE_PATH"
 
+# --- Block the user's ssh directory (any key type, any file name) ---
+
+case "$FILE_PATH" in
+  "$HOME"/.ssh/*)
+    log "BLOCKED: ssh directory ($FILE_PATH)"
+    echo "Blocked: $FILE_PATH is in your .ssh directory and was not sent to the model." >&2
+    exit 2
+    ;;
+esac
+
 # --- Block known sensitive file patterns by name ---
 
 case "$BASENAME" in

@@ -17,6 +17,13 @@ log() {
   echo "[$(date '+%H:%M:%S')] [block-dangerous] $1" >> "$LOG_FILE"
 }
 
+# CHECK/ALLOWED lines are per-call noise; blocks always log.
+# Set CLAUDE_HOOK_DEBUG=1 to trace every invocation.
+debug() {
+  [[ "${CLAUDE_HOOK_DEBUG:-0}" == "1" ]] || return 0
+  log "$1"
+}
+
 # Read JSON input from stdin
 INPUT="$(cat)"
 if [[ -z "$INPUT" ]]; then
@@ -29,7 +36,7 @@ if [[ -z "$COMMAND" ]]; then
   exit 0
 fi
 
-log "CHECK: $COMMAND"
+debug "CHECK: $COMMAND"
 
 # --- Destructive patterns ---
 
@@ -69,5 +76,5 @@ if echo "$COMMAND" | grep -qiE 'delete\s+from\s+\w+\s*;?\s*$'; then
   exit 2
 fi
 
-log "ALLOWED"
+debug "ALLOWED"
 exit 0

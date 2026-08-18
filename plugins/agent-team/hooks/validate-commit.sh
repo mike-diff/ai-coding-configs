@@ -18,6 +18,13 @@ log() {
   echo "[$(date '+%H:%M:%S')] [validate-commit] $1" >> "$LOG_FILE"
 }
 
+# CHECK/ALLOWED lines are per-commit noise; blocks always log.
+# Set CLAUDE_HOOK_DEBUG=1 to trace every invocation.
+debug() {
+  [[ "${CLAUDE_HOOK_DEBUG:-0}" == "1" ]] || return 0
+  log "$1"
+}
+
 # Read JSON input from stdin
 INPUT="$(cat)"
 if [[ -z "$INPUT" ]]; then
@@ -41,7 +48,7 @@ if ! echo "$COMMAND" | grep -qE '(-m|--message)'; then
   exit 0
 fi
 
-log "CHECK: $COMMAND"
+debug "CHECK: $COMMAND"
 
 # Extract the commit message from -m "message" or -m 'message'
 # Handle: git commit -m "msg", git commit -am "msg", heredoc patterns
@@ -62,14 +69,15 @@ if [[ -z "$MSG" ]]; then
 fi
 
 # Conventional commits pattern: type(scope): description or type: description
-# Types: feat, fix, refactor, docs, test, chore, style, perf, ci, revert
-PATTERN='^(feat|fix|refactor|docs|test|chore|style|perf|ci|revert)(\([a-zA-Z0-9_-]+\))?!?: .+'
+# Types match the repo doctrine (coding-standards Git Conventions): feat, fix,
+# refactor, docs, test, chore. Kept in lockstep with pi-guard's COMMIT_TYPES.
+PATTERN='^(feat|fix|refactor|docs|test|chore)(\([a-zA-Z0-9_-]+\))?: .+'
 
 if echo "$MSG" | grep -qE "$PATTERN"; then
-  log "ALLOWED: valid commit message"
+  debug "ALLOWED: valid commit message"
   exit 0
 fi
 
 log "BLOCKED: invalid commit message '$MSG'"
-echo "Commit blocked: message must match 'type(scope): description'. Valid types: feat, fix, refactor, docs, test, chore, style, perf, ci, revert. Example: 'feat(auth): add JWT token refresh'. Please fix the commit message and retry." >&2
+echo "Commit blocked: message must match 'type(scope): description'. Valid types: feat, fix, refactor, docs, test, chore. Example: 'feat(auth): add JWT token refresh'. Please fix the commit message and retry." >&2
 exit 2

@@ -40,6 +40,12 @@ State the tier you chose and why in one line. Follow the user if they ask for mo
 ## Constraints
 
 - Every acceptance criterion and goal-condition clause must be checkable from a command's output — never "works correctly" or "looks right". A purely visual AC is marked `[manual]` and excluded from the Goal Condition rather than given a fake proxy.
+- Every spec (light or full) ends each phase with a `## Goal Condition`
+  block: one numbered clause per acceptance criterion, each naming the
+  concrete command and the exact output or exit code that proves it, plus a
+  scope-constraint line and a turn cap. The rule and format are in
+  [references/workflow.md](references/workflow.md) — a spec without one is
+  incomplete, not lighter.
 - Each phase is self-contained: an agent running `/agent-team:dev "Implement Phase N" @spec` needs nothing from other phases beyond the Prerequisites list.
 - Pin exact versions for dependencies the feature **adds**, verified against the registry. Don't research dependencies the repo already uses.
 - The spec is a living document: `/agent-team:dev` updates its status and appends a Wrapup, and mid-implementation reality can revise it. A spec approved once and frozen is how plans drift.

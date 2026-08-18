@@ -187,6 +187,7 @@ assert_file_contains ".pi/extensions/pi-guard/index.ts" 'git\s+reset\s+--hard'
 assert_file_contains ".pi/extensions/pi-guard/index.ts" 'TRUNCATE'
 assert_file_contains ".pi/extensions/pi-guard/index.ts" 'AKIA[0-9A-Z]{16}'
 assert_file_contains ".pi/extensions/pi-guard/index.ts" 'ghp'
+assert_file_contains ".pi/extensions/pi-guard/index.ts" '.ssh'
 
 # pi agent definitions for the official subagent example extension (opt-in).
 for a in explorer implementer reviewer qa; do

@@ -35,8 +35,12 @@ Phase 3 - Pattern Recognition:
 Phase 4 - Synthesize:
 - Build mental model of how components connect
 - Identify the most important files to understand
+- Offer to write or refresh the project's `CLAUDE.md` from these findings —
+  commands, conventions, entry points, gotchas — for the user to review. The
+  map then loads every session instead of being re-derived; keep it short
+  (under ~50 lines, facts Claude can't infer from the code). The standalone
+  config ships a starter template at `.claude/CLAUDE.md.example`.
 - Your findings persist through project memory for future sessions
-</workflow>
 
 <context_gathering>
 Goal: Develop genuine understanding, not surface-level familiarity.

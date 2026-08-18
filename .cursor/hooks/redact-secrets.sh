@@ -16,6 +16,14 @@ fi
 BASENAME=$(basename "$FILE_PATH")
 DIR=$(dirname "$FILE_PATH")
 
+# Block the user's ssh directory (any key type, any file name)
+case "$FILE_PATH" in
+  "$HOME"/.ssh/*)
+    echo "{\"permission\": \"deny\", \"user_message\": \"Blocked: $FILE_PATH is in your .ssh directory and was not sent to the model.\"}"
+    exit 2
+    ;;
+esac
+
 # Block known sensitive file patterns by name
 case "$BASENAME" in
   .env|.env.local|.env.production|.env.staging|.env.development)

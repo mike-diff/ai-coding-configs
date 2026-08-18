@@ -19,64 +19,89 @@ log() {
   echo "[$(date '+%H:%M:%S')] [post-edit-lint] $1" >> "$LOG_FILE"
 }
 
+# Per-call noise (SKIP/FIRED lines) only when debugging; blocks and lint
+# findings always log. Set CLAUDE_HOOK_DEBUG=1 to see every invocation.
+debug() {
+  [[ "${CLAUDE_HOOK_DEBUG:-0}" == "1" ]] || return 0
+  log "$1"
+}
+
 # Read the JSON input from stdin
 INPUT="$(cat)"
 if [[ -z "$INPUT" ]]; then
-  log "SKIP: empty input"
+  debug "SKIP: empty input"
   exit 0
 fi
 
 # Extract the file path from tool input
 FILE_PATH="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.path // empty' 2>/dev/null)"
 if [[ -z "$FILE_PATH" ]]; then
-  log "SKIP: no file_path in input"
+  debug "SKIP: no file_path in input"
   exit 0
 fi
 
-log "FIRED: file=$FILE_PATH"
+debug "FIRED: file=$FILE_PATH"
 
 # Skip non-code files
 case "$FILE_PATH" in
   *.md|*.txt|*.json|*.yaml|*.yml|*.toml|*.lock|*.log|*.csv)
-    log "SKIP: non-code file ($FILE_PATH)"
+    debug "SKIP: non-code file ($FILE_PATH)"
     exit 0
     ;;
 esac
 
-# Auto-detect lint command from project config
-LINT_CMD=""
+# Auto-detect lint command from project config. Commands are built as argv
+# arrays and executed directly — never eval'd. FILE_PATH comes from tool-call
+# JSON, so a crafted path (e.g. containing $(...) or backticks) must never
+# reach a shell parser.
+declare -a LINT_CMD=()
+declare -a LINT_TAIL=()
 
 if [[ -f "package.json" ]]; then
-  # Check for common Node.js lint scripts
-  if jq -e '.scripts.lint' package.json >/dev/null 2>&1; then
-    LINT_CMD="npm run lint -- --no-error-on-unmatched-pattern"
-  elif jq -e '.scripts.eslint' package.json >/dev/null 2>&1; then
-    LINT_CMD="npm run eslint"
+  # Invoke the eslint binary directly on the edited file only. Routing through
+  # `npm run lint -- <args>` appends args to an arbitrary script: flags land on
+  # node itself (`node: bad option`) and `eslint .`-style scripts still lint
+  # the whole project. With no local or global eslint, skip — the verify gate
+  # runs the project's own lint script in full at phase end.
+  PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  if [[ -x "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
+    LINT_CMD=("$PROJECT_ROOT/node_modules/.bin/eslint" --no-error-on-unmatched-pattern "$FILE_PATH")
+  elif command -v eslint >/dev/null 2>&1; then
+    LINT_CMD=(eslint --no-error-on-unmatched-pattern "$FILE_PATH")
   fi
 elif [[ -f "pyproject.toml" ]]; then
   # Check for Python linters
   if command -v ruff >/dev/null 2>&1; then
-    LINT_CMD="ruff check \"$FILE_PATH\""
+    LINT_CMD=(ruff check "$FILE_PATH")
   elif command -v flake8 >/dev/null 2>&1; then
-    LINT_CMD="flake8 \"$FILE_PATH\""
+    LINT_CMD=(flake8 "$FILE_PATH")
   fi
 elif [[ -f "Cargo.toml" ]]; then
-  LINT_CMD="cargo clippy --quiet 2>&1 | head -20"
+  LINT_CMD=(cargo clippy --quiet)
+  LINT_TAIL=(head -20)
 elif [[ -f "go.mod" ]]; then
-  LINT_CMD="go vet ./... 2>&1 | head -20"
+  LINT_CMD=(go vet ./...)
+  LINT_TAIL=(head -20)
 fi
 
 # If no lint command found, skip silently
-if [[ -z "$LINT_CMD" ]]; then
+if [[ ${#LINT_CMD[@]} -eq 0 ]]; then
   exit 0
 fi
 
-# Run lint and capture output (don't fail the hook on lint errors)
-LINT_OUTPUT="$(eval "$LINT_CMD" 2>&1)" || true
+# Run lint. Distinguish findings from tool failure: eslint/ruff/flake8 exit 1
+# when they found issues and 2+ on config or fatal errors, so only rc 1 is
+# surfaced as lint findings — a broken linter is not lint output.
+LINT_RC=0
+if [[ ${#LINT_TAIL[@]} -gt 0 ]]; then
+  LINT_OUTPUT="$("${LINT_CMD[@]}" 2>&1 | "${LINT_TAIL[@]}")" || LINT_RC=${PIPESTATUS[0]}
+else
+  LINT_OUTPUT="$("${LINT_CMD[@]}" 2>&1)" || LINT_RC=$?
+fi
 
 # If lint found issues, surface them to Claude. Prefer hookSpecificOutput.additionalContext
 # (reliably injected into context) over stderr; fall back to stderr if jq is unavailable.
-if [[ -n "$LINT_OUTPUT" ]]; then
+if [[ -n "$LINT_OUTPUT" && "$LINT_RC" -eq 1 ]]; then
   log "LINT: issues found for $FILE_PATH"
   CTX="Lint issues after editing ${FILE_PATH}:"$'\n'"${LINT_OUTPUT}"
   if command -v jq >/dev/null 2>&1; then

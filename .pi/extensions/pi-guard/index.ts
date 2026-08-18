@@ -14,9 +14,10 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { readFile } from "node:fs/promises";
-import { basename } from "node:path";
+import { homedir } from "node:os";
+import { basename, join, sep } from "node:path";
 
-const COMMIT_TYPES = "feat|fix|refactor|docs|test|chore|style|perf|ci|revert";
+const COMMIT_TYPES = "feat|fix|refactor|docs|test|chore";
 const COMMIT_PATTERN = new RegExp(`^(${COMMIT_TYPES})(\\([a-zA-Z0-9_-]+\\))?!?: .+`);
 
 /** Destructive shell commands — mirrors block-dangerous.sh. */
@@ -57,8 +58,11 @@ function badCommitReason(command: string): string | undefined {
   return undefined;
 }
 
-/** Sensitive filenames — mirrors redact-secrets.sh. */
 function sensitiveFileNameReason(path: string): string | undefined {
+  const sshDir = join(homedir(), ".ssh") + sep;
+  if (path.startsWith(sshDir)) {
+    return `Blocked: ${path} is in your .ssh directory and was not sent to the model.`;
+  }
   const name = basename(path);
   if (/^\.env(\.|$)/.test(name)) {
     return `Blocked: ${name} looks like an env file and was not sent to the model.`;

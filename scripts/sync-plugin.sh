@@ -21,7 +21,8 @@ cp -R "$SRC/agents/." "$DST/agents/"
 # 2. Output styles removed from Claude Code — drop any stale plugin copy
 rm -rf "$DST/output-styles"
 
-# 3. Rules source (byte-identical)
+# 3. Rules source (byte-identical, mirror: stale rules removed)
+rm -rf "$DST/rules-source"
 mkdir -p "$DST/rules-source"
 cp -R "$SRC/rules/." "$DST/rules-source/"
 
@@ -48,10 +49,11 @@ if [ -n "$INJECT_RULES_BACKUP" ]; then
 fi
 chmod +x "$DST/hooks/"*.sh
 
-# 5. Skills (copy + namespace prefix sed + hardcoded path rewrites)
 mkdir -p "$DST/skills"
-# Clear destination first to avoid stale files when source removes a skill
-rm -rf "$DST/skills/"*
+# Clear destination first (whole directory, so dotfiles don't survive) to
+# avoid stale files when source removes a skill
+rm -rf "$DST/skills"
+mkdir -p "$DST/skills"
 cp -R "$SRC/skills/." "$DST/skills/"
 
 # Apply namespace prefix to all .md files in plugin skills

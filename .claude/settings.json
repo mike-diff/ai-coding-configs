@@ -3,14 +3,22 @@
     "ENABLE_PROMPT_CACHING_1H": "1"
   },
   "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch)",
+      "Bash(ls)",
+      "Bash(pwd)"
+    ],
     "deny": [
-      "Read(.env*)",
-      "Read(*.pem)",
-      "Read(*.key)",
-      "Read(id_rsa*)",
-      "Read(id_ed25519*)",
-      "Read(credentials.json)",
-      "Read(service-account.json)"
+      "Read(**/.env*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(~/.ssh/**)",
+      "Read(**/credentials.json)",
+      "Read(**/service-account.json)"
     ]
   },
   "statusLine": {
@@ -80,6 +88,16 @@
       {
         "hooks": [
           { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-failure.sh" }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v notify-send >/dev/null 2>&1 && notify-send 'Claude Code' 'Claude needs your attention' || true"
+          }
         ]
       }
     ]

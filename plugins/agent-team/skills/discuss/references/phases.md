@@ -45,6 +45,10 @@ features that exist for this, common pitfalls, current state of the relevant too
 handful of findings that would actually change a plan, with links.
 ```
 
+Cache large MCP or tool payloads the researchers pull in to
+`.context/mcp-cache/` per [mcp-caching.md](mcp-caching.md) — research
+sessions are where context pressure peaks.
+
 ## Phase 2: EXPLORE
 
 The core of the command — a reactive conversation, not a script.

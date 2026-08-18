@@ -70,8 +70,10 @@ Rules live in `.claude/rules/`. Claude Code loads these automatically at every s
 
 | Rule | What it covers |
 |------|---------------|
-| `coding-standards` | Code quality, naming conventions, structured output requirements |
-| `mcp-caching` | Cache large MCP responses to `.context/mcp-cache/` to avoid bloating context windows |
+| `coding-standards` | Code quality, naming, change and git conventions, structured outputs |
+| `typescript-javascript` | Stack-specific style — path-scoped, loads only when TS/JS files are touched |
+
+`/discuss` carries its own MCP-caching reference (`.claude/skills/discuss/references/mcp-caching.md`), loaded only during research sessions instead of every session.
 
 ---
 
@@ -126,11 +128,55 @@ Specs are local planning artifacts by default. They save under `.context/specs/`
 
 ### Context Directory
 
-The `mcp-caching` rule and Cursor's session hooks write to `.context/` in your project root. Add it to your `.gitignore`:
+The `/discuss` MCP-caching reference and Cursor's session hooks write to `.context/` in your project root. Add it to your `.gitignore`:
 
 ```bash
 echo ".context/" >> .gitignore
 ```
+
+### Project CLAUDE.md
+
+Rules carry conventions; the project's own facts belong in a root `CLAUDE.md`
+that loads every session: exact build/test commands, conventions Claude can't
+infer, known gotchas. Start from `CLAUDE.md.example` in this directory (copy
+to your project root as `CLAUDE.md`), or run `/orient` and accept its offer
+to draft one from the codebase map.
+
+### Code intelligence plugin (recommended)
+
+Install the LSP plugin for your stack from the official marketplace — it
+activates native diagnostics (type errors and missing imports surface
+automatically after every edit) and symbol navigation, which the
+`post-edit-lint` hook cannot provide:
+
+```text
+/plugin install typescript-lsp@claude-plugins-official    # or pyright-lsp, gopls-lsp,
+                                                          # rust-analyzer-lsp, ...
+```
+
+The language-server binary must be on your `PATH` (`typescript-language-server`,
+`pyright-langserver`, `gopls`, `rust-analyzer`, ...).
+
+### Permissions
+
+`settings.json` ships a small universal allow list (read-only git, `ls`,
+`pwd`). Give your stack's check commands friction-free runs by extending it —
+for example:
+
+```json
+"allow": [
+  "Bash(npm run lint:*)",
+  "Bash(npm run typecheck:*)",
+  "Bash(npm test:*)",
+  "Bash(npx tsc --noEmit)"
+]
+```
+
+Use the `:*` prefix form (`Bash(npm run lint:*)`, not `Bash(npm run lint*)`):
+it matches the command plus any arguments without glob-matching other
+commands that share a prefix (verified live: `git diff:*` does not cover
+`git difftool`). Keep the list to commands you would approve every time
+anyway; Python stacks use the `ruff`, `mypy`, and `pytest` equivalents.
 
 ## User-level setup
 

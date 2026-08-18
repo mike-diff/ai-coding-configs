@@ -49,6 +49,31 @@ expect_rc "redact-secrets: env file blocked" \
 expect_rc "redact-secrets: normal file allowed" \
   redact-secrets.sh '{"tool_input":{"file_path":"/tmp/x/main.py"}}' 0
 
+# Injection regression: a crafted file path must never reach a shell parser.
+# The hook builds argv arrays; the $(touch) below must not execute.
+INJ_DIR="$(mktemp -d)"
+mkdir -p "$INJ_DIR/node_modules/.bin"
+printf '#!/bin/sh\nexit 0\n' > "$INJ_DIR/node_modules/.bin/eslint"
+chmod +x "$INJ_DIR/node_modules/.bin/eslint"
+PWN_FLAG="$INJ_DIR/pwned"
+INJ_PAYLOAD="$(printf '{"tool_input":{"file_path":"/tmp/$(touch %s).ts"}}' "$PWN_FLAG")"
+if printf '%s' "$INJ_PAYLOAD" | ( cd "$INJ_DIR" && bash "$HOOKS/post-edit-lint.sh" ) >/dev/null 2>&1 && [ ! -e "$PWN_FLAG" ]; then
+  pass "post-edit-lint: crafted path executes nothing"
+else
+  fail "post-edit-lint: crafted path executed (eval regression)"
+fi
+rm -rf "$INJ_DIR"
+
+# ssh directory coverage: any key name under $HOME/.ssh blocks
+SSH_HOME="$(mktemp -d)"
+mkdir -p "$SSH_HOME/.ssh"
+if printf '%s' "{\"tool_input\":{\"file_path\":\"$SSH_HOME/.ssh/deploy_key_custom\"}}" | HOME="$SSH_HOME" bash "$HOOKS/redact-secrets.sh" >/dev/null 2>&1; then
+  fail "redact-secrets: ssh directory not blocked"
+else
+  pass "redact-secrets: ssh directory blocked (any key name)"
+fi
+rm -rf "$SSH_HOME"
+
 # --- Live tests: real Claude Code hook invocations ---
 
 if ! command -v claude >/dev/null 2>&1; then

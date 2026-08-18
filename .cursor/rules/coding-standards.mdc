@@ -89,6 +89,30 @@ When creating new code:
 - Add appropriate tests
 </change_rules>
 
+## Lean Builds
+
+<lean_builds>
+Before editing a non-trivial change, restate the smallest useful version in a
+sentence and name the non-goals; the plan earns each touched file.
+
+- Prefer existing extension points and repo-native patterns over new dependencies or frameworks built for one use case
+- Challenge every new file, dependency, config knob, and shared-file edit — if it only serves a hypothetical future, cut it
+- No parallel versions, no unused exports, no plumbing for future requirements
+- Before reporting done: review `git diff --stat`, delete code that did not earn its place, and collapse abstractions that didn't pay
+</lean_builds>
+
+## Test Quality
+
+<test_quality>
+Before writing or keeping any test, answer: what single one-line change to
+production code would make this test fail? If you cannot name it, delete the
+test. Test behavior, not implementation. Delete tautologies, "does not throw"
+tests, mock echo, and compiler-guaranteed assertions. A constant compared
+against a real external contract (wire/SQL literal) is a legitimate pin. Wait
+on conditions, never clocks; a flaky test is worse than no test. Fewer tests
+that each pin distinct behavior beat many that assert nothing.
+</test_quality>
+
 ## Anti-Patterns to Avoid
 
 <anti_patterns>

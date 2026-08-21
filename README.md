@@ -217,6 +217,16 @@ Skills are reference documents the AI draws on automatically based on context. T
 | `skill-creator` | Domain skill | Creating or editing skills, writing SKILL.md files |
 | `worktree-ops`, `best-of-n-ops`, `debug-ops`, `canvas-ops` | Operational skills | When running Cursor 3.x workflows for isolation, parallel attempts, debugging, and analytical outputs |
 
+### Output Styles
+
+Claude Code only. Output styles (`.claude/output-styles/`) change how Claude writes back to you — shorter, denser, action-first — without changing what it knows. They ship inert; you turn one on with `/config`.
+
+| Style | Purpose |
+|-------|---------|
+| `technical-brief` | Result before narration, procedures numbered, one idea per sentence, one term per concept |
+
+Try Claude Code's built-in `Concise` style first — it covers the biggest win for free. Reach for `technical-brief` when you also want procedure structure and consistent terminology. Custom styles must set `keep-coding-instructions: true`, or Claude Code silently drops its own scoping and verification instructions.
+
 ---
 
 ## A Typical Workflow

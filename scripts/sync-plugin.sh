@@ -18,8 +18,13 @@ rm -rf "$DST/agents"
 mkdir -p "$DST/agents"
 cp -R "$SRC/agents/." "$DST/agents/"
 
-# 2. Output styles removed from Claude Code — drop any stale plugin copy
+# 2. Output styles (byte-identical, mirror: stale styles removed).
+# Opt-in only: shipping a style does not activate it. Users select one via
+# /config or the outputStyle setting. The standalone /output-style command was
+# removed in Claude Code 2.1.91, but the feature itself is current.
 rm -rf "$DST/output-styles"
+mkdir -p "$DST/output-styles"
+cp -R "$SRC/output-styles/." "$DST/output-styles/"
 
 # 3. Rules source (byte-identical, mirror: stale rules removed)
 rm -rf "$DST/rules-source"

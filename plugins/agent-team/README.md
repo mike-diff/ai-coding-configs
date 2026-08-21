@@ -22,6 +22,7 @@ After install, all commands are namespaced: `/agent-team:discuss`, `/agent-team:
 - **5 specialized agents** — `explorer`, `implementer`, `qa`, `reviewer`, `skill-author`
 - **12 hooks** across 9 lifecycle events (`SessionStart`, `PreToolUse`, `PostToolUse`, `PermissionDenied`, `PreCompact`, `CwdChanged`, `TaskCreated`, `StopFailure`, `Notification`)
 - **2 rules** — `coding-standards`, `typescript-javascript` (auto-injected via SessionStart hook)
+- **1 output style** — `technical-brief` (opt-in; select via `/config`, off by default)
 
 ## What This Plugin Does NOT Provide
 

@@ -42,6 +42,7 @@ This directory contains Cursor-specific configuration for AI-assisted developmen
 │   └── skill-author.md # Skill creation via TDD
 ├── rules/              # Project rules (auto-applied based on context)
 │   ├── coding-standards.mdc  # Code style and quality
+│   ├── comment-policy.mdc   # Comment doctrine (always active)
 │   ├── commit-conventions.mdc # Git commit format
 │   ├── subagent-outputs.mdc  # Required subagent result formats
 │   └── mcp-caching.mdc      # Cache large MCP responses
@@ -133,6 +134,7 @@ Cursor's **built-in** Explore, Bash, and Browser subagents cover codebase analys
 Rules auto-apply based on file patterns:
 
 - `coding-standards.mdc` - Active for code files (*.ts, *.py, etc.)
+- `comment-policy.mdc` - Always active — comment doctrine for every file
 - `commit-conventions.mdc` - Active for git operations
 - `subagent-outputs.mdc` - Active for subagent files
 - `mcp-caching.mdc` - Always active, caches large MCP responses

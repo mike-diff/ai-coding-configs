@@ -40,16 +40,16 @@ Run ALL applicable tool commands below. Collect output into a structured finding
 
 ```bash
 # Dead code
-npx knip --reporter compact 2>/agent-team:dev/null
+npx knip --reporter compact 2>/dev/null
 
 # Circular dependencies
-npx madge --circular --extensions ts src/ 2>/agent-team:dev/null
+npx madge --circular --extensions ts src/ 2>/dev/null
 
 # Type errors
 npx tsc --noEmit 2>&1
 
 # Lint
-npx eslint . --format compact 2>/agent-team:dev/null
+npx eslint . --format compact 2>/dev/null
 
 # Weak types
 grep -rn ': any\b\|: unknown\b\|as any' --include='*.ts' --include='*.tsx'
@@ -58,7 +58,7 @@ grep -rn ': any\b\|: unknown\b\|as any' --include='*.ts' --include='*.tsx'
 ### Python
 
 ```bash
-vulture . --min-confidence 80 2>/agent-team:dev/null
+vulture . --min-confidence 80 2>/dev/null
 mypy . 2>&1
 ruff check . 2>&1
 ```
@@ -66,8 +66,8 @@ ruff check . 2>&1
 ### Go
 
 ```bash
-deadcode ./... 2>/agent-team:dev/null
-unused ./... 2>/agent-team:dev/null
+deadcode ./... 2>/dev/null
+unused ./... 2>/dev/null
 go vet ./... 2>&1
 staticcheck ./... 2>&1
 ```
@@ -76,7 +76,7 @@ staticcheck ./... 2>&1
 
 ```bash
 cargo clippy -- -W dead_code -W unused_imports 2>&1
-cargo udeps 2>/agent-team:dev/null
+cargo udeps 2>/dev/null
 ```
 
 ### Slop detection (all languages)
@@ -102,7 +102,7 @@ grep -rn 'catch\s*(.*)\s*{' --include='*.ts' --include='*.tsx' --include='*.js'
 grep -rn 'function\|const.*=.*=>' --include='*.ts' | sort | uniq -d -f2
 
 # jscpd if available
-npx jscpd src/ 2>/agent-team:dev/null
+npx jscpd src/ 2>/dev/null
 ```
 
 ### Type consolidation (agent assesses)
@@ -140,7 +140,7 @@ For each finding, classify as:
 
 - **Deduplication**: Would consolidating obscure intent? Is the "shared" version harder to understand than the two specific ones?
 - **Error handling**: Does the catch serve recovery, cleanup, logging, or user-facing display? If yes, keep. If it's hiding errors with no justification, remove.
-- **Comments**: Does it help a new engineer understand *why* the code exists? If yes, keep. If it describes *what happened* during an edit, remove.
+- **Comments**: None by default — every remaining comment must justify its existence (consumer-directed API docs on exports are the usual survivor). If it describes *what happened* during an edit, remove. Durable invariant/constraint prose belongs in rules, memory, or context docs, not an inline comment — when in doubt, leave it out.
 - **Types**: Is `any` at a genuine boundary (parsing, serialization, interop)? Preserve. Is it laziness? Replace.
 
 ---

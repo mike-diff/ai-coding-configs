@@ -140,7 +140,7 @@ For each finding, classify as:
 
 - **Deduplication**: Would consolidating obscure intent? Is the "shared" version harder to understand than the two specific ones?
 - **Error handling**: Does the catch serve recovery, cleanup, logging, or user-facing display? If yes, keep. If it's hiding errors with no justification, remove.
-- **Comments**: Does it help a new engineer understand *why* the code exists? If yes, keep. If it describes *what happened* during an edit, remove.
+- **Comments**: None by default — every remaining comment must justify its existence (consumer-directed API docs on exports are the usual survivor). If it describes *what happened* during an edit, remove. Durable invariant/constraint prose belongs in rules, memory, or context docs, not an inline comment — when in doubt, leave it out.
 - **Types**: Is `any` at a genuine boundary (parsing, serialization, interop)? Preserve. Is it laziness? Replace.
 
 ---

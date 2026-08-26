@@ -61,9 +61,12 @@ rm -rf "$DST/skills"
 mkdir -p "$DST/skills"
 cp -R "$SRC/skills/." "$DST/skills/"
 
-# Apply namespace prefix to all .md files in plugin skills
+# Apply namespace prefix to all .md files in plugin skills. The lookahead
+# (?!(?:[:\w/-]|\.\w)) keeps absolute-path tokens literal (/dev/null,
+# /dev.json, /dev-null, /discuss/foo) while sentence-final mentions ("/dev.")
+# still namespace.
 find "$DST/skills" -name "*.md" -print0 | xargs -0 perl -i -pe \
-  "s{(?<![:/\\w-])/($SKILL_NAMES)\\b(?!:)}{/agent-team:\$1}g"
+  "s{(?<![:/\\w-])/($SKILL_NAMES)\\b(?!(?:[:\\w/-]|\\.\\w))}{/agent-team:\$1}g"
 
 # Hardcoded path rewrites in skill/SKILL.md (quote-wrapped so the commands
 # actually execute: the closing quote lands after the full argument).
@@ -92,7 +95,7 @@ mkdir -p "$AP/skills"
 cp -R "$SRC/skills/." "$AP/skills/"
 
 # 7. Verification: no unprefixed slash-command refs in plugin skills
-UNPREFIXED=$(perl -ne 'print "$ARGV:$.: $_" if /(?<![:\/\w-])\/(ask|dev|discuss|goal-or-loop|issue|loop-patterns|orient|primitives|review-patterns|skill|slop-check|spec|team-orchestration|testing-patterns|ticket|to-dos)\b(?!:)/' $(find "$DST/skills" -name "*.md") 2>/dev/null | grep -v "/agent-team:" || true)
+UNPREFIXED=$(perl -ne 'print "$ARGV:$.: $_" if /(?<![:\/\w-])\/(ask|dev|discuss|goal-or-loop|issue|loop-patterns|orient|primitives|review-patterns|skill|slop-check|spec|team-orchestration|testing-patterns|ticket|to-dos)\b(?!(?:[:\w\/-]|\.\w))/' $(find "$DST/skills" -name "*.md") 2>/dev/null | grep -v "/agent-team:" || true)
 if [ -n "$UNPREFIXED" ]; then
   echo "WARNING: unprefixed slash-command references remain:" >&2
   echo "$UNPREFIXED" >&2

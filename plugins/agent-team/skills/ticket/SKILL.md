@@ -70,7 +70,7 @@ Search for similar patterns in the codebase to identify files to modify and patt
 ### Step 1.5: Check Available Labels
 
 ```bash
-gh label list --limit 50 2>/agent-team:dev/null || echo "LABELS_UNAVAILABLE"
+gh label list --limit 50 2>/dev/null || echo "LABELS_UNAVAILABLE"
 ```
 
 ### Step 1.6: Assess Complexity

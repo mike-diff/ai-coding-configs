@@ -142,7 +142,7 @@ Rules are guidelines loaded automatically by the AI at the start of every sessio
 
 | Rule | What it covers |
 |------|---------------|
-| `coding-standards` | Code quality, naming, change rules, git conventions, structured outputs |
+| `coding-standards` | Code quality, naming, comment policy, change rules, git conventions, structured outputs |
 | `typescript-javascript` | Stack-specific style — path-scoped, loads only when TS/JS files are touched |
 
 **Cursor** (`.cursor/rules/`):
@@ -150,6 +150,7 @@ Rules are guidelines loaded automatically by the AI at the start of every sessio
 | Rule | What it covers |
 |------|---------------|
 | `coding-standards` | Code quality, naming, structure |
+| `comment-policy` | Comment doctrine — always active, every file |
 | `commit-conventions` | Conventional Commits format |
 | `subagent-outputs` | Required result block formats for subagents |
 | `mcp-caching` | Cache large MCP responses to `.context/` |

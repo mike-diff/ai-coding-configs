@@ -107,6 +107,21 @@ assert_file_contains ".claude/agents/implementer.md" "stop and ask"
 # Reviewer is briefed for coverage over filtering (severity-suppression regression trap).
 assert_file_contains ".claude/agents/reviewer.md" "Report every issue you find"
 
+# Comment doctrine: hard line — justification, sanctioned form, carve-out,
+# relocation, edit scope; no TODOs; disagreement resolved, never trusted.
+assert_file_contains ".claude/rules/coding-standards.md" "## Comments"
+assert_file_contains ".claude/rules/coding-standards.md" "Every comment must justify its existence"
+assert_file_contains ".claude/rules/coding-standards.md" "functions and public class methods"
+assert_file_contains ".claude/rules/typescript-javascript.md" "Comments section of"
+assert_file_contains ".claude/rules/coding-standards.md" "machine-consumed directives"
+assert_file_contains ".claude/rules/coding-standards.md" "Never write a TODO"
+assert_file_contains ".claude/rules/coding-standards.md" "rules, memory, or context docs"
+assert_file_contains ".claude/rules/coding-standards.md" "hunks you edit"
+assert_file_contains ".claude/agents/reviewer.md" "Comment drift, always"
+assert_file_contains ".claude/agents/reviewer.md" "never by trusting the comment"
+assert_file_contains ".claude/agents/implementer.md" "no comments by default"
+assert_file_contains ".claude/rules/coding-standards.md" "unused-code detection"
+
 ########################################
 # .cursor — rebuilt workflows (Cursor 2.4+ native subagents/skills)
 ########################################
@@ -146,6 +161,69 @@ assert_max_lines ".cursor/skills/dev/references/workflow.md" 350
 assert_file_contains ".cursor/agents/implementer.md" "High-risk assumptions"
 assert_file_contains ".cursor/agents/implementer.md" "stop and ask"
 assert_file_contains ".cursor/agents/spec-reviewer.md" "Report every issue you find"
+
+# Comment doctrine port: always-active comment-policy.mdc carries the full
+# doctrine (glob-gated coding-standards.mdc can't reach every file).
+assert_file_contains ".cursor/rules/comment-policy.mdc" "alwaysApply: true"
+assert_file_contains ".cursor/rules/comment-policy.mdc" "Every comment must justify"
+assert_file_contains ".cursor/rules/comment-policy.mdc" "functions and public class methods"
+assert_file_contains ".cursor/rules/comment-policy.mdc" "machine-consumed directives"
+assert_file_contains ".cursor/rules/comment-policy.mdc" "Never write a TODO"
+assert_file_contains ".cursor/rules/comment-policy.mdc" "rules, memory, or context docs"
+assert_file_contains ".cursor/rules/comment-policy.mdc" "hunks you edit"
+assert_file_contains ".cursor/agents/spec-reviewer.md" "Comment drift, always"
+assert_file_contains ".cursor/agents/spec-reviewer.md" "comment-policy"
+assert_file_contains ".cursor/agents/implementer.md" "no comments by default"
+assert_file_contains ".cursor/agents/implementer.md" "comment-policy"
+stale_doctrine=$(rg -n -i 'TODO\(owner\)|Explain "why", not "what"|JSDoc for public|comments only where logic is non-obvious|Docstrings for public functions' .claude/rules .claude/agents .cursor/rules .cursor/agents || true)
+[ -z "$stale_doctrine" ] || fail "superseded comment doctrine remains in live rules/agents:\n$stale_doctrine"
+
+assert_file_contains ".cursor/rules/coding-standards.mdc" "unused-code detection"
+
+# slop-check follows the comment doctrine everywhere: skill + guide, all three trees.
+assert_file_contains '.claude/skills/slop-check/SKILL.md' 'None by default'
+assert_file_contains '.claude/skills/slop-check/references/judgment-guide.md' 'public class'
+assert_file_contains 'plugins/agent-team/skills/slop-check/SKILL.md' 'None by default'
+assert_file_contains 'plugins/agent-plugin/skills/slop-check/SKILL.md' 'None by default'
+slop_keep=$(rg -n 'Comments? explain|understand \*why\*|usually belongs' .claude/skills/slop-check plugins/agent-team/skills/slop-check plugins/agent-plugin/skills/slop-check || true)
+[ -z "$slop_keep" ] || fail "old keep-why-comments guidance remains in slop-check:\n$slop_keep"
+
+# Byte-identical parity for generated trees (mutation-tested: anchor-only
+# checks let real divergences through).
+for rf in coding-standards.md typescript-javascript.md; do
+  cmp -s ".claude/rules/$rf" "plugins/agent-team/rules-source/$rf" \
+    || fail "rules-source/$rf diverged from canonical — re-run sync-plugin.sh"
+done
+for af in implementer.md reviewer.md; do
+  cmp -s ".claude/agents/$af" "plugins/agent-team/agents/$af" \
+    || fail "plugin agent $af diverged from canonical — re-run sync-plugin.sh"
+done
+cmp -s .claude/skills/slop-check/SKILL.md plugins/agent-plugin/skills/slop-check/SKILL.md \
+  || fail "agent-plugin slop SKILL.md diverged from canonical — re-run sync-plugin.sh"
+for tree in plugins/agent-team plugins/agent-plugin; do
+  cmp -s .claude/skills/slop-check/references/judgment-guide.md \
+    "$tree/skills/slop-check/references/judgment-guide.md" \
+    || fail "$tree judgment-guide diverged — re-run sync-plugin.sh"
+done
+# agent-team SKILL.md is namespaced; compare after un-namespacing.
+sed 's|/agent-team:|/|g' plugins/agent-team/skills/slop-check/SKILL.md \
+  | cmp -s - .claude/skills/slop-check/SKILL.md \
+  || fail "agent-team slop SKILL.md diverged beyond namespacing — re-run sync-plugin.sh"
+# Full doctrine depth on both live policies: sanctioned form is scoped to
+# exported functions; the carve-out covers generated markers and license headers.
+assert_file_contains ".cursor/rules/comment-policy.mdc" "functions and public class methods"
+assert_file_contains ".claude/rules/coding-standards.md" "generated markers"
+assert_file_contains ".cursor/rules/comment-policy.mdc" "generated markers"
+assert_file_contains ".claude/rules/coding-standards.md" "and license headers"
+assert_file_contains ".cursor/rules/comment-policy.mdc" "and license headers"
+# Relocation reaches every slop tree; pre-existing TODOs require ownership.
+for sloptree in .claude plugins/agent-team plugins/agent-plugin; do
+  assert_file_contains "$sloptree/skills/slop-check/SKILL.md" "rules, memory, or context docs"
+  assert_file_contains "$sloptree/skills/slop-check/references/judgment-guide.md" "Verify ownership before removing"
+done
+# The namespace rewrite must never mangle absolute-path tokens.
+mangled=$(rg -n 'agent-team:dev/null|agent-team:dev-null|agent-team:dev\.json' plugins/agent-team/skills || true)
+[ -z "$mangled" ] || fail "namespace rewrite mangled a path token — check sync-plugin.sh lookahead:\n$mangled"
 
 ########################################
 # Pi maintainer wrappers + shared conventions

@@ -17,6 +17,5 @@ Loads only when Claude works with matching files.
 - Prefer interfaces over types for object shapes; export types alongside implementations
 - Prefer `const` over `let`, never `var`
 - Use async/await over callbacks
-- Add JSDoc comments for public functions
-- Include comments only where logic is non-obvious
+- Comments: governed by the Comments section of `coding-standards`
 - Keep functions focused and reasonably sized

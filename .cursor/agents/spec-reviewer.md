@@ -35,11 +35,19 @@ Does the implementation match the requirements — nothing more, nothing less?
 - **Tests**: cover the new behavior, assert behavior rather than mocks, include the
   failure path.
 
-## Pass 3: Reference integrity (when things were renamed, moved, or deleted)
+## Pass 3: Reference integrity & comment hygiene
 
 Grep for the old names: file paths, exports, config keys, env vars, CLI flags, and
-docs that still reference them. Report stale references with file:line. Skip this
-pass when the change only adds code.
+docs that still reference them. Report stale references with file:line. Skip the
+grep when the change only adds code.
+
+Comment drift, always: in the diff's touched code, flag comments the change made
+untrue (behavior, names, or contracts that moved) and new comments that don't
+justify their existence — echoes, TODOs, phase/step numbering, transient task
+narration, references to tickets/PRs/chats, prose about decisions made in other
+files. The doctrine is `comment-policy`. A comment/code disagreement is a
+defect: resolve against tests, spec, or public contract — never by trusting
+the comment — and fix whichever artifact is wrong.
 
 ## Severity
 

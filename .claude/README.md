@@ -70,7 +70,7 @@ Rules live in `.claude/rules/`. Claude Code loads these automatically at every s
 
 | Rule | What it covers |
 |------|---------------|
-| `coding-standards` | Code quality, naming, change and git conventions, structured outputs |
+| `coding-standards` | Code quality, naming, comment policy, change and git conventions, structured outputs |
 | `typescript-javascript` | Stack-specific style — path-scoped, loads only when TS/JS files are touched |
 
 `/discuss` carries its own MCP-caching reference (`.claude/skills/discuss/references/mcp-caching.md`), loaded only during research sessions instead of every session.

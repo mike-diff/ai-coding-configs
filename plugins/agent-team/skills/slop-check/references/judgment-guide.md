@@ -135,22 +135,31 @@ Detailed criteria for evaluating findings that require agent judgment. Tools fin
 **Remove:**
 - Comments that restate what the code does: `// increment counter` above `count++`
 - Edit-history comments: "Previously this used X, changed to Y", "Moved from file Z"
-- TODO/FIXME that are years old with no activity
-- Stub comments: "TODO: implement this", "placeholder", "fill in later"
+- TODO/FIXME/stub comments written by the current change — agents never
+  write them; implement or report the blocker
 - Block comments that are just section dividers with no information
 - Comments that describe the implementation instead of the intent
 - Excessive inline comments that make the code harder to read
 
+**Verify ownership before removing:**
+- Pre-existing TODO/FIXME markers (any age): implement, convert to a tracked
+  issue, or flag for review — never silently delete another author's marker
+- Pre-existing stub comments ("placeholder", "fill in later"): confirm they
+  mark known-missing work, not stale narration
+
 **Keep or improve:**
-- Comments explaining *why*: "We use a 5-second timeout because the downstream service has a 10-second SLA"
-- Comments explaining non-obvious constraints or invariants
-- Comments documenting edge cases or known limitations
-- Comments explaining business logic that isn't obvious from the code
-- Public API documentation (JSDoc, docstrings, etc.)
+- Consumer-directed API documentation (JSDoc, TSDoc, docstrings) on exported
+  functions and public class methods, when it tells the caller something the
+  signature doesn't
+- Nothing else is an automatic keeper: every remaining comment must justify
+  its existence — none by default. Durable invariant/constraint prose
+  belongs in project rules, memory, or context docs instead of an
+  inline comment; when in doubt, leave it out.
 
 **Improve by rewriting:**
 - Comments that have useful intent buried in verbose language
-- Comments that describe the "what" when they should describe the "why"
+- Comments that describe the "what" — delete rather than rewrite, unless the
+  code itself is what needs clarifying
 - Comments written for the original author, not for a new engineer
 
 ---

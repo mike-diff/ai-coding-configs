@@ -77,6 +77,20 @@ Rules live in `.claude/rules/`. Claude Code loads these automatically at every s
 
 ---
 
+## Output Styles
+
+Output styles live in `.claude/output-styles/` and change how Claude writes back to you — not what it knows. Shipping one does not turn it on: select it with `/config` (the standalone `/output-style` command was removed in Claude Code 2.1.91), or set `"outputStyle"` in `settings.json`. Styles are read at session start, so a change needs `/clear`.
+
+| Style | What it does |
+|-------|-------------|
+| `technical-brief` | Result before narration, procedures numbered, one idea per sentence, one term per concept |
+
+Before reaching for it, try the built-in `Concise` style — it covers the largest win (lead with the result, skip preamble) at no token cost. `technical-brief` adds procedure structure, terminology consistency, and verification discipline that `Concise`'s single sentence does not.
+
+Any custom style you add here **must** set `keep-coding-instructions: true` in its frontmatter. Without it, Claude Code silently drops its own software-engineering instructions — scoping, comment conventions, verifying work — and nothing warns you. Output styles also apply to the main conversation only; subagents run their own system prompt.
+
+---
+
 ## Hooks
 
 Hooks live in `.claude/hooks/` and are configured in `settings.json`. Unlike rules (which the agent *should* follow), hooks *always* run - they provide hard guarantees via exit code `2` to block with feedback.

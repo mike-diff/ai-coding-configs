@@ -235,6 +235,14 @@ assert_file_contains ".claude/skills/dev/SKILL.md" "disable-model-invocation: tr
 assert_file_contains ".claude/skills/spec/SKILL.md" "disable-model-invocation: true"
 assert_file_contains ".claude/skills/discuss/SKILL.md" "disable-model-invocation: true"
 
+# Output style ships opt-in on both distributions. keep-coding-instructions is
+# load-bearing: without it Claude Code silently drops its software-engineering
+# instructions (scoping, comment conventions, verification) from the prompt.
+assert_file_contains ".claude/output-styles/technical-brief.md" "keep-coding-instructions: true"
+[ -f "plugins/agent-team/output-styles/technical-brief.md" ] || fail "plugin missing technical-brief output style — re-run sync-plugin.sh"
+diff -q ".claude/output-styles/technical-brief.md" "plugins/agent-team/output-styles/technical-brief.md" >/dev/null \
+  || fail "plugin output style drifted from .claude source — re-run sync-plugin.sh"
+
 # Compact hook emits a desktop notification; post-edit-lint surfaces lint via additionalContext.
 assert_file_contains ".claude/hooks/notify-compact.sh" "terminalSequence"
 assert_file_contains ".claude/hooks/post-edit-lint.sh" "additionalContext"

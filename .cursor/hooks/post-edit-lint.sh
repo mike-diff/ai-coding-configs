@@ -21,8 +21,8 @@ fi
 EXT="${FILE_PATH##*.}"
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 # An eslint config the linter itself would discover — with a package.json
-# declaration, the strongest signal that eslint is this project's linter and
-# not a transitive leftover in a Biome or oxlint project.
+# declaration, the strongest signal that eslint is this project's chosen
+# linter rather than a transitive leftover.
 has_eslint_config() {
   local d f
   for d in "$PWD" "$PROJECT_ROOT"; do

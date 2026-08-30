@@ -63,17 +63,16 @@ esac
 # JSON, so a crafted path (e.g. containing $(...) or backticks) must never
 # reach a shell parser.
 #
-# Selection is per-linter allowlist, not a global "non-code" blocklist: what
-# counts as lintable is stack-relative (Biome lints .astro/.json/.css), so
-# the only sound test is "the project opted into a linter this hook drives,
+# Selection is a per-linter allowlist: lintability is stack-relative, so the
+# only sound test is "the project opted into a linter this hook drives,
 # and the edited file is in that linter's domain". Finer arbitration belongs
 # to the linter's own config — eslint warns and exits 0 on a file its config
 # doesn't cover, which surfaces nothing here (only rc 1 does).
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
 # An eslint config the linter itself would discover — with a package.json
-# declaration, the strongest signal that eslint is this project's linter and
-# not a transitive leftover in a Biome or oxlint project.
+# declaration, the strongest signal that eslint is this project's chosen
+# linter rather than a transitive leftover.
 has_eslint_config() {
   local d f
   for d in "$PWD" "$PROJECT_ROOT"; do

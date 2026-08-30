@@ -82,8 +82,8 @@ else
 fi
 rm -rf "$INJ_DIR"
 
-# Non-eslint Node project (Biome): a transitively installed eslint binary
-# must not be mistaken for the project's linter (issue #32).
+# Non-eslint Node project: a transitively installed eslint binary
+# must not be mistaken for the project's linter.
 BIOME_DIR="$(mktemp -d)"
 pel_fixture "$BIOME_DIR" "$EXPECT_BIOME" 'echo "Error: --no-error-on-unmatched-pattern is not expected"; exit 1'
 : > "$BIOME_DIR/src.ts"
@@ -91,7 +91,7 @@ if [[ -z "$(pel_out "$BIOME_DIR" "$BIOME_DIR/m" '{"tool_input":{"file_path":"'"$
   && [ ! -e "$BIOME_DIR/m" ]; then
   pass "post-edit-lint: biome project skipped despite stray eslint binary"
 else
-  fail "post-edit-lint: biome project ran non-declared eslint (issue #32)"
+  fail "post-edit-lint: biome project ran non-declared eslint"
 fi
 rm -rf "$BIOME_DIR"
 
@@ -106,18 +106,18 @@ else
   fail "post-edit-lint: eslint findings not surfaced"
 fi
 
-# Out-of-project file: the project's linter must not run at all (issue #32).
+# Out-of-project file: the project's linter must not run at all.
 SCRATCH_DIR="$(mktemp -d)"
 : > "$SCRATCH_DIR/note.ts"
 pel_out "$ESLINT_DIR" "$ESLINT_DIR/m" '{"tool_input":{"file_path":"'"$SCRATCH_DIR"'/note.ts"}}' >/dev/null
 if [ ! -e "$ESLINT_DIR/m" ]; then
   pass "post-edit-lint: out-of-project edit skipped"
 else
-  fail "post-edit-lint: out-of-project edit ran project linter (issue #32)"
+  fail "post-edit-lint: out-of-project edit ran project linter"
 fi
 rm -rf "$SCRATCH_DIR"
 
-# Extension allowlist: markup/style stay out of eslint's domain (issue #32);
+# Extension allowlist: markup/style stay out of eslint's domain;
 # framework single-file components are routed through the project's eslint.
 EXT_OK=1
 for EXT in html css scss svg md json; do
@@ -128,7 +128,7 @@ done
 if [ "$EXT_OK" -eq 1 ]; then
   pass "post-edit-lint: markup/style/data extensions skipped"
 else
-  fail "post-edit-lint: out-of-domain extension triggered linter (issue #32)"
+  fail "post-edit-lint: out-of-domain extension triggered linter"
 fi
 
 SFC_OK=1
@@ -152,7 +152,7 @@ pel_out "$NOCONF_DIR" "$NOCONF_DIR/m" '{"tool_input":{"file_path":"'"$NOCONF_DIR
 if [ ! -e "$NOCONF_DIR/m" ]; then
   pass "post-edit-lint: eslint without config skipped"
 else
-  fail "post-edit-lint: unconfigured eslint ran (issue #32)"
+  fail "post-edit-lint: unconfigured eslint ran"
 fi
 rm -rf "$NOCONF_DIR"
 

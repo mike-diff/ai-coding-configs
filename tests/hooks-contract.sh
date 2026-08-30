@@ -52,9 +52,10 @@ expect_rc "redact-secrets: normal file allowed" \
 # post-edit-lint unit tests. Fixtures are fake Node projects; the eslint
 # "binary" is a shim so the hook's command selection and gating logic is
 # exercised without a real toolchain.
-pel_fixture() { # pel_fixture <dir> <package.json-content>
+pel_fixture() { # pel_fixture <dir> <package.json-content> [shim-body] [no-config]
   mkdir -p "$1/node_modules/.bin"
   printf '%s' "$2" > "$1/package.json"
+  [[ -n "${4:-}" ]] || : > "$1/eslint.config.js"
   printf '#!/bin/sh\n[ -n "${PEL_MARKER:-}" ] && echo ran >> "$PEL_MARKER"\n%s' "${3:-exit 0}" \
     > "$1/node_modules/.bin/eslint"
   chmod +x "$1/node_modules/.bin/eslint"
@@ -116,18 +117,68 @@ else
 fi
 rm -rf "$SCRATCH_DIR"
 
-# Markup/style extensions never trigger the linter (issue #32).
+# Extension allowlist: markup/style stay out of eslint's domain (issue #32);
+# framework single-file components are routed through the project's eslint.
 EXT_OK=1
-for EXT in html css scss astro vue svg; do
+for EXT in html css scss svg md json; do
   : > "$ESLINT_DIR/file.$EXT"
   pel_out "$ESLINT_DIR" "$ESLINT_DIR/m" '{"tool_input":{"file_path":"'"$ESLINT_DIR"'/file.'"$EXT"'"}}' >/dev/null
   [ -e "$ESLINT_DIR/m" ] && EXT_OK=0
 done
 if [ "$EXT_OK" -eq 1 ]; then
-  pass "post-edit-lint: markup/style extensions skipped"
+  pass "post-edit-lint: markup/style/data extensions skipped"
 else
-  fail "post-edit-lint: markup/style extension triggered linter (issue #32)"
+  fail "post-edit-lint: out-of-domain extension triggered linter (issue #32)"
 fi
+
+SFC_OK=1
+for EXT in astro vue; do
+  rm -f "$ESLINT_DIR/m"
+  : > "$ESLINT_DIR/file.$EXT"
+  OUT="$(pel_out "$ESLINT_DIR" "$ESLINT_DIR/m" '{"tool_input":{"file_path":"'"$ESLINT_DIR"'/file.'"$EXT"'"}}')"
+  { [ -e "$ESLINT_DIR/m" ] && printf '%s' "$OUT" | jq -e '.hookSpecificOutput.additionalContext' >/dev/null; } || SFC_OK=0
+done
+if [ "$SFC_OK" -eq 1 ]; then
+  pass "post-edit-lint: vue/astro routed to project eslint"
+else
+  fail "post-edit-lint: vue/astro not routed to project eslint"
+fi
+
+# eslint declared but no config: not this project's linter, never invoked.
+NOCONF_DIR="$(mktemp -d)"
+pel_fixture "$NOCONF_DIR" "$EXPECT_ESLINT" 'echo should-not-run; exit 1' no-config
+: > "$NOCONF_DIR/src.ts"
+pel_out "$NOCONF_DIR" "$NOCONF_DIR/m" '{"tool_input":{"file_path":"'"$NOCONF_DIR"'/src.ts"}}' >/dev/null
+if [ ! -e "$NOCONF_DIR/m" ]; then
+  pass "post-edit-lint: eslint without config skipped"
+else
+  fail "post-edit-lint: unconfigured eslint ran (issue #32)"
+fi
+rm -rf "$NOCONF_DIR"
+
+# Whole-project linters only fire on relevant file types.
+CARGO_DIR="$(mktemp -d)"
+printf '[package]\nname = "x"\n' > "$CARGO_DIR/Cargo.toml"
+mkdir -p "$CARGO_DIR/bin"
+printf '#!/bin/sh\n[ -n "${PEL_MARKER:-}" ] && echo ran >> "$PEL_MARKER"\nexit 0\n' > "$CARGO_DIR/bin/cargo"
+chmod +x "$CARGO_DIR/bin/cargo"
+: > "$CARGO_DIR/src.rs"
+: > "$CARGO_DIR/README.md"
+CARGO_HOOK() { # CARGO_HOOK <path-relative-to-fixture>
+  printf '{"tool_input":{"file_path":"%s/%s"}}' "$CARGO_DIR" "$1" \
+    | ( cd "$CARGO_DIR" && PEL_MARKER="$CARGO_DIR/m" PATH="$CARGO_DIR/bin:$PATH" bash "$HOOKS/post-edit-lint.sh" ) >/dev/null 2>&1
+}
+CARGO_HOOK README.md
+[ -e "$CARGO_DIR/m" ] && MD_RAN=1 || MD_RAN=0
+rm -f "$CARGO_DIR/m"
+CARGO_HOOK src.rs
+[ -e "$CARGO_DIR/m" ] && RS_RAN=1 || RS_RAN=0
+if [ "$MD_RAN" -eq 0 ] && [ "$RS_RAN" -eq 1 ]; then
+  pass "post-edit-lint: cargo clippy gated to rust files"
+else
+  fail "post-edit-lint: cargo clippy extension gate broken"
+fi
+rm -rf "$CARGO_DIR"
 
 # Linter failure (rc >= 2) is misconfiguration, not findings — never surfaced.
 FAIL_DIR="$(mktemp -d)"

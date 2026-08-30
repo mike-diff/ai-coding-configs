@@ -3,12 +3,11 @@ set -euo pipefail
 
 # PostToolUse Hook (matcher: Write|Edit)
 # Runs after any file write or edit operation.
-# Detects the project's lint command and runs it on the modified file.
-# Exit 0 = success (stdout shown in verbose mode)
-# Stderr on exit 0 = shown to Claude as context
-#
-# This hook provides fast feedback on lint errors immediately after
-# a file is modified, rather than waiting for the QA teammate.
+# Opt-in fast feedback: lints the edited file only when the project declared
+# AND configured a linter this hook can invoke on that file type (eslint,
+# ruff, flake8; clippy and go vet run whole-project on relevant types).
+# Everything else stays silent — the verify gate runs the project's own lint
+# script in full at phase end.
 
 # Debug logging - writes to .claude/.logs/hooks.log
 LOG_DIR="${CLAUDE_PLUGIN_DATA:-${CLAUDE_PROJECT_DIR:-.}/.claude/.logs}"
@@ -59,48 +58,82 @@ case "$ABS_PATH" in
     ;;
 esac
 
-# Skip non-code files
-case "$FILE_PATH" in
-  *.md|*.txt|*.json|*.yaml|*.yml|*.toml|*.lock|*.log|*.csv|*.html|*.css|*.scss|*.astro|*.vue|*.svg)
-    debug "SKIP: non-code file ($FILE_PATH)"
-    exit 0
-    ;;
-esac
-
 # Auto-detect lint command from project config. Commands are built as argv
 # arrays and executed directly — never eval'd. FILE_PATH comes from tool-call
 # JSON, so a crafted path (e.g. containing $(...) or backticks) must never
 # reach a shell parser.
+#
+# Selection is per-linter allowlist, not a global "non-code" blocklist: what
+# counts as lintable is stack-relative (Biome lints .astro/.json/.css), so
+# the only sound test is "the project opted into a linter this hook drives,
+# and the edited file is in that linter's domain". Finer arbitration belongs
+# to the linter's own config — eslint warns and exits 0 on a file its config
+# doesn't cover, which surfaces nothing here (only rc 1 does).
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+
+# An eslint config the linter itself would discover — with a package.json
+# declaration, the strongest signal that eslint is this project's linter and
+# not a transitive leftover in a Biome or oxlint project.
+has_eslint_config() {
+  local d f
+  for d in "$PWD" "$PROJECT_ROOT"; do
+    for f in eslint.config.js eslint.config.mjs eslint.config.cjs \
+             eslint.config.ts eslint.config.mts eslint.config.cts \
+             .eslintrc .eslintrc.js .eslintrc.cjs .eslintrc.json \
+             .eslintrc.yaml .eslintrc.yml; do
+      [[ -f "$d/$f" ]] && return 0
+    done
+  done
+  return 1
+}
+
 declare -a LINT_CMD=()
 declare -a LINT_TAIL=()
 
-if [[ -f "package.json" ]] && jq -e '(.devDependencies.eslint // .dependencies.eslint) != null' package.json >/dev/null 2>&1; then
-  # Invoke the eslint binary directly on the edited file only, and only when
-  # the project declares eslint — a transitively installed eslint in a Biome
-  # or oxlint project is not that project's linter. Routing through
+if [[ -f "package.json" ]] \
+  && jq -e '(.devDependencies.eslint // .dependencies.eslint) != null' package.json >/dev/null 2>&1 \
+  && has_eslint_config; then
+  # Invoke the eslint binary directly on the edited file only. Routing through
   # `npm run lint -- <args>` appends args to an arbitrary script: flags land on
   # node itself (`node: bad option`) and `eslint .`-style scripts still lint
-  # the whole project. With no local or global eslint, skip — the verify gate
-  # runs the project's own lint script in full at phase end.
-  PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-  if [[ -x "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
-    LINT_CMD=("$PROJECT_ROOT/node_modules/.bin/eslint" --no-error-on-unmatched-pattern "$FILE_PATH")
-  elif command -v eslint >/dev/null 2>&1; then
-    LINT_CMD=(eslint --no-error-on-unmatched-pattern "$FILE_PATH")
-  fi
+  # the whole project.
+  case "$FILE_PATH" in
+    *.js|*.mjs|*.cjs|*.jsx|*.ts|*.tsx|*.vue|*.svelte|*.astro)
+      if [[ -x "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
+        LINT_CMD=("$PROJECT_ROOT/node_modules/.bin/eslint" --no-error-on-unmatched-pattern "$FILE_PATH")
+      elif command -v eslint >/dev/null 2>&1; then
+        LINT_CMD=(eslint --no-error-on-unmatched-pattern "$FILE_PATH")
+      fi
+      ;;
+  esac
 elif [[ -f "pyproject.toml" ]]; then
-  # Check for Python linters
-  if command -v ruff >/dev/null 2>&1; then
-    LINT_CMD=(ruff check "$FILE_PATH")
-  elif command -v flake8 >/dev/null 2>&1; then
-    LINT_CMD=(flake8 "$FILE_PATH")
-  fi
+  # Only when the project opted in: a PATH-installed linter in a project that
+  # never configured it reports defaults nobody signed up for.
+  case "$FILE_PATH" in
+    *.py)
+      if command -v ruff >/dev/null 2>&1 \
+        && { [[ -f ruff.toml || -f .ruff.toml ]] || grep -q '\[tool.ruff\]' pyproject.toml; }; then
+        LINT_CMD=(ruff check "$FILE_PATH")
+      elif command -v flake8 >/dev/null 2>&1 \
+        && { [[ -f .flake8 ]] || grep -q '\[flake8\]' setup.cfg tox.ini 2>/dev/null; }; then
+        LINT_CMD=(flake8 "$FILE_PATH")
+      fi
+      ;;
+  esac
 elif [[ -f "Cargo.toml" ]]; then
-  LINT_CMD=(cargo clippy --quiet)
-  LINT_TAIL=(head -20)
+  case "$FILE_PATH" in
+    *.rs|Cargo.toml|*/Cargo.toml|Cargo.lock|*/Cargo.lock)
+      LINT_CMD=(cargo clippy --quiet)
+      LINT_TAIL=(head -20)
+      ;;
+  esac
 elif [[ -f "go.mod" ]]; then
-  LINT_CMD=(go vet ./...)
-  LINT_TAIL=(head -20)
+  case "$FILE_PATH" in
+    *.go|go.mod|*/go.mod|go.sum|*/go.sum)
+      LINT_CMD=(go vet ./...)
+      LINT_TAIL=(head -20)
+      ;;
+  esac
 fi
 
 # If no lint command found, skip silently

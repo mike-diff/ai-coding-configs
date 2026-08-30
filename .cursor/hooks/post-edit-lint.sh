@@ -20,6 +20,37 @@ fi
 
 EXT="${FILE_PATH##*.}"
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+# Sets ESLINT_CONFIG to flat|legacy for an eslint config the linter itself
+# would discover — with a package.json declaration, the strongest signal that
+# eslint is this project's chosen linter rather than a transitive leftover.
+find_eslint_config() {
+  local d f
+  for d in "$PWD" "$PROJECT_ROOT"; do
+    for f in eslint.config.js eslint.config.mjs eslint.config.cjs \
+             eslint.config.ts eslint.config.mts eslint.config.cts; do
+      [[ -f "$d/$f" ]] && { ESLINT_CONFIG=flat; return 0; }
+    done
+    for f in .eslintrc .eslintrc.js .eslintrc.cjs .eslintrc.json \
+             .eslintrc.yaml .eslintrc.yml; do
+      [[ -f "$d/$f" ]] && { ESLINT_CONFIG=legacy; return 0; }
+    done
+  done
+  return 1
+}
+
+# Skip edits outside the project — a scratchpad write must not run this
+# project's linter or create .context state.
+case "$FILE_PATH" in
+  /*) ABS_PATH="$FILE_PATH" ;;
+  *) ABS_PATH="$PROJECT_ROOT/$FILE_PATH" ;;
+esac
+ABS_PATH="$(realpath -m "$ABS_PATH" 2>/dev/null || printf '%s' "$ABS_PATH")"
+PROJECT_ROOT_NORM="$(realpath -m "$PROJECT_ROOT" 2>/dev/null || printf '%s' "$PROJECT_ROOT")"
+case "$ABS_PATH" in
+  "$PROJECT_ROOT_NORM"/*) ;;
+  *) exit 0 ;;
+esac
+
 ERRORS_FILE="$PROJECT_ROOT/.context/lint-errors.md"
 mkdir -p "$PROJECT_ROOT/.context"
 
@@ -38,12 +69,26 @@ fi
 ERRORS=""
 
 case "$EXT" in
-  ts|tsx|js|jsx|mjs|cjs)
+  ts|tsx|js|jsx|mjs|cjs|vue|svelte|astro)
     ESLINT=""
-    if [[ -f "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
-      ESLINT="$PROJECT_ROOT/node_modules/.bin/eslint"
-    elif command -v eslint &>/dev/null; then
-      ESLINT="eslint"
+    # Only the project's own binary — a global eslint may be a different
+    # major and misread the project's config. Single-file components
+    # (vue/svelte/astro) only under flat config: an uncovered file there
+    # warns and exits 0, but a legacy config parse-errors it — a false
+    # finding.
+    if [[ -f "$PROJECT_ROOT/package.json" ]] \
+      && jq -e '(.devDependencies.eslint // .dependencies.eslint) != null' "$PROJECT_ROOT/package.json" >/dev/null 2>&1 \
+      && find_eslint_config; then
+      if [[ -f "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
+        case "$EXT" in
+          vue|svelte|astro)
+            [[ "$ESLINT_CONFIG" == flat ]] && ESLINT="$PROJECT_ROOT/node_modules/.bin/eslint"
+            ;;
+          *)
+            ESLINT="$PROJECT_ROOT/node_modules/.bin/eslint"
+            ;;
+        esac
+      fi
     fi
 
     if [[ -n "$ESLINT" ]]; then
@@ -58,7 +103,10 @@ case "$EXT" in
     ;;
 
   py)
-    if command -v ruff &>/dev/null; then
+    # Only when the project opted in: a PATH-installed linter in a project
+    # that never configured it reports defaults nobody signed up for.
+    if command -v ruff &>/dev/null \
+      && { [[ -f ruff.toml || -f .ruff.toml ]] || grep -q '\[tool.ruff\]' pyproject.toml 2>/dev/null; }; then
       # Auto-fix first
       ruff check --fix "$FILE_PATH" 2>/dev/null || true
       # Collect any remaining errors
@@ -66,7 +114,8 @@ case "$EXT" in
       if [[ -n "$RUFF_OUT" ]]; then
         ERRORS="$RUFF_OUT"
       fi
-    elif command -v flake8 &>/dev/null; then
+    elif command -v flake8 &>/dev/null \
+      && { [[ -f .flake8 ]] || grep -q '\[flake8\]' setup.cfg tox.ini 2>/dev/null; }; then
       FLAKE_OUT=$(flake8 "$FILE_PATH" 2>&1 || true)
       if [[ -n "$FLAKE_OUT" ]]; then
         ERRORS="$FLAKE_OUT"

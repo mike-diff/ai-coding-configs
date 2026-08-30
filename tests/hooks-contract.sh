@@ -52,10 +52,13 @@ expect_rc "redact-secrets: normal file allowed" \
 # post-edit-lint unit tests. Fixtures are fake Node projects; the eslint
 # "binary" is a shim so the hook's command selection and gating logic is
 # exercised without a real toolchain.
-pel_fixture() { # pel_fixture <dir> <package.json-content> [shim-body] [no-config]
+pel_fixture() { # pel_fixture <dir> <package.json-content> [shim-body] [config: flat|legacy|none]
   mkdir -p "$1/node_modules/.bin"
   printf '%s' "$2" > "$1/package.json"
-  [[ -n "${4:-}" ]] || : > "$1/eslint.config.js"
+  case "${4:-flat}" in
+    flat) : > "$1/eslint.config.js" ;;
+    legacy) : > "$1/.eslintrc.json" ;;
+  esac
   printf '#!/bin/sh\n[ -n "${PEL_MARKER:-}" ] && echo ran >> "$PEL_MARKER"\n%s' "${3:-exit 0}" \
     > "$1/node_modules/.bin/eslint"
   chmod +x "$1/node_modules/.bin/eslint"
@@ -146,7 +149,7 @@ fi
 
 # eslint declared but no config: not this project's linter, never invoked.
 NOCONF_DIR="$(mktemp -d)"
-pel_fixture "$NOCONF_DIR" "$EXPECT_ESLINT" 'echo should-not-run; exit 1' no-config
+pel_fixture "$NOCONF_DIR" "$EXPECT_ESLINT" 'echo should-not-run; exit 1' none
 : > "$NOCONF_DIR/src.ts"
 pel_out "$NOCONF_DIR" "$NOCONF_DIR/m" '{"tool_input":{"file_path":"'"$NOCONF_DIR"'/src.ts"}}' >/dev/null
 if [ ! -e "$NOCONF_DIR/m" ]; then
@@ -155,6 +158,67 @@ else
   fail "post-edit-lint: unconfigured eslint ran"
 fi
 rm -rf "$NOCONF_DIR"
+
+# Legacy eslintrc: plain extensions lint, single-file components don't — a
+# legacy config parse-errors an SFC it doesn't cover (rc 1, false finding).
+LEGACY_DIR="$(mktemp -d)"
+pel_fixture "$LEGACY_DIR" "$EXPECT_ESLINT" 'echo "err error"; exit 1' legacy
+: > "$LEGACY_DIR/src.ts"
+: > "$LEGACY_DIR/Comp.vue"
+pel_out "$LEGACY_DIR" "$LEGACY_DIR/m" '{"tool_input":{"file_path":"'"$LEGACY_DIR"'/src.ts"}}' >/dev/null
+[ -e "$LEGACY_DIR/m" ] && LEGACY_TS=1 || LEGACY_TS=0
+rm -f "$LEGACY_DIR/m"
+pel_out "$LEGACY_DIR" "$LEGACY_DIR/m" '{"tool_input":{"file_path":"'"$LEGACY_DIR"'/Comp.vue"}}' >/dev/null
+[ -e "$LEGACY_DIR/m" ] && LEGACY_VUE=1 || LEGACY_VUE=0
+if [ "$LEGACY_TS" -eq 1 ] && [ "$LEGACY_VUE" -eq 0 ]; then
+  pass "post-edit-lint: legacy config lints ts but not SFCs"
+else
+  fail "post-edit-lint: legacy config SFC gating broken"
+fi
+rm -rf "$LEGACY_DIR"
+
+# No local eslint binary: a PATH eslint must not stand in for the project's
+# own (possibly different major) install.
+GLOBAL_DIR="$(mktemp -d)"
+pel_fixture "$GLOBAL_DIR" "$EXPECT_ESLINT" 'echo should-not-run; exit 1'
+rm -rf "$GLOBAL_DIR/node_modules"
+mkdir -p "$GLOBAL_DIR/bin"
+printf '#!/bin/sh\n[ -n "${PEL_MARKER:-}" ] && echo ran >> "$PEL_MARKER"\nexit 0\n' > "$GLOBAL_DIR/bin/eslint"
+chmod +x "$GLOBAL_DIR/bin/eslint"
+: > "$GLOBAL_DIR/src.ts"
+printf '{"tool_input":{"file_path":"%s/src.ts"}}' "$GLOBAL_DIR" \
+  | ( cd "$GLOBAL_DIR" && PEL_MARKER="$GLOBAL_DIR/m" PATH="$GLOBAL_DIR/bin:$PATH" bash "$HOOKS/post-edit-lint.sh" ) >/dev/null 2>&1
+if [ ! -e "$GLOBAL_DIR/m" ]; then
+  pass "post-edit-lint: PATH eslint not used as fallback"
+else
+  fail "post-edit-lint: PATH eslint ran without local install"
+fi
+rm -rf "$GLOBAL_DIR"
+
+# Python opt-in: ruff runs only when the project configured it.
+PY_RUFF="$(mktemp -d)"; PY_BARE="$(mktemp -d)"
+for d in "$PY_RUFF" "$PY_BARE"; do
+  mkdir -p "$d/bin"
+  printf '#!/bin/sh\n[ -n "${PEL_MARKER:-}" ] && echo ran >> "$PEL_MARKER"\nexit 0\n' > "$d/bin/ruff"
+  chmod +x "$d/bin/ruff"
+  : > "$d/x.py"
+done
+printf '[tool.ruff]\n' > "$PY_RUFF/pyproject.toml"
+printf '[project]\nname = "x"\n' > "$PY_BARE/pyproject.toml"
+py_run() { # py_run <dir>
+  printf '{"tool_input":{"file_path":"%s/x.py"}}' "$1" \
+    | ( cd "$1" && PEL_MARKER="$1/m" PATH="$1/bin:$PATH" bash "$HOOKS/post-edit-lint.sh" ) >/dev/null 2>&1
+}
+py_run "$PY_RUFF"
+[ -e "$PY_RUFF/m" ] && RUFF_ON=1 || RUFF_ON=0
+py_run "$PY_BARE"
+[ -e "$PY_BARE/m" ] && RUFF_OFF=1 || RUFF_OFF=0
+if [ "$RUFF_ON" -eq 1 ] && [ "$RUFF_OFF" -eq 0 ]; then
+  pass "post-edit-lint: ruff gated on project opt-in"
+else
+  fail "post-edit-lint: ruff opt-in gate broken"
+fi
+rm -rf "$PY_RUFF" "$PY_BARE"
 
 # Whole-project linters only fire on relevant file types.
 CARGO_DIR="$(mktemp -d)"

@@ -20,17 +20,19 @@ fi
 
 EXT="${FILE_PATH##*.}"
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-# An eslint config the linter itself would discover — with a package.json
-# declaration, the strongest signal that eslint is this project's chosen
-# linter rather than a transitive leftover.
-has_eslint_config() {
+# Sets ESLINT_CONFIG to flat|legacy for an eslint config the linter itself
+# would discover — with a package.json declaration, the strongest signal that
+# eslint is this project's chosen linter rather than a transitive leftover.
+find_eslint_config() {
   local d f
   for d in "$PWD" "$PROJECT_ROOT"; do
     for f in eslint.config.js eslint.config.mjs eslint.config.cjs \
-             eslint.config.ts eslint.config.mts eslint.config.cts \
-             .eslintrc .eslintrc.js .eslintrc.cjs .eslintrc.json \
+             eslint.config.ts eslint.config.mts eslint.config.cts; do
+      [[ -f "$d/$f" ]] && { ESLINT_CONFIG=flat; return 0; }
+    done
+    for f in .eslintrc .eslintrc.js .eslintrc.cjs .eslintrc.json \
              .eslintrc.yaml .eslintrc.yml; do
-      [[ -f "$d/$f" ]] && return 0
+      [[ -f "$d/$f" ]] && { ESLINT_CONFIG=legacy; return 0; }
     done
   done
   return 1
@@ -69,14 +71,23 @@ ERRORS=""
 case "$EXT" in
   ts|tsx|js|jsx|mjs|cjs|vue|svelte|astro)
     ESLINT=""
-    # Only when the project declares AND configures eslint.
+    # Only the project's own binary — a global eslint may be a different
+    # major and misread the project's config. Single-file components
+    # (vue/svelte/astro) only under flat config: an uncovered file there
+    # warns and exits 0, but a legacy config parse-errors it — a false
+    # finding.
     if [[ -f "$PROJECT_ROOT/package.json" ]] \
       && jq -e '(.devDependencies.eslint // .dependencies.eslint) != null' "$PROJECT_ROOT/package.json" >/dev/null 2>&1 \
-      && has_eslint_config; then
+      && find_eslint_config; then
       if [[ -f "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
-        ESLINT="$PROJECT_ROOT/node_modules/.bin/eslint"
-      elif command -v eslint &>/dev/null; then
-        ESLINT="eslint"
+        case "$EXT" in
+          vue|svelte|astro)
+            [[ "$ESLINT_CONFIG" == flat ]] && ESLINT="$PROJECT_ROOT/node_modules/.bin/eslint"
+            ;;
+          *)
+            ESLINT="$PROJECT_ROOT/node_modules/.bin/eslint"
+            ;;
+        esac
       fi
     fi
 

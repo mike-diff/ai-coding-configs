@@ -70,20 +70,28 @@ esac
 # doesn't cover, which surfaces nothing here (only rc 1 does).
 PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-# An eslint config the linter itself would discover — with a package.json
-# declaration, the strongest signal that eslint is this project's chosen
-# linter rather than a transitive leftover.
-has_eslint_config() {
+# Sets ESLINT_CONFIG to flat|legacy for an eslint config the linter itself
+# would discover — with a package.json declaration, the strongest signal that
+# eslint is this project's chosen linter rather than a transitive leftover.
+find_eslint_config() {
   local d f
   for d in "$PWD" "$PROJECT_ROOT"; do
     for f in eslint.config.js eslint.config.mjs eslint.config.cjs \
-             eslint.config.ts eslint.config.mts eslint.config.cts \
-             .eslintrc .eslintrc.js .eslintrc.cjs .eslintrc.json \
+             eslint.config.ts eslint.config.mts eslint.config.cts; do
+      [[ -f "$d/$f" ]] && { ESLINT_CONFIG=flat; return 0; }
+    done
+    for f in .eslintrc .eslintrc.js .eslintrc.cjs .eslintrc.json \
              .eslintrc.yaml .eslintrc.yml; do
-      [[ -f "$d/$f" ]] && return 0
+      [[ -f "$d/$f" ]] && { ESLINT_CONFIG=legacy; return 0; }
     done
   done
   return 1
+}
+
+set_eslint_cmd() {
+  if [[ -x "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
+    LINT_CMD=("$PROJECT_ROOT/node_modules/.bin/eslint" --no-error-on-unmatched-pattern "$FILE_PATH")
+  fi
 }
 
 declare -a LINT_CMD=()
@@ -91,17 +99,22 @@ declare -a LINT_TAIL=()
 
 if [[ -f "package.json" ]] \
   && jq -e '(.devDependencies.eslint // .dependencies.eslint) != null' package.json >/dev/null 2>&1 \
-  && has_eslint_config; then
-  # Invoke the eslint binary directly on the edited file only. Routing through
-  # `npm run lint -- <args>` appends args to an arbitrary script: flags land on
-  # node itself (`node: bad option`) and `eslint .`-style scripts still lint
-  # the whole project.
+  && find_eslint_config; then
+  # Invoke the project's own eslint binary directly on the edited file only —
+  # never a global one, which may be a different major and misread the
+  # project's config. Routing through `npm run lint -- <args>` appends args
+  # to an arbitrary script: flags land on node itself (`node: bad option`)
+  # and `eslint .`-style scripts still lint the whole project.
   case "$FILE_PATH" in
-    *.js|*.mjs|*.cjs|*.jsx|*.ts|*.tsx|*.vue|*.svelte|*.astro)
-      if [[ -x "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
-        LINT_CMD=("$PROJECT_ROOT/node_modules/.bin/eslint" --no-error-on-unmatched-pattern "$FILE_PATH")
-      elif command -v eslint >/dev/null 2>&1; then
-        LINT_CMD=(eslint --no-error-on-unmatched-pattern "$FILE_PATH")
+    *.js|*.mjs|*.cjs|*.jsx|*.ts|*.tsx)
+      set_eslint_cmd
+      ;;
+    *.vue|*.svelte|*.astro)
+      # Single-file components only under flat config: an uncovered file
+      # there warns and exits 0, but a legacy config parse-errors it —
+      # rc 1, a false finding.
+      if [[ "$ESLINT_CONFIG" == flat ]]; then
+        set_eslint_cmd
       fi
       ;;
   esac

@@ -221,28 +221,42 @@ fi
 rm -rf "$PY_RUFF" "$PY_BARE"
 
 # Whole-project linters only fire on relevant file types.
-CARGO_DIR="$(mktemp -d)"
-printf '[package]\nname = "x"\n' > "$CARGO_DIR/Cargo.toml"
-mkdir -p "$CARGO_DIR/bin"
-printf '#!/bin/sh\n[ -n "${PEL_MARKER:-}" ] && echo ran >> "$PEL_MARKER"\nexit 0\n' > "$CARGO_DIR/bin/cargo"
-chmod +x "$CARGO_DIR/bin/cargo"
-: > "$CARGO_DIR/src.rs"
-: > "$CARGO_DIR/README.md"
-CARGO_HOOK() { # CARGO_HOOK <path-relative-to-fixture>
-  printf '{"tool_input":{"file_path":"%s/%s"}}' "$CARGO_DIR" "$1" \
-    | ( cd "$CARGO_DIR" && PEL_MARKER="$CARGO_DIR/m" PATH="$CARGO_DIR/bin:$PATH" bash "$HOOKS/post-edit-lint.sh" ) >/dev/null 2>&1
+GO_DIR="$(mktemp -d)"
+printf 'module example.com/x\n\ngo 1.22\n' > "$GO_DIR/go.mod"
+mkdir -p "$GO_DIR/bin"
+printf '#!/bin/sh\n[ -n "${PEL_MARKER:-}" ] && echo ran >> "$PEL_MARKER"\nexit 0\n' > "$GO_DIR/bin/go"
+chmod +x "$GO_DIR/bin/go"
+: > "$GO_DIR/main.go"
+: > "$GO_DIR/README.md"
+go_hook() { # go_hook <path-relative-to-fixture>
+  printf '{"tool_input":{"file_path":"%s/%s"}}' "$GO_DIR" "$1" \
+    | ( cd "$GO_DIR" && PEL_MARKER="$GO_DIR/m" PATH="$GO_DIR/bin:$PATH" bash "$HOOKS/post-edit-lint.sh" ) >/dev/null 2>&1
 }
-CARGO_HOOK README.md
-[ -e "$CARGO_DIR/m" ] && MD_RAN=1 || MD_RAN=0
-rm -f "$CARGO_DIR/m"
-CARGO_HOOK src.rs
-[ -e "$CARGO_DIR/m" ] && RS_RAN=1 || RS_RAN=0
-if [ "$MD_RAN" -eq 0 ] && [ "$RS_RAN" -eq 1 ]; then
-  pass "post-edit-lint: cargo clippy gated to rust files"
+go_hook README.md
+[ -e "$GO_DIR/m" ] && GO_MD_RAN=1 || GO_MD_RAN=0
+rm -f "$GO_DIR/m"
+go_hook main.go
+[ -e "$GO_DIR/m" ] && GO_RAN=1 || GO_RAN=0
+if [ "$GO_MD_RAN" -eq 0 ] && [ "$GO_RAN" -eq 1 ]; then
+  pass "post-edit-lint: go vet gated to go files"
 else
-  fail "post-edit-lint: cargo clippy extension gate broken"
+  fail "post-edit-lint: go vet extension gate broken"
 fi
-rm -rf "$CARGO_DIR"
+rm -rf "$GO_DIR"
+
+# Cross-surface parity: the plugin hook is a byte-identical copy of the
+# canonical one, and the Cursor port's eslint-config discovery must match it.
+if diff -q "$HOOKS/post-edit-lint.sh" "$REPO_ROOT/plugins/agent-team/hooks/post-edit-lint.sh" >/dev/null; then
+  pass "post-edit-lint: plugin copy byte-identical to canonical"
+else
+  fail "post-edit-lint: plugin copy drifted from canonical (run scripts/sync-plugin.sh)"
+fi
+if diff <(awk '/^find_eslint_config\(\)/,/^}/' "$HOOKS/post-edit-lint.sh") \
+         <(awk '/^find_eslint_config\(\)/,/^}/' "$REPO_ROOT/.cursor/hooks/post-edit-lint.sh") >/dev/null; then
+  pass "post-edit-lint: cursor config discovery matches canonical"
+else
+  fail "post-edit-lint: cursor config discovery drifted from canonical"
+fi
 
 # Linter failure (rc >= 2) is misconfiguration, not findings — never surfaced.
 FAIL_DIR="$(mktemp -d)"

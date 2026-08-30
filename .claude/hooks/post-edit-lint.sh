@@ -5,7 +5,7 @@ set -euo pipefail
 # Runs after any file write or edit operation.
 # Opt-in fast feedback: lints the edited file only when the project declared
 # AND configured a linter this hook can invoke on that file type (eslint,
-# ruff, flake8; clippy and go vet run whole-project on relevant types).
+# ruff, flake8; go vet runs whole-project on relevant types).
 # Everything else stays silent — the verify gate runs the project's own lint
 # script in full at phase end.
 
@@ -130,13 +130,6 @@ elif [[ -f "pyproject.toml" ]]; then
         && { [[ -f .flake8 ]] || grep -q '\[flake8\]' setup.cfg tox.ini 2>/dev/null; }; then
         LINT_CMD=(flake8 "$FILE_PATH")
       fi
-      ;;
-  esac
-elif [[ -f "Cargo.toml" ]]; then
-  case "$FILE_PATH" in
-    *.rs|Cargo.toml|*/Cargo.toml|Cargo.lock|*/Cargo.lock)
-      LINT_CMD=(cargo clippy --quiet)
-      LINT_TAIL=(head -20)
       ;;
   esac
 elif [[ -f "go.mod" ]]; then

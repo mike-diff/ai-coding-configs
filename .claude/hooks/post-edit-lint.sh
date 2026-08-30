@@ -41,10 +41,27 @@ if [[ -z "$FILE_PATH" ]]; then
 fi
 
 debug "FIRED: file=$FILE_PATH"
+# Skip edits outside the project dir — a scratchpad or sibling-repo write
+# must not trigger this project's linter. Hooks run with CWD = project dir;
+# CLAUDE_PROJECT_DIR carries it when the runtime sets it.
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+case "$FILE_PATH" in
+  /*) ABS_PATH="$FILE_PATH" ;;
+  *) ABS_PATH="$PROJECT_DIR/$FILE_PATH" ;;
+esac
+ABS_PATH="$(realpath -m "$ABS_PATH" 2>/dev/null || printf '%s' "$ABS_PATH")"
+PROJECT_DIR="$(realpath -m "$PROJECT_DIR" 2>/dev/null || printf '%s' "$PROJECT_DIR")"
+case "$ABS_PATH" in
+  "$PROJECT_DIR"/*) ;;
+  *)
+    debug "SKIP: outside project ($FILE_PATH)"
+    exit 0
+    ;;
+esac
 
 # Skip non-code files
 case "$FILE_PATH" in
-  *.md|*.txt|*.json|*.yaml|*.yml|*.toml|*.lock|*.log|*.csv)
+  *.md|*.txt|*.json|*.yaml|*.yml|*.toml|*.lock|*.log|*.csv|*.html|*.css|*.scss|*.astro|*.vue|*.svg)
     debug "SKIP: non-code file ($FILE_PATH)"
     exit 0
     ;;
@@ -57,8 +74,10 @@ esac
 declare -a LINT_CMD=()
 declare -a LINT_TAIL=()
 
-if [[ -f "package.json" ]]; then
-  # Invoke the eslint binary directly on the edited file only. Routing through
+if [[ -f "package.json" ]] && jq -e '(.devDependencies.eslint // .dependencies.eslint) != null' package.json >/dev/null 2>&1; then
+  # Invoke the eslint binary directly on the edited file only, and only when
+  # the project declares eslint — a transitively installed eslint in a Biome
+  # or oxlint project is not that project's linter. Routing through
   # `npm run lint -- <args>` appends args to an arbitrary script: flags land on
   # node itself (`node: bad option`) and `eslint .`-style scripts still lint
   # the whole project. With no local or global eslint, skip — the verify gate

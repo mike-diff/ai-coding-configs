@@ -49,20 +49,96 @@ expect_rc "redact-secrets: env file blocked" \
 expect_rc "redact-secrets: normal file allowed" \
   redact-secrets.sh '{"tool_input":{"file_path":"/tmp/x/main.py"}}' 0
 
-# Injection regression: a crafted file path must never reach a shell parser.
-# The hook builds argv arrays; the $(touch) below must not execute.
+# post-edit-lint unit tests. Fixtures are fake Node projects; the eslint
+# "binary" is a shim so the hook's command selection and gating logic is
+# exercised without a real toolchain.
+pel_fixture() { # pel_fixture <dir> <package.json-content>
+  mkdir -p "$1/node_modules/.bin"
+  printf '%s' "$2" > "$1/package.json"
+  printf '#!/bin/sh\n[ -n "${PEL_MARKER:-}" ] && echo ran >> "$PEL_MARKER"\n%s' "${3:-exit 0}" \
+    > "$1/node_modules/.bin/eslint"
+  chmod +x "$1/node_modules/.bin/eslint"
+}
+
+pel_out() { # pel_out <dir> <marker> <payload> -> hook stdout
+  printf '%s' "$3" | ( cd "$1" && PEL_MARKER="$2" bash "$HOOKS/post-edit-lint.sh" ) 2>/dev/null
+}
+
+EXPECT_ESLINT='{"devDependencies":{"eslint":"9.0.0"}}'
+EXPECT_BIOME='{"scripts":{"lint":"biome check ."},"devDependencies":{"@biomejs/biome":"2.4.16"}}'
+
+# Injection regression: a crafted path must never reach a shell parser.
+# The fixture declares eslint so the argv path actually runs; the $(touch)
+# below must not execute.
 INJ_DIR="$(mktemp -d)"
-mkdir -p "$INJ_DIR/node_modules/.bin"
-printf '#!/bin/sh\nexit 0\n' > "$INJ_DIR/node_modules/.bin/eslint"
-chmod +x "$INJ_DIR/node_modules/.bin/eslint"
+pel_fixture "$INJ_DIR" "$EXPECT_ESLINT"
 PWN_FLAG="$INJ_DIR/pwned"
-INJ_PAYLOAD="$(printf '{"tool_input":{"file_path":"/tmp/$(touch %s).ts"}}' "$PWN_FLAG")"
-if printf '%s' "$INJ_PAYLOAD" | ( cd "$INJ_DIR" && bash "$HOOKS/post-edit-lint.sh" ) >/dev/null 2>&1 && [ ! -e "$PWN_FLAG" ]; then
+INJ_PAYLOAD="$(printf '{"tool_input":{"file_path":"%s/$(touch %s).ts"}}' "$INJ_DIR" "$PWN_FLAG")"
+if pel_out "$INJ_DIR" /dev/null "$INJ_PAYLOAD" >/dev/null && [ ! -e "$PWN_FLAG" ]; then
   pass "post-edit-lint: crafted path executes nothing"
 else
   fail "post-edit-lint: crafted path executed (eval regression)"
 fi
 rm -rf "$INJ_DIR"
+
+# Non-eslint Node project (Biome): a transitively installed eslint binary
+# must not be mistaken for the project's linter (issue #32).
+BIOME_DIR="$(mktemp -d)"
+pel_fixture "$BIOME_DIR" "$EXPECT_BIOME" 'echo "Error: --no-error-on-unmatched-pattern is not expected"; exit 1'
+: > "$BIOME_DIR/src.ts"
+if [[ -z "$(pel_out "$BIOME_DIR" "$BIOME_DIR/m" '{"tool_input":{"file_path":"'"$BIOME_DIR"'/src.ts"}}')" ]] \
+  && [ ! -e "$BIOME_DIR/m" ]; then
+  pass "post-edit-lint: biome project skipped despite stray eslint binary"
+else
+  fail "post-edit-lint: biome project ran non-declared eslint (issue #32)"
+fi
+rm -rf "$BIOME_DIR"
+
+# eslint project with findings: rc 1 output is surfaced as additionalContext.
+ESLINT_DIR="$(mktemp -d)"
+pel_fixture "$ESLINT_DIR" "$EXPECT_ESLINT" 'echo "src.ts:1:1 error Missing semicolon"; exit 1'
+: > "$ESLINT_DIR/src.ts"
+PEL_OUT="$(pel_out "$ESLINT_DIR" /dev/null '{"tool_input":{"file_path":"'"$ESLINT_DIR"'/src.ts"}}')"
+if printf '%s' "$PEL_OUT" | jq -e '.hookSpecificOutput.additionalContext | contains("Missing semicolon")' >/dev/null; then
+  pass "post-edit-lint: eslint findings surfaced via additionalContext"
+else
+  fail "post-edit-lint: eslint findings not surfaced"
+fi
+
+# Out-of-project file: the project's linter must not run at all (issue #32).
+SCRATCH_DIR="$(mktemp -d)"
+: > "$SCRATCH_DIR/note.ts"
+pel_out "$ESLINT_DIR" "$ESLINT_DIR/m" '{"tool_input":{"file_path":"'"$SCRATCH_DIR"'/note.ts"}}' >/dev/null
+if [ ! -e "$ESLINT_DIR/m" ]; then
+  pass "post-edit-lint: out-of-project edit skipped"
+else
+  fail "post-edit-lint: out-of-project edit ran project linter (issue #32)"
+fi
+rm -rf "$SCRATCH_DIR"
+
+# Markup/style extensions never trigger the linter (issue #32).
+EXT_OK=1
+for EXT in html css scss astro vue svg; do
+  : > "$ESLINT_DIR/file.$EXT"
+  pel_out "$ESLINT_DIR" "$ESLINT_DIR/m" '{"tool_input":{"file_path":"'"$ESLINT_DIR"'/file.'"$EXT"'"}}' >/dev/null
+  [ -e "$ESLINT_DIR/m" ] && EXT_OK=0
+done
+if [ "$EXT_OK" -eq 1 ]; then
+  pass "post-edit-lint: markup/style extensions skipped"
+else
+  fail "post-edit-lint: markup/style extension triggered linter (issue #32)"
+fi
+
+# Linter failure (rc >= 2) is misconfiguration, not findings — never surfaced.
+FAIL_DIR="$(mktemp -d)"
+pel_fixture "$FAIL_DIR" "$EXPECT_ESLINT" 'echo "eslint: bad config"; exit 2'
+: > "$FAIL_DIR/src.ts"
+if [[ -z "$(pel_out "$FAIL_DIR" /dev/null '{"tool_input":{"file_path":"'"$FAIL_DIR"'/src.ts"}}')" ]]; then
+  pass "post-edit-lint: linter failure (rc 2) not surfaced as findings"
+else
+  fail "post-edit-lint: linter failure surfaced as findings"
+fi
+rm -rf "$FAIL_DIR" "$ESLINT_DIR"
 
 # ssh directory coverage: any key name under $HOME/.ssh blocks
 SSH_HOME="$(mktemp -d)"

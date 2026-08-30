@@ -20,6 +20,19 @@ fi
 
 EXT="${FILE_PATH##*.}"
 PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+# Skip edits outside the project — a scratchpad write must not run this
+# project's linter or create .context state.
+case "$FILE_PATH" in
+  /*) ABS_PATH="$FILE_PATH" ;;
+  *) ABS_PATH="$PROJECT_ROOT/$FILE_PATH" ;;
+esac
+ABS_PATH="$(realpath -m "$ABS_PATH" 2>/dev/null || printf '%s' "$ABS_PATH")"
+PROJECT_ROOT_NORM="$(realpath -m "$PROJECT_ROOT" 2>/dev/null || printf '%s' "$PROJECT_ROOT")"
+case "$ABS_PATH" in
+  "$PROJECT_ROOT_NORM"/*) ;;
+  *) exit 0 ;;
+esac
+
 ERRORS_FILE="$PROJECT_ROOT/.context/lint-errors.md"
 mkdir -p "$PROJECT_ROOT/.context"
 
@@ -40,10 +53,15 @@ ERRORS=""
 case "$EXT" in
   ts|tsx|js|jsx|mjs|cjs)
     ESLINT=""
-    if [[ -f "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
-      ESLINT="$PROJECT_ROOT/node_modules/.bin/eslint"
-    elif command -v eslint &>/dev/null; then
-      ESLINT="eslint"
+    # Only when the project declares eslint — a transitively installed
+    # eslint in a Biome or oxlint project is not that project's linter.
+    if [[ -f "$PROJECT_ROOT/package.json" ]] \
+      && jq -e '(.devDependencies.eslint // .dependencies.eslint) != null' "$PROJECT_ROOT/package.json" >/dev/null 2>&1; then
+      if [[ -f "$PROJECT_ROOT/node_modules/.bin/eslint" ]]; then
+        ESLINT="$PROJECT_ROOT/node_modules/.bin/eslint"
+      elif command -v eslint &>/dev/null; then
+        ESLINT="eslint"
+      fi
     fi
 
     if [[ -n "$ESLINT" ]]; then

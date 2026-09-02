@@ -113,7 +113,7 @@ Write SKILL.md addressing the specific failures from baseline.
 - Schemas, lookup tables, data files: `schema.json`
 - NOT instructional prose (that goes in `references/`)
 
-Starter asset templates available at `.cursor/skills/skill-creator/assets/`:
+Starter asset templates available at `.cursor/skills/skill/assets/`:
 - `technique-template.md`
 - `reference-template.md`
 - `guardrail-template.md`
@@ -147,7 +147,7 @@ Re-test until no new rationalizations emerge.
 Run the validator:
 
 ```bash
-bash .cursor/skills/skill-creator/scripts/validate-skill.sh .cursor/skills/[skill-name]/
+bash .cursor/skills/skill/scripts/validate-skill.sh .cursor/skills/[skill-name]/
 ```
 
 Fix any errors before returning results.

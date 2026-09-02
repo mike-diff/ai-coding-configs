@@ -107,8 +107,8 @@ Use the @skill-author agent to create this skill:
 - scripts/:    [yes — what scripts | no]
 - assets/:     [yes — what templates/data | no]
 
-Starter templates: .cursor/skills/skill-creator/assets/
-Validation script: .cursor/skills/skill-creator/scripts/validate-skill.sh
+Starter templates: .cursor/skills/skill/assets/
+Validation script: .cursor/skills/skill/scripts/validate-skill.sh
 
 TDD process:
 1. Baseline test WITHOUT skill — record failures verbatim
@@ -125,7 +125,7 @@ Wait for `<skill-author-result>` block before proceeding.
 ### Phase 4: Validate
 
 ```bash
-bash .cursor/skills/skill-creator/scripts/validate-skill.sh .cursor/skills/[skill-name]/
+bash .cursor/skills/skill/scripts/validate-skill.sh .cursor/skills/[skill-name]/
 ls -la .cursor/skills/[skill-name]/
 wc -l .cursor/skills/[skill-name]/SKILL.md
 ```
@@ -161,10 +161,10 @@ If validation fails, delegate back to @skill-author with specific errors.
 
 | File | Purpose |
 |------|---------|
-| `.cursor/skills/skill-creator/SKILL.md` | Spec overview and frontmatter rules |
-| `.cursor/skills/skill-creator/references/agent-skills-spec.md` | Full specification |
-| `.cursor/skills/skill-creator/references/skill-templates.md` | Annotated templates |
-| `.cursor/skills/skill-creator/assets/technique-template.md` | Technique starter |
-| `.cursor/skills/skill-creator/assets/reference-template.md` | Reference starter |
-| `.cursor/skills/skill-creator/assets/guardrail-template.md` | Guardrail starter |
-| `.cursor/skills/skill-creator/scripts/validate-skill.sh` | Validation script |
+| `.cursor/skills/skill/SKILL.md` | Spec overview and frontmatter rules |
+| `.cursor/skills/skill/references/agent-skills-spec.md` | Full specification |
+| `.cursor/skills/skill/references/skill-templates.md` | Annotated templates |
+| `.cursor/skills/skill/assets/technique-template.md` | Technique starter |
+| `.cursor/skills/skill/assets/reference-template.md` | Reference starter |
+| `.cursor/skills/skill/assets/guardrail-template.md` | Guardrail starter |
+| `.cursor/skills/skill/scripts/validate-skill.sh` | Validation script |

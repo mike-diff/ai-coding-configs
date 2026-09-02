@@ -28,14 +28,13 @@ This directory contains Cursor-specific configuration for AI-assisted developmen
 │   ├── ticket/         # /ticket - Create GitHub issues via interview
 │   ├── to-dos/         # /to-dos - Generate implementation tasks
 │   ├── orient/         # /orient - Learn a new codebase
-│   ├── skill/          # /skill - Create new skills via TDD
+│   ├── skill/          # /skill - Create new skills via TDD (spec, templates, validation script)
 │   ├── ask/            # /ask - Clarification questions
 │   ├── primitives/     # /primitives - Enumerate native tools
 │   ├── worktree-ops/   # /worktree operational guidance
 │   ├── best-of-n-ops/  # /best-of-n operational guidance
 │   ├── debug-ops/      # /debug operational guidance
-│   ├── canvas-ops/     # Canvas usage guidance
-│   └── skill-creator/  # Agent Skills spec, templates, and validation script
+│   └── canvas-ops/     # Canvas usage guidance
 ├── agents/             # Custom subagents (built-in Explore/Bash/Browser cover the rest)
 │   ├── implementer.md  # Parallel-track code implementation
 │   ├── spec-reviewer.md # Fresh-context compliance + quality review (readonly)
@@ -47,7 +46,7 @@ This directory contains Cursor-specific configuration for AI-assisted developmen
 │   ├── subagent-outputs.mdc  # Required subagent result formats
 │   └── mcp-caching.mdc      # Cache large MCP responses
 ├── skills/             # Reusable capabilities
-│   └── skill-creator/  # Agent Skills spec, templates, and validation script
+│   └── skill/          # Agent Skills spec, templates, and validation script
 └── README.md           # This file
 ```
 
@@ -145,7 +144,6 @@ Skills provide specialized knowledge that auto-activates based on description ma
 
 | Skill | When it activates |
 |-------|------------------|
-| `skill-creator` | Creating or editing skills, writing SKILL.md files, validating skill structure |
 | `worktree-ops` | Deciding when to isolate tasks with `/worktree` |
 | `best-of-n-ops` | Running and evaluating parallel model attempts with `/best-of-n` |
 | `debug-ops` | Root-cause-first troubleshooting with `/debug` |

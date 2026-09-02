@@ -2,4 +2,5 @@
 .context/
 .DS_Store
 .claude/.logs
+.claude/agent-memory/
 .cursor/.logs

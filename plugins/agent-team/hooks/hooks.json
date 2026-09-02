@@ -31,6 +31,9 @@
         ]
       }
     ],
+    "PostToolUseFailure": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/post-tool-use-failure.sh" } ] }
+    ],
     "PermissionDenied": [
       { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/permission-denied.sh" } ] }
     ],
@@ -45,6 +48,9 @@
     ],
     "StopFailure": [
       { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/stop-failure.sh" } ] }
+    ],
+    "SessionEnd": [
+      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session-end.sh" } ] }
     ],
     "Notification": [
       {

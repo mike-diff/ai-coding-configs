@@ -14,7 +14,8 @@ After install, all commands are namespaced: `/agent-team:discuss`, `/agent-team:
 
 ## Prerequisites
 
-- Claude Code 2.1.178 or later (verify with `claude --version`). Subagent delegation is native — no env flag needed. Last verified against 2.1.229.
+- Claude Code 2.1.178 or later (verify with `claude --version`). Subagent delegation is native — no env flag needed. Last verified against 2.1.258.
+- On Opus 4.8, the Claude 5 family, and newer models, Claude Code (2.1.233+) removes the task tools (`TaskCreate`/`TaskUpdate`/`TaskList`); set `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` in your environment or settings `env` for `/agent-team:to-dos` and task-list coordination to work.
 
 ## What This Plugin Provides
 
@@ -29,7 +30,7 @@ After install, all commands are namespaced: `/agent-team:discuss`, `/agent-team:
 These shipped with the standalone `.claude/` but cannot ship via the plugin schema:
 
 - **`statusline.sh`** — plugin schema doesn't accept arbitrary statuslines (only `subagentStatusLine`, different shape). To get the same statusline, copy `.claude/statusline.sh` from the source repo into your project and configure it manually in `.claude/settings.json`.
-- **`env.ENABLE_PROMPT_CACHING_1H`** — plugin `settings.json` doesn't accept env vars. Set this in your user-level `~/.claude/settings.json` if desired.
+- **Cache TTL settings** — the plugin can't ship settings keys. Set `"promptCacheTtl": "1h"` and `"subagentPromptCacheTtl": "1h"` in your user-level `~/.claude/settings.json` if desired.
 
 ## Logs
 

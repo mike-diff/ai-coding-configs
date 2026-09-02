@@ -32,8 +32,8 @@ qualitatively in emitted prompts, never as load-bearing numbers:
 
 ## Authoritative facts (from the official /goal doc, code.claude.com)
 
-Confirmed in the docs as of v2.1.139+. These are the source of truth where they
-conflict with anything inferred from the binary:
+These are the source of truth where they conflict with anything inferred from
+the binary:
 
 - **Judge model:** a small fast model, **defaults to Haiku**, configured per
   provider. It reads the conversation only and **does not call tools** — so the
@@ -63,7 +63,7 @@ conflict with anything inferred from the binary:
 
 ## Authoritative facts (from the official /loop doc, code.claude.com)
 
-Confirmed in the docs (scheduled tasks require v2.1.72+):
+Confirmed in the docs:
 
 - **Self-paced** delay is chosen each iteration between **1 minute and 1 hour**
   based on observed state; the delay + reason print at the end of each iteration.

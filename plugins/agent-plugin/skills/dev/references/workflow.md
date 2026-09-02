@@ -134,7 +134,7 @@ Trigger: a spec path with no single phase named — `/dev @.context/specs/spec-X
 1. Read the spec fully; enumerate phases with acceptance criteria.
 2. Run Explore and Clarify once for the whole spec. Interactive: Clarify stops for
    input exactly once; after "proceed", no more pauses between phases.
-3. Create one task per spec phase (TaskCreate), dependency-chained in order. If tasks
+3. Create one task per spec phase (TaskCreate; on Claude 5-era models this needs `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` — if the task tools are unavailable, track phase status in the spec file instead), dependency-chained in order. If tasks
    exist from an interrupted sweep, reconcile: keep `completed`, create missing, resume
    at the first incomplete phase.
 

@@ -2,10 +2,16 @@
 name: to-dos
 description: Generate detailed, actionable developer tasks using TaskCreate with rich descriptions, dependency tracking, and owner assignment.
 argument-hint: <feature or change to break down>
+compatibility: "Designed for Claude Code"
 disable-model-invocation: true
 ---
 
 # Technical Implementation Task Generator
+
+> **Requires the task tools.** Claude Code 2.1.233+ removes `TaskCreate`/`TaskUpdate`
+> on Opus 4.8, the Claude 5 family, and newer models unless
+> `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` is set (this repo's `settings.json` sets it).
+> If the tools are still unavailable, stop and report that instead of generating tasks.
 
 Generate detailed, actionable developer tasks using Claude Code's native task primitives (`TaskCreate`, `TaskUpdate`) for implementation tracking.
 

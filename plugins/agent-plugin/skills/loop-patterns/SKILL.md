@@ -1,6 +1,7 @@
 ---
 name: loop-patterns
 description: Recommended /loop patterns for the agents shipped in this repo (explorer, implementer, reviewer, qa, skill-author). Activates when the user asks about /loop, polling, watch-mode, periodic tasks, or autonomous iteration.
+compatibility: "Designed for Claude Code"
 ---
 
 # /loop patterns per agent
@@ -52,6 +53,15 @@ Solo (no agent team), one session, auto-advance each phase only after its Goal C
 `/loop` re-runs the prompt in the same session; `/goal` is the per-phase completion judge that `/loop` lacks. They're independent — `/goal` can't invoke `/loop`, so the loop prompt re-sets the goal each iteration. Prefer `/dev @<spec>` (sweep) for hands-off team runs; use this for solo single-session control.
 
 Cadence: self-paced. Good for: solo spec implementation without an agent team.
+
+## Bare /loop and loop.md
+
+A bare `/loop` (no prompt) runs a maintenance prompt at a self-paced interval:
+Claude Code uses `.claude/loop.md` if the project ships one (falling back to
+`~/.claude/loop.md`, then the built-in prompt of continue-unfinished-work /
+tend-the-PR / cleanup). Ship a `.claude/loop.md` in the project to tune the
+pass to its own validation scripts. Supplying any prompt on the command line
+bypasses the file.
 
 ## Not recommended
 

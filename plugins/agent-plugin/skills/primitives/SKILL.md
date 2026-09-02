@@ -1,6 +1,7 @@
 ---
 name: primitives
 description: Enumerate all native Claude Code tools, modes, and configuration primitives available in the current session
+compatibility: "Designed for Claude Code"
 disable-model-invocation: true
 ---
 

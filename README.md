@@ -215,7 +215,6 @@ Skills are reference documents the AI draws on automatically based on context. T
 | Skill | Type | When it activates |
 |-------|------|------------------|
 | `dev`, `discuss`, `spec`, `to-dos`, `issue`, `ticket`, `orient`, `ask`, `skill`, `primitives` | Commands (`disable-model-invocation: true`) | When you type `/name` in Agent chat |
-| `skill-creator` | Domain skill | Creating or editing skills, writing SKILL.md files |
 | `worktree-ops`, `best-of-n-ops`, `debug-ops`, `canvas-ops` | Operational skills | When running Cursor 3.x workflows for isolation, parallel attempts, debugging, and analytical outputs |
 
 ### Output Styles

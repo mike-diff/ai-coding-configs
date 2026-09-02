@@ -23,7 +23,8 @@ Full specification for creating valid Agent Skills. Sources: https://agentskills
 | `compatibility` | No | 1–500 chars. Use only when the skill has specific environment requirements. |
 | `license` | No | License name or reference to a bundled license file. |
 | `metadata` | No | Arbitrary key-value map for additional properties. |
-| `allowed-tools` | No | Space-delimited list of pre-approved tools. Experimental. |
+| `allowed-tools` | No | Space-delimited list of pre-approved tools. |
+| `disallowed-tools` | No | Tools the skill may not use. |
 
 ### name field rules
 

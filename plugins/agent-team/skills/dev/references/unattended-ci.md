@@ -29,11 +29,11 @@ Unattended is signalled to `/agent-team:dev` via env `DEV_UNATTENDED=1` (set in 
 
 Verified by spike (private `claude-dispatch-spike` repo, real CI runs):
 
-- **Native Task path works headless, one level deep.** The Opus lead spawns `.claude/agents/*.md`
-  sub-agents via the Task tool; each runs on its own `model:` frontmatter (a haiku sub-agent ran
+- **Native subagent path works headless, one level deep.** The Opus lead spawns `.claude/agents/*.md`
+  sub-agents via the Agent tool; each runs on its own `model:` frontmatter (a haiku sub-agent ran
   under an opus lead). Structured results return to the lead. This avoids the experimental Agent
   Teams non-terminating-turn failure mode (no force-kill; recovery is an interactive config edit
-  that cannot run in CI). For CI, the lead should delegate via the **Task tool**, not Agent Teams.
+  that cannot run in CI). For CI, the lead should delegate via the **Agent tool**, not Agent Teams.
 - **Native nesting beyond one level is unreliable.** A sub-agent told to spawn its own sub-agent
   did NOT — it silently fabricated the expected child output. Keep delegation flat, one level.
 - **The Workflow scripting runtime (the v2.1.x "5-level nesting" engine) is NOT usable in CI via

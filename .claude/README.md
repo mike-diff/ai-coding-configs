@@ -207,7 +207,7 @@ One setting in this config lives in your **user-level** `~/.claude/settings.json
 
     Replace `<your-project>` with a descriptive name. Claude Code will auto-create `MEMORY.md` and topic files there.
 
-**Minimum Claude Code version:** 2.1.108 (released 2026-04-14). Verify with `claude --version`. Older versions will silently ignore `ENABLE_PROMPT_CACHING_1H` and may reject other features used here. Last verified against 2.1.229 (August 2026).
+**Minimum Claude Code version:** 2.1.233 (the release that removed the task tools from Claude 5-era models; `settings.json` sets `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` to restore them for `/to-dos` and task-list coordination). Verify with `claude --version`. Older versions will silently ignore the `promptCacheTtl`/`subagentPromptCacheTtl` settings and may reject other features used here. Last verified against 2.1.258 (September 2026).
 
 ## Built-in commands leveraged
 

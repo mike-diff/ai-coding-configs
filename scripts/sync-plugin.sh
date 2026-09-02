@@ -94,7 +94,17 @@ rm -rf "$AP/skills"
 mkdir -p "$AP/skills"
 cp -R "$SRC/skills/." "$AP/skills/"
 
-# 7. Verification: no unprefixed slash-command refs in plugin skills
+# 7. Verification: manifest versions agree across marketplace, both plugins,
+#    and package.json (single release version for the whole repo)
+VERSIONS=$(jq -r '.plugins[].version, .metadata.version // empty' "$REPO_ROOT/.claude-plugin/marketplace.json"; \
+  jq -r '.version' "$DST/.claude-plugin/plugin.json" "$AP/plugin.json" "$REPO_ROOT/package.json")
+if [ "$(echo "$VERSIONS" | sort -u | wc -l)" -ne 1 ]; then
+  echo "ERROR: manifest versions drifted:" >&2
+  echo "$VERSIONS" | sort | uniq -c >&2
+  exit 1
+fi
+
+# 8. Verification: no unprefixed slash-command refs in plugin skills
 UNPREFIXED=$(perl -ne 'print "$ARGV:$.: $_" if /(?<![:\/\w-])\/(ask|dev|discuss|goal-or-loop|issue|loop-patterns|orient|primitives|review-patterns|skill|slop-check|spec|team-orchestration|testing-patterns|ticket|to-dos)\b(?!(?:[:\w\/-]|\.\w))/' $(find "$DST/skills" -name "*.md") 2>/dev/null | grep -v "/agent-team:" || true)
 if [ -n "$UNPREFIXED" ]; then
   echo "WARNING: unprefixed slash-command references remain:" >&2
